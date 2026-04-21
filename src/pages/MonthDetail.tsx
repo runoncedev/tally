@@ -91,7 +91,7 @@ export default function MonthDetail() {
 
   return (
     <div>
-      <div className="flex items-center justify-between sm:justify-start mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2 mr-2.5">
           <h1 className="text-xl font-semibold">{formatMonthLabel(month)}</h1>
           {month === currentMonth && <span className="text-xs px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">current</span>}
