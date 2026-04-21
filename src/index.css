@@ -6,3 +6,33 @@
     filter: invert(1);
   }
 }
+
+/* forward: sale a la izquierda, entra desde la derecha */
+:root[data-nav-direction="forward"]::view-transition-old(month-content) {
+  animation: 200ms ease both slide-out-left;
+}
+:root[data-nav-direction="forward"]::view-transition-new(month-content) {
+  animation: 200ms ease both slide-in-right;
+}
+
+/* back: sale a la derecha, entra desde la izquierda */
+:root[data-nav-direction="back"]::view-transition-old(month-content) {
+  animation: 200ms ease both slide-out-right;
+}
+:root[data-nav-direction="back"]::view-transition-new(month-content) {
+  animation: 200ms ease both slide-in-left;
+}
+
+
+@keyframes slide-out-left {
+  to { opacity: 0; transform: translateX(-24px); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+}
+@keyframes slide-out-right {
+  to { opacity: 0; transform: translateX(24px); }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+}
