@@ -59,16 +59,19 @@ export function TransactionRow({ row, categories, month, onChange, onSave, onDel
         />
       </div>
 
-      <div>
+      <div className="relative">
         <select
           value={row.category_id}
           onChange={e => onChange({ category_id: e.target.value ? Number(e.target.value) : '', isDirty: true })}
           onKeyDown={handleKeyDown}
-          className={`w-full bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg px-3 py-2 ${row.category_id === '' ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'}`}
+          className={`w-full appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg pl-3 pr-8 py-2 ${row.category_id === '' ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'}`}
         >
           <option value="" disabled>Category</option>
           {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
 
       <div className="flex items-center justify-between pt-1">
