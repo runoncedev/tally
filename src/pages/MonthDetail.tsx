@@ -110,7 +110,7 @@ export default function MonthDetail() {
         </div>
       </div>
 
-      <div className="flex gap-6 mb-8">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-8">
         <div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Income</p>
           <p className="text-2xl font-semibold text-green-600 dark:text-green-400">{formatCurrency(summary.income)}</p>
