@@ -24,6 +24,37 @@
 }
 
 
+/* dialog open/close transitions using @starting-style */
+dialog {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 180ms ease, transform 180ms ease, overlay 180ms ease allow-discrete, display 180ms ease allow-discrete;
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+dialog:not([open]) {
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+  backdrop-filter: blur(2px);
+  transition: opacity 180ms ease, overlay 180ms ease allow-discrete, display 180ms ease allow-discrete;
+}
+
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
 @keyframes slide-out-left {
   to { opacity: 0; transform: translateX(-24px); }
 }
