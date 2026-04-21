@@ -2,7 +2,12 @@ import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { QueryClient } from '@tanstack/query-core'
 import { supabase } from './supabase'
-import type { TablesInsert, TablesUpdate } from '../types/database.types'
+import { publicTransactionsRowSchema } from '../types/database.schemas'
+
+const transactionSchema = publicTransactionsRowSchema.extend({
+  id: publicTransactionsRowSchema.shape.id.optional(),
+  created_at: publicTransactionsRowSchema.shape.created_at.optional(),
+})
 
 export const queryClient = new QueryClient()
 
@@ -21,6 +26,7 @@ export const categoriesCollection = createCollection(
 
 export const transactionsCollection = createCollection(
   queryCollectionOptions({
+    schema: transactionSchema,
     queryKey: ['transactions'],
     queryFn: async () => {
       const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false })
@@ -31,7 +37,7 @@ export const transactionsCollection = createCollection(
     getKey: (item) => item.public_id,
     onInsert: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
-      const m = mutation.modified as TablesInsert<'transactions'>
+      const m = mutation.modified
       const { error } = await supabase.from('transactions').insert({
         public_id: m.public_id,
         date: m.date,
@@ -44,7 +50,7 @@ export const transactionsCollection = createCollection(
     },
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
-      const patch = mutation.changes as TablesUpdate<'transactions'>
+      const patch = mutation.changes
       const { error } = await supabase.from('transactions').update(patch).eq('public_id', mutation.key as string)
       if (error) throw error
       await transactionsCollection.utils.refetch()
