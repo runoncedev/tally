@@ -70,7 +70,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
   const handleSave = async () => {
     if (!canSave) return
-    const amount = parseFloat(form.amount)
+    const amount = parseInt(form.amount, 10)
     if (isNaN(amount)) return
 
     const payload = {
@@ -137,12 +137,15 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
       <div className="flex items-baseline gap-1 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2">
         <span className="text-2xl font-semibold text-zinc-400 dark:text-zinc-500">$</span>
         <input
-          type="number"
-          step="0.01"
-          value={form.amount}
-          placeholder="0.00"
+          type="text"
+          inputMode="numeric"
+          value={form.amount === '' ? '' : Number(form.amount).toLocaleString('en-US')}
+          placeholder="0"
           autoFocus={!tx}
-          onChange={e => patch({ amount: e.target.value })}
+          onChange={e => {
+            const raw = e.target.value.replace(/,/g, '')
+            if (raw === '' || /^\d+$/.test(raw)) patch({ amount: raw })
+          }}
           className="bg-transparent outline-none text-2xl font-semibold w-full placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
         />
       </div>
