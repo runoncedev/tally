@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { transactionsCollection } from '../lib/collections'
 import type { Category, Transaction } from '../types/app.types'
 
-type TransactionRowProps = {
+type TransactionFormProps = {
   tx?: Transaction
   categories: Category[]
   month: string
@@ -51,7 +51,7 @@ function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryTyp
   }
 }
 
-export function TransactionRow({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, initialType, publicId, onSaved, onDelete }: TransactionRowProps) {
+export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, initialType, publicId, onSaved, onDelete }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(() =>
     tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType)
   )

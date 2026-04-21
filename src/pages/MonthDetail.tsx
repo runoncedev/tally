@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useLiveQuery, eq, and, gte, lt } from '@tanstack/react-db'
 import { transactionsCollection, categoriesCollection } from '../lib/collections'
-import { TransactionRow } from '../components/TransactionRow'
+import { TransactionForm } from '../components/TransactionForm'
 import type { Category, Transaction } from '../types/app.types'
 
 function formatCurrency(value: number) {
@@ -150,7 +150,7 @@ export default function MonthDetail() {
 
       <div className="flex flex-col gap-3">
         {transactions.map(tx => (
-          <TransactionRow
+          <TransactionForm
             key={tx.public_id}
             tx={tx as unknown as Transaction}
             categories={categories as unknown as Category[]}
@@ -159,7 +159,7 @@ export default function MonthDetail() {
           />
         ))}
         {recurringPrefills.map(tx => (
-          <TransactionRow
+          <TransactionForm
             key={`recurring-${tx.category_id}`}
             categories={categories as unknown as Category[]}
             month={month}
@@ -170,7 +170,7 @@ export default function MonthDetail() {
           />
         ))}
         {newRows.map(row => (
-          <TransactionRow
+          <TransactionForm
             key={row.publicId}
             categories={categories as unknown as Category[]}
             month={month}

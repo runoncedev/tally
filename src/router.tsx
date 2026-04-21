@@ -7,7 +7,7 @@ const rootRoute = createRootRoute({ component: Layout })
 const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: Home })
 const monthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/month/$month', component: MonthDetail })
 
-const routeTree = rootRoute.addChildren([homeRoute, monthRoute])
+export const routeTree = rootRoute.addChildren([homeRoute, monthRoute])
 
 export const router = createRouter({ routeTree })
 
