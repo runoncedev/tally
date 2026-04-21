@@ -44,7 +44,9 @@ export default function MonthDetail() {
   const now = new Date()
   const currentMonthLabel = `${now.getMonth() + 1}-${String(now.getFullYear()).slice(2)}`
 
-  const navigateMonth = (m: string, direction: 'forward' | 'back') => {
+  const navigateMonth = (e: React.MouseEvent, m: string, direction: 'forward' | 'back') => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    e.preventDefault()
     if (document.startViewTransition) {
       document.documentElement.dataset.navDirection = direction
       document.startViewTransition(() => navigate({ to: '/month/$month', params: { month: m } }))
@@ -98,25 +100,28 @@ export default function MonthDetail() {
         </div>
         <div className="flex items-center">
           {month !== currentMonth && (
-            <button
-              onClick={() => navigateMonth(currentMonth, month < currentMonth ? 'forward' : 'back')}
+            <a
+              href={`/month/${currentMonth}`}
+              onClick={(e) => navigateMonth(e, currentMonth, month < currentMonth ? 'forward' : 'back')}
               className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-xs font-semibold leading-none"
             >
               {currentMonthLabel}
-            </button>
+            </a>
           )}
-          <button
-            onClick={() => navigateMonth(adjacentMonth(month, -1), 'back')}
+          <a
+            href={`/month/${adjacentMonth(month, -1)}`}
+            onClick={(e) => navigateMonth(e, adjacentMonth(month, -1), 'back')}
             className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <button
-            onClick={() => navigateMonth(adjacentMonth(month, 1), 'forward')}
+          </a>
+          <a
+            href={`/month/${adjacentMonth(month, 1)}`}
+            onClick={(e) => navigateMonth(e, adjacentMonth(month, 1), 'forward')}
             className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
+          </a>
           <div className="relative rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors p-2.5 ml-1.5 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50">
             <input
               type="month"
