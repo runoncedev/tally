@@ -43,7 +43,7 @@ export function Layout() {
   if (!user) return <LoginScreen />
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50">
+    <>
       <nav className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex justify-between items-center">
         <Link to="/" className="font-bold text-lg">Tally</Link>
         <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
@@ -58,6 +58,6 @@ export function Layout() {
       <main className="max-w-3xl mx-auto px-4 py-8">
         <Outlet />
       </main>
-    </div>
+    </>
   )
 }

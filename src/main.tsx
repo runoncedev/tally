@@ -6,7 +6,7 @@ import { queryClient } from './lib/collections'
 import './index.css'
 import { router } from './router'
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.body).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
