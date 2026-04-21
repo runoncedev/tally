@@ -1,13 +1,13 @@
-import { createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router'
+import { createRouter, createRoute, createRootRoute } from '@tanstack/react-router'
+import { Layout } from './components/Layout'
 import Home from './pages/Home'
-import NewTransaction from './pages/NewTransaction'
+import MonthDetail from './pages/MonthDetail'
 
-const rootRoute = createRootRoute({ component: Outlet })
-
+const rootRoute = createRootRoute({ component: Layout })
 const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: Home })
-const newRoute = createRoute({ getParentRoute: () => rootRoute, path: '/new', component: NewTransaction })
+const monthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/month/$month', component: MonthDetail })
 
-const routeTree = rootRoute.addChildren([homeRoute, newRoute])
+const routeTree = rootRoute.addChildren([homeRoute, monthRoute])
 
 export const router = createRouter({ routeTree })
 

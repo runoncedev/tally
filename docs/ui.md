@@ -10,6 +10,7 @@
 
 ## Month Detail `/:month` (ej: `/2026-04`)
 
+- Muestra el resumen del mes: ingresos, gastos y balance
 - Tabla de transacciones del mes con columnas: fecha, monto, categoría, recurrente
 - Al abrir el mes, se cargan automáticamente las transacciones recurrentes faltantes:
   - Se obtienen todas las tx `recurrent=true` del historial (únicas por `category_id`)
