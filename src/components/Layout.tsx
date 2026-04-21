@@ -34,9 +34,6 @@ export function Layout() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
-      if (window.location.hash) {
-        window.history.replaceState(null, '', window.location.pathname)
-      }
     })
     return () => subscription.unsubscribe()
   }, [])
