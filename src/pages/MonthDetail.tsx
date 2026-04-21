@@ -110,21 +110,16 @@ export default function MonthDetail() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-8">
-        <div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">Income</p>
-          <p className="text-2xl font-semibold text-green-600 dark:text-green-400">{formatCurrency(summary.income)}</p>
-        </div>
-        <div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">Expenses</p>
-          <p className="text-2xl font-semibold text-red-600 dark:text-red-400">{formatCurrency(summary.expenses)}</p>
-        </div>
-        <div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
-          <p className={`text-2xl font-semibold ${summary.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {formatCurrency(summary.balance)}
-          </p>
-        </div>
+      <div className="mb-8">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
+        <p className={`text-3xl font-bold ${summary.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          {formatCurrency(summary.balance)}
+        </p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          Income <span className="text-green-600 dark:text-green-400 font-medium">{formatCurrency(summary.income)}</span>
+          {' · '}
+          Expenses <span className="text-red-600 dark:text-red-400 font-medium">{formatCurrency(summary.expenses)}</span>
+        </p>
       </div>
 
       <div className="flex flex-col gap-3">
