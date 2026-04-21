@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from './mocks/node'
 import { TransactionForm } from '../components/TransactionForm'
-import type { Category } from '../types/app.types'
+import type { Category } from '../lib/collections'
 
 const categories: Category[] = [
   { id: 1, name: 'Salary', type: 'income', created_at: '' },

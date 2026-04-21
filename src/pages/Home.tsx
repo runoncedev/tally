@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { MonthCard } from '../components/MonthCard'
 import { categoriesCollection, transactionsCollection } from '../lib/collections'
-import type { Category, Transaction } from '../types/app.types'
+import type { Category, Transaction } from '../lib/collections'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -14,7 +14,7 @@ function buildMonthSummaries(transactions: Array<Transaction>, categoriesById: R
   for (const tx of transactions) {
     const month = tx.date.slice(0, 7)
     if (!months[month]) months[month] = { income: 0, expenses: 0 }
-    const type = categoriesById[tx.category_id]?.type
+    const type = categoriesById[Number(tx.category_id)]?.type
     if (type === 'income') months[month].income += tx.amount
     else months[month].expenses += tx.amount
   }
@@ -41,7 +41,7 @@ export default function Home() {
   )
 
   const months = useMemo(() => {
-    const summaries = buildMonthSummaries(transactions as unknown as Transaction[], categoriesById)
+    const summaries = buildMonthSummaries(transactions, categoriesById)
     if (!summaries.find((m) => m.month === currentMonth)) {
       summaries.push({ month: currentMonth, income: 0, expenses: 0, balance: 0 })
     }

@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Transaction } from '../types/app.types'
+import type { Transaction } from './collections'
 import type { TablesInsert, TablesUpdate } from '../types/database.types'
 
 export async function fetchAllTransactions(): Promise<Transaction[]> {

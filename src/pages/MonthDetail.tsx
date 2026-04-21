@@ -3,7 +3,7 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { useLiveQuery, eq, and, gte, lt } from '@tanstack/react-db'
 import { transactionsCollection, categoriesCollection } from '../lib/collections'
 import { TransactionForm } from '../components/TransactionForm'
-import type { Category, Transaction } from '../types/app.types'
+import type { Category, Transaction } from '../lib/collections'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -30,7 +30,7 @@ function monthDateRange(month: string) {
 function computeSummary(transactions: Transaction[], categoriesById: Record<number, Category>) {
   let income = 0, expenses = 0
   for (const tx of transactions) {
-    const type = categoriesById[tx.category_id]?.type
+    const type = categoriesById[Number(tx.category_id)]?.type
     if (type === 'income') income += tx.amount
     else expenses += tx.amount
   }
@@ -69,14 +69,14 @@ export default function MonthDetail() {
 
   const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
 
-  const transactions = monthTransactions as unknown as Transaction[]
+  const transactions = monthTransactions
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const summary = useMemo(() => computeSummary(transactions, categoriesById), [transactions, categoriesById])
 
   const recurringPrefills = useMemo(() => {
     const existingCategoryIds = new Set(transactions.map(tx => tx.category_id))
     const seen = new Set<number>()
-    return (allRecurring as unknown as Transaction[]).filter(tx => {
+    return allRecurring.filter(tx => {
       if (existingCategoryIds.has(tx.category_id)) return false
       if (seen.has(tx.category_id)) return false
       seen.add(tx.category_id)
@@ -85,7 +85,7 @@ export default function MonthDetail() {
   }, [transactions, allRecurring])
 
   const addRow = (type: 'income' | 'expense') =>
-    setNewRows(prev => [...prev, { publicId: crypto.randomUUID(), type }])
+    setNewRows(prev => [{ publicId: crypto.randomUUID(), type }, ...prev])
   const removeRow = (publicId: string) =>
     setNewRows(prev => prev.filter(r => r.publicId !== publicId))
 
@@ -148,31 +148,28 @@ export default function MonthDetail() {
         </p>
       </div>
 
+      <div className="flex gap-2 mb-6 sm:justify-start">
+          <button
+            onClick={() => addRow('income')}
+            className="flex-1 sm:flex-none sm:w-36 py-2 rounded-xl border text-sm transition-colors border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-500 flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 dark:text-green-400"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 19 19 12"/></svg>
+            Income
+          </button>
+          <button
+            onClick={() => addRow('expense')}
+            className="flex-1 sm:flex-none sm:w-36 py-2 rounded-xl border text-sm transition-colors border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-500 flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 dark:text-red-400"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 5 5 12"/></svg>
+            Expense
+          </button>
+        </div>
+
       <div className="flex flex-col gap-3">
-        {transactions.map(tx => (
-          <TransactionForm
-            key={tx.public_id}
-            tx={tx as unknown as Transaction}
-            categories={categories as unknown as Category[]}
-            month={month}
-            categoriesById={categoriesById}
-          />
-        ))}
-        {recurringPrefills.map(tx => (
-          <TransactionForm
-            key={`recurring-${tx.category_id}`}
-            categories={categories as unknown as Category[]}
-            month={month}
-            categoriesById={categoriesById}
-            prefillCategoryId={tx.category_id}
-            prefillCategoryType={(categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense'}
-            onSaved={() => {}}
-          />
-        ))}
         {newRows.map(row => (
           <TransactionForm
             key={row.publicId}
-            categories={categories as unknown as Category[]}
+            categories={categories}
             month={month}
             categoriesById={categoriesById}
             initialType={row.type}
@@ -181,20 +178,26 @@ export default function MonthDetail() {
             onDelete={() => removeRow(row.publicId)}
           />
         ))}
-        <div className="flex gap-2">
-          <button
-            onClick={() => addRow('income')}
-            className={`flex-1 py-3 rounded-xl border text-sm transition-colors ${hasNoData ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
-          >
-            + Income
-          </button>
-          <button
-            onClick={() => addRow('expense')}
-            className={`flex-1 py-3 rounded-xl border text-sm transition-colors ${hasNoData ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
-          >
-            + Expense
-          </button>
-        </div>
+        {transactions.map(tx => (
+          <TransactionForm
+            key={tx.public_id}
+            tx={tx}
+            categories={categories}
+            month={month}
+            categoriesById={categoriesById}
+          />
+        ))}
+        {recurringPrefills.map(tx => (
+          <TransactionForm
+            key={`recurring-${tx.category_id}`}
+            categories={categories}
+            month={month}
+            categoriesById={categoriesById}
+            prefillCategoryId={tx.category_id}
+            prefillCategoryType={(categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense'}
+            onSaved={() => {}}
+          />
+        ))}
       </div>
       </div>
     </div>
