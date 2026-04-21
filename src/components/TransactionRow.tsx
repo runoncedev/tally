@@ -9,6 +9,8 @@ type TransactionRowProps = {
   categoriesById: Record<number, Category>
   prefillCategoryId?: number
   prefillCategoryType?: 'income' | 'expense'
+  initialType?: 'income' | 'expense'
+  publicId?: string
   onSaved?: () => void
   onDelete?: () => void
 }
@@ -49,9 +51,9 @@ function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryTyp
   }
 }
 
-export function TransactionRow({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, onSaved, onDelete }: TransactionRowProps) {
+export function TransactionRow({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, initialType, publicId, onSaved, onDelete }: TransactionRowProps) {
   const [form, setForm] = useState<FormState>(() =>
-    tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType)
+    tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType)
   )
   const [isDirty, setIsDirty] = useState(false)
 
@@ -77,43 +79,47 @@ export function TransactionRow({ tx, categories, month, categoriesById, prefillC
     }
 
     if (tx) {
-      transactionsCollection.update(tx.id, (draft) => {
+      transactionsCollection.update(tx.public_id, (draft) => {
         draft.date = payload.date
         draft.amount = payload.amount
         draft.category_id = payload.category_id
         draft.description = payload.description
         draft.recurrent = payload.recurrent
       })
+      setIsDirty(false)
     } else {
-      transactionsCollection.insert({ ...payload, id: -Date.now(), created_at: new Date().toISOString() })
+      transactionsCollection.insert({ ...payload, public_id: publicId ?? crypto.randomUUID() })
       onSaved?.()
     }
+  }
 
-    setIsDirty(false)
+  const handleCancel = () => {
+    if (!tx) {
+      onDelete?.()
+    } else {
+      setForm(txToForm(tx, categoriesById))
+      setIsDirty(false)
+    }
   }
 
   const handleDelete = async () => {
     if (!tx) return
     if (tx.recurrent && !confirm('This is a recurring transaction. Are you sure you want to delete it?')) return
-    transactionsCollection.delete(tx.id)
+    transactionsCollection.delete(tx.public_id)
     onDelete?.()
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSave()
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleSave()
   }
 
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
       <div className="flex justify-between">
-        <select
-          value={form.type}
-          onChange={e => patch({ type: e.target.value as 'income' | 'expense', category_id: '' })}
-          className={`bg-transparent outline-none text-sm font-medium ${form.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-        >
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
-        </select>
+        <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${form.type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+          {form.type === 'income' ? 'Income' : 'Expense'}
+        </span>
 
         <input
           type="date"
@@ -121,7 +127,6 @@ export function TransactionRow({ tx, categories, month, categoriesById, prefillC
           min={`${month}-01`}
           max={lastDayOfMonth(month)}
           onChange={e => patch({ date: e.target.value })}
-          onKeyDown={handleKeyDown}
           className="bg-transparent outline-none text-sm text-zinc-500 dark:text-zinc-400"
         />
       </div>
@@ -133,8 +138,8 @@ export function TransactionRow({ tx, categories, month, categoriesById, prefillC
           step="0.01"
           value={form.amount}
           placeholder="0.00"
+          autoFocus={!tx}
           onChange={e => patch({ amount: e.target.value })}
-          onKeyDown={handleKeyDown}
           className="bg-transparent outline-none text-2xl font-semibold w-full placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
         />
       </div>
@@ -143,7 +148,6 @@ export function TransactionRow({ tx, categories, month, categoriesById, prefillC
         <select
           value={form.category_id}
           onChange={e => patch({ category_id: e.target.value ? Number(e.target.value) : '' })}
-          onKeyDown={handleKeyDown}
           className={`w-full appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg pl-3 pr-8 py-2 ${form.category_id === '' ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'}`}
         >
           <option value="" disabled>Category</option>
@@ -176,8 +180,16 @@ export function TransactionRow({ tx, categories, month, categoriesById, prefillC
               Delete
             </button>
           )}
+          {(isDirty || !tx) && (
+            <button
+              onClick={handleCancel}
+              className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
           <button
-            onClick={handleSave}
+            type="submit"
             disabled={!canSave}
             className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 disabled:opacity-30 transition-opacity"
           >
@@ -185,6 +197,6 @@ export function TransactionRow({ tx, categories, month, categoriesById, prefillC
           </button>
         </div>
       </div>
-    </div>
+    </form>
   )
 }

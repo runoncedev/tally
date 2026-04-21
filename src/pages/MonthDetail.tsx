@@ -30,7 +30,6 @@ function monthDateRange(month: string) {
 function computeSummary(transactions: Transaction[], categoriesById: Record<number, Category>) {
   let income = 0, expenses = 0
   for (const tx of transactions) {
-    if (tx.id < 0) continue // skip optimistic inserts
     const type = categoriesById[tx.category_id]?.type
     if (type === 'income') income += tx.amount
     else expenses += tx.amount
@@ -53,7 +52,8 @@ export default function MonthDetail() {
       navigate({ to: '/month/$month', params: { month: m } })
     }
   }
-  const [newRowKeys, setNewRowKeys] = useState<number[]>([])
+
+  const [newRows, setNewRows] = useState<{ publicId: string; type: 'income' | 'expense' }[]>([])
 
   const { start, end } = useMemo(() => monthDateRange(month), [month])
 
@@ -69,7 +69,7 @@ export default function MonthDetail() {
 
   const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
 
-  const transactions = (monthTransactions as unknown as Transaction[]).filter(tx => tx.id > 0)
+  const transactions = monthTransactions as unknown as Transaction[]
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const summary = useMemo(() => computeSummary(transactions, categoriesById), [transactions, categoriesById])
 
@@ -84,10 +84,12 @@ export default function MonthDetail() {
     })
   }, [transactions, allRecurring])
 
-  const addRow = () => setNewRowKeys(prev => [...prev, Date.now()])
-  const removeNewRow = (key: number) => setNewRowKeys(prev => prev.filter(k => k !== key))
+  const addRow = (type: 'income' | 'expense') =>
+    setNewRows(prev => [...prev, { publicId: crypto.randomUUID(), type }])
+  const removeRow = (publicId: string) =>
+    setNewRows(prev => prev.filter(r => r.publicId !== publicId))
 
-  const hasNoData = transactions.length === 0 && recurringPrefills.length === 0
+  const hasNoData = transactions.length === 0 && recurringPrefills.length === 0 && newRows.length === 0
 
   return (
     <div>
@@ -140,16 +142,16 @@ export default function MonthDetail() {
           {formatCurrency(summary.balance)}
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Income <span className="text-green-600 dark:text-green-400 font-medium">{formatCurrency(summary.income)}</span>
+          Income <span className={summary.income > 0 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{formatCurrency(summary.income)}</span>
           {' · '}
-          Expenses <span className="text-red-600 dark:text-red-400 font-medium">{formatCurrency(summary.expenses)}</span>
+          Expenses <span className={summary.expenses > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{formatCurrency(summary.expenses)}</span>
         </p>
       </div>
 
       <div className="flex flex-col gap-3">
         {transactions.map(tx => (
           <TransactionRow
-            key={tx.id}
+            key={tx.public_id}
             tx={tx as unknown as Transaction}
             categories={categories as unknown as Category[]}
             month={month}
@@ -167,21 +169,32 @@ export default function MonthDetail() {
             onSaved={() => {}}
           />
         ))}
-        {newRowKeys.map(key => (
+        {newRows.map(row => (
           <TransactionRow
-            key={key}
+            key={row.publicId}
             categories={categories as unknown as Category[]}
             month={month}
             categoriesById={categoriesById}
-            onSaved={() => removeNewRow(key)}
+            initialType={row.type}
+            publicId={row.publicId}
+            onSaved={() => removeRow(row.publicId)}
+            onDelete={() => removeRow(row.publicId)}
           />
         ))}
-        <button
-          onClick={addRow}
-          className={`w-full py-3 rounded-xl border text-sm transition-colors ${hasNoData && newRowKeys.length === 0 ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
-        >
-          + Add transaction
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => addRow('income')}
+            className={`flex-1 py-3 rounded-xl border text-sm transition-colors ${hasNoData ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
+          >
+            + Income
+          </button>
+          <button
+            onClick={() => addRow('expense')}
+            className={`flex-1 py-3 rounded-xl border text-sm transition-colors ${hasNoData ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
+          >
+            + Expense
+          </button>
+        </div>
       </div>
       </div>
     </div>

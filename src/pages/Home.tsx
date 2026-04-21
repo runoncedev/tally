@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
-import { Link } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
-import { transactionsCollection, categoriesCollection } from '../lib/collections'
+import { Link } from '@tanstack/react-router'
+import { useMemo } from 'react'
 import { MonthCard } from '../components/MonthCard'
+import { categoriesCollection, transactionsCollection } from '../lib/collections'
 import type { Category, Transaction } from '../types/app.types'
 
 function formatCurrency(value: number) {
@@ -24,7 +24,7 @@ function buildMonthSummaries(transactions: Array<Transaction>, categoriesById: R
 }
 
 export default function Home() {
-  const { data: transactions = [] } = useLiveQuery((q) => q.from({ tx: transactionsCollection }), [])
+  const { data: transactions = [], isLoading } = useLiveQuery((q) => q.from({ tx: transactionsCollection }), [])
   const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
 
   const today = new Date()
@@ -57,9 +57,10 @@ export default function Home() {
     <div>
       <div className="mb-8">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Total balance</p>
-        <p className={`text-3xl font-bold ${totalBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          {formatCurrency(totalBalance)}
-        </p>
+        {isLoading
+          ? <div className="h-[2.25rem] w-32 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+          : <p className={`text-3xl font-bold ${totalBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(totalBalance)}</p>
+        }
       </div>
 
       {months.length === 0 ? (
@@ -87,7 +88,7 @@ export default function Home() {
                     <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800/60" />
                   </div>
                 )}
-                <MonthCard key={m.month} {...m} isCurrent={m.month === currentMonth} isPast={m.month < currentMonth} />
+                <MonthCard key={m.month} {...m} isCurrent={m.month === currentMonth} isPast={m.month < currentMonth} isLoading={isLoading && m.month >= currentMonth} />
               </>
             )
           })}

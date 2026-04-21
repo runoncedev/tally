@@ -28,11 +28,12 @@ export const transactionsCollection = createCollection(
       return data
     },
     queryClient,
-    getKey: (item) => item.id,
+    getKey: (item) => item.public_id,
     onInsert: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
       const m = mutation.modified as TablesInsert<'transactions'>
       const { error } = await supabase.from('transactions').insert({
+        public_id: m.public_id,
         date: m.date,
         amount: m.amount,
         category_id: m.category_id,
@@ -40,18 +41,17 @@ export const transactionsCollection = createCollection(
         recurrent: m.recurrent ?? false,
       })
       if (error) throw error
-      await transactionsCollection.utils.refetch()
     },
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
       const patch = mutation.changes as TablesUpdate<'transactions'>
-      const { error } = await supabase.from('transactions').update(patch).eq('id', mutation.key as number)
+      const { error } = await supabase.from('transactions').update(patch).eq('public_id', mutation.key as string)
       if (error) throw error
       await transactionsCollection.utils.refetch()
     },
     onDelete: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
-      const { error } = await supabase.from('transactions').delete().eq('id', mutation.key as number)
+      const { error } = await supabase.from('transactions').delete().eq('public_id', mutation.key as string)
       if (error) throw error
       await transactionsCollection.utils.refetch()
     },
