@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { fetchAllTransactions, fetchCategories } from '../lib/queries'
+import { useLiveQuery } from '@tanstack/react-db'
+import { transactionsCollection, categoriesCollection } from '../lib/collections'
 import { MonthCard } from '../components/MonthCard'
 import type { Category, Transaction } from '../types/app.types'
 
@@ -9,7 +9,7 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 }
 
-function buildMonthSummaries(transactions: Transaction[], categoriesById: Record<number, Category>) {
+function buildMonthSummaries(transactions: Array<Transaction>, categoriesById: Record<number, Category>) {
   const months: Record<string, { income: number; expenses: number }> = {}
   for (const tx of transactions) {
     const month = tx.date.slice(0, 7)
@@ -24,8 +24,8 @@ function buildMonthSummaries(transactions: Transaction[], categoriesById: Record
 }
 
 export default function Home() {
-  const { data: transactions = [] } = useQuery({ queryKey: ['transactions', 'all'], queryFn: fetchAllTransactions })
-  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
+  const { data: transactions = [] } = useLiveQuery((q) => q.from({ tx: transactionsCollection }), [])
+  const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
 
   const today = new Date()
   const currentMonth = today.toISOString().slice(0, 7)
@@ -34,17 +34,23 @@ export default function Home() {
     const d = new Date(today.getFullYear(), today.getMonth() + 1, 1)
     return d.toISOString().slice(0, 7)
   })()
-  const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
+
+  const categoriesById = useMemo(
+    () => Object.fromEntries(categories.map((c) => [c.id, c])),
+    [categories],
+  )
+
   const months = useMemo(() => {
-    const summaries = buildMonthSummaries(transactions, categoriesById)
-    if (!summaries.find(m => m.month === currentMonth)) {
+    const summaries = buildMonthSummaries(transactions as unknown as Transaction[], categoriesById)
+    if (!summaries.find((m) => m.month === currentMonth)) {
       summaries.push({ month: currentMonth, income: 0, expenses: 0, balance: 0 })
     }
-    if (isAfterMidMonth && !summaries.find(m => m.month === nextMonth)) {
+    if (isAfterMidMonth && !summaries.find((m) => m.month === nextMonth)) {
       summaries.push({ month: nextMonth, income: 0, expenses: 0, balance: 0 })
     }
     return summaries.sort((a, b) => b.month.localeCompare(a.month))
   }, [transactions, categoriesById, currentMonth, isAfterMidMonth, nextMonth])
+
   const totalBalance = useMemo(() => months.reduce((sum, m) => sum + m.balance, 0), [months])
 
   return (

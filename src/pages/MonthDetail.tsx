@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchMonthTransactions, fetchCategories, fetchRecurringTransactions, insertTransaction, updateTransaction, deleteTransaction } from '../lib/queries'
+import { useLiveQuery, eq, and, gte, lt } from '@tanstack/react-db'
+import { transactionsCollection, categoriesCollection } from '../lib/collections'
 import { TransactionRow } from '../components/TransactionRow'
-import type { Category, DraftRow, Transaction } from '../types/app.types'
+import type { Category, Transaction } from '../types/app.types'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -20,46 +20,20 @@ function adjacentMonth(month: string, delta: 1 | -1) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-function emptyRow(month: string): DraftRow {
-  return { date: `${month}-01`, amount: '', category_id: '', type: 'expense', description: '', recurrent: false, isDirty: false }
+function monthDateRange(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  const start = `${year}-${String(mon).padStart(2, '0')}-01`
+  const end = mon === 12 ? `${year + 1}-01-01` : `${year}-${String(mon + 1).padStart(2, '0')}-01`
+  return { start, end }
 }
 
-function txToDraft(tx: Transaction, categoriesById: Record<number, Category>): DraftRow {
-  return {
-    id: tx.id,
-    date: tx.date.slice(0, 10),
-    amount: String(tx.amount),
-    category_id: tx.category_id,
-    type: (categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense',
-    description: tx.description ?? '',
-    recurrent: tx.recurrent,
-    isDirty: false,
-  }
-}
-
-function buildInitialRows(transactions: Transaction[], recurring: Transaction[], month: string, categoriesById: Record<number, Category>): DraftRow[] {
-  const existingCategoryIds = new Set(transactions.filter(tx => tx.recurrent).map(tx => tx.category_id))
-  const missingRecurring = recurring.filter(tx => !existingCategoryIds.has(tx.category_id))
-  const recurringDrafts: DraftRow[] = missingRecurring.map(tx => ({
-    date: `${month}-01`,
-    amount: '',
-    category_id: tx.category_id,
-    type: (categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense',
-    description: '',
-    recurrent: false,
-    isDirty: false,
-  }))
-  return [...transactions.map(tx => txToDraft(tx, categoriesById)), ...recurringDrafts]
-}
-
-function computeSummary(rows: DraftRow[], categoriesById: Record<number, Category>) {
+function computeSummary(transactions: Transaction[], categoriesById: Record<number, Category>) {
   let income = 0, expenses = 0
-  for (const row of rows) {
-    if (!row.id || !row.amount || row.category_id === '') continue
-    const type = categoriesById[row.category_id]?.type
-    const amount = parseFloat(row.amount)
-    if (type === 'income') income += amount
-    else expenses += amount
+  for (const tx of transactions) {
+    if (tx.id < 0) continue // skip optimistic inserts
+    const type = categoriesById[tx.category_id]?.type
+    if (type === 'income') income += tx.amount
+    else expenses += tx.amount
   }
   return { income, expenses, balance: income - expenses }
 }
@@ -67,60 +41,41 @@ function computeSummary(rows: DraftRow[], categoriesById: Record<number, Categor
 export default function MonthDetail() {
   const { month } = useParams({ from: '/month/$month' })
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [rows, setRows] = useState<DraftRow[]>([])
+  const [newRowKeys, setNewRowKeys] = useState<number[]>([])
 
-  const { data: transactions } = useQuery({ queryKey: ['transactions', month], queryFn: () => fetchMonthTransactions(month) })
-  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
-  const { data: recurring = [] } = useQuery({ queryKey: ['transactions', 'recurring'], queryFn: fetchRecurringTransactions, staleTime: 0 })
+  const { start, end } = useMemo(() => monthDateRange(month), [month])
 
+  const { data: monthTransactions = [] } = useLiveQuery(
+    (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => and(gte(tx.date, start), lt(tx.date, end))),
+    [start, end],
+  )
+
+  const { data: allRecurring = [] } = useLiveQuery(
+    (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => eq(tx.recurrent, true)),
+    [],
+  )
+
+  const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
+
+  const transactions = (monthTransactions as unknown as Transaction[]).filter(tx => tx.id > 0)
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
-  const summary = useMemo(() => computeSummary(rows, categoriesById), [rows, categoriesById])
+  const summary = useMemo(() => computeSummary(transactions, categoriesById), [transactions, categoriesById])
 
-  useEffect(() => {
-    if (!transactions || categories.length === 0) return
-    setRows(buildInitialRows(transactions, recurring, month, categoriesById))
-  }, [month, transactions, recurring, categories])
+  const recurringPrefills = useMemo(() => {
+    const existingCategoryIds = new Set(transactions.map(tx => tx.category_id))
+    const seen = new Set<number>()
+    return (allRecurring as unknown as Transaction[]).filter(tx => {
+      if (existingCategoryIds.has(tx.category_id)) return false
+      if (seen.has(tx.category_id)) return false
+      seen.add(tx.category_id)
+      return true
+    })
+  }, [transactions, allRecurring])
 
-  const addRow = () => setRows(prev => [...prev, emptyRow(month)])
+  const addRow = () => setNewRowKeys(prev => [...prev, Date.now()])
+  const removeNewRow = (key: number) => setNewRowKeys(prev => prev.filter(k => k !== key))
 
-  const updateRow = (index: number, patch: Partial<DraftRow>) => {
-    setRows(prev => prev.map((r, i) => i === index ? { ...r, ...patch } : r))
-  }
-
-  const deleteRow = async (index: number) => {
-    const row = rows[index]
-    if (!row.id) return
-    const savedTx = transactions?.find(tx => tx.id === row.id)
-    if (savedTx?.recurrent && !confirm('This is a recurring transaction. Are you sure you want to delete it?')) return
-    await deleteTransaction(row.id)
-    setRows(prev => prev.filter((_, i) => i !== index))
-    queryClient.invalidateQueries({ queryKey: ['transactions', month] })
-    queryClient.invalidateQueries({ queryKey: ['transactions', 'all'] })
-  }
-
-  const saveRow = async (index: number) => {
-    const row = rows[index]
-    if (!row.amount || row.category_id === '') return
-    const amount = parseFloat(row.amount)
-    if (isNaN(amount)) return
-
-    const payload = {
-      date: new Date(row.date).toISOString(),
-      amount,
-      category_id: row.category_id as number,
-      description: row.description || null,
-      recurrent: row.recurrent,
-    }
-
-    const saved = row.id
-      ? await updateTransaction(row.id, payload)
-      : await insertTransaction(payload)
-
-    setRows(prev => prev.map((r, i) => i === index ? txToDraft(saved, categoriesById) : r))
-    queryClient.invalidateQueries({ queryKey: ['transactions', month] })
-    queryClient.invalidateQueries({ queryKey: ['transactions', 'all'] })
-  }
+  const hasNoData = transactions.length === 0 && recurringPrefills.length === 0
 
   return (
     <div>
@@ -173,20 +128,38 @@ export default function MonthDetail() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {rows.map((row, i) => (
+        {transactions.map(tx => (
           <TransactionRow
-            key={i}
-            row={row}
-            categories={categories}
+            key={tx.id}
+            tx={tx as unknown as Transaction}
+            categories={categories as unknown as Category[]}
             month={month}
-            onChange={patch => updateRow(i, patch)}
-            onSave={() => saveRow(i)}
-            onDelete={() => deleteRow(i)}
+            categoriesById={categoriesById}
+          />
+        ))}
+        {recurringPrefills.map(tx => (
+          <TransactionRow
+            key={`recurring-${tx.category_id}`}
+            categories={categories as unknown as Category[]}
+            month={month}
+            categoriesById={categoriesById}
+            prefillCategoryId={tx.category_id}
+            prefillCategoryType={(categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense'}
+            onSaved={() => {}}
+          />
+        ))}
+        {newRowKeys.map(key => (
+          <TransactionRow
+            key={key}
+            categories={categories as unknown as Category[]}
+            month={month}
+            categoriesById={categoriesById}
+            onSaved={() => removeNewRow(key)}
           />
         ))}
         <button
           onClick={addRow}
-          className={`w-full py-3 rounded-xl border text-sm transition-colors ${(transactions ?? []).length === 0 && recurring.length === 0 ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
+          className={`w-full py-3 rounded-xl border text-sm transition-colors ${hasNoData && newRowKeys.length === 0 ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
         >
           + Add transaction
         </button>
