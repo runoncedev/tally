@@ -159,7 +159,7 @@ export default function MonthDetail() {
         ))}
         <button
           onClick={addRow}
-          className="w-full py-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+          className={`w-full py-3 rounded-xl border text-sm transition-colors ${(transactions ?? []).length === 0 && recurring.length === 0 ? 'border-zinc-400 dark:border-zinc-500 text-zinc-600 dark:text-zinc-300 hover:border-zinc-600 dark:hover:border-zinc-300' : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
         >
           + Add transaction
         </button>

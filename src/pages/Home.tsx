@@ -27,10 +27,25 @@ export default function Home() {
   const { data: transactions = [] } = useQuery({ queryKey: ['transactions', 'all'], queryFn: fetchAllTransactions })
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
 
+  const today = new Date()
+  const currentMonth = today.toISOString().slice(0, 7)
+  const isAfterMidMonth = today.getDate() > 15
+  const nextMonth = (() => {
+    const d = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+    return d.toISOString().slice(0, 7)
+  })()
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
-  const months = useMemo(() => buildMonthSummaries(transactions, categoriesById), [transactions, categoriesById])
+  const months = useMemo(() => {
+    const summaries = buildMonthSummaries(transactions, categoriesById)
+    if (!summaries.find(m => m.month === currentMonth)) {
+      summaries.push({ month: currentMonth, income: 0, expenses: 0, balance: 0 })
+    }
+    if (isAfterMidMonth && !summaries.find(m => m.month === nextMonth)) {
+      summaries.push({ month: nextMonth, income: 0, expenses: 0, balance: 0 })
+    }
+    return summaries.sort((a, b) => b.month.localeCompare(a.month))
+  }, [transactions, categoriesById, currentMonth, isAfterMidMonth, nextMonth])
   const totalBalance = useMemo(() => months.reduce((sum, m) => sum + m.balance, 0), [months])
-  const currentMonth = new Date().toISOString().slice(0, 7)
 
   return (
     <div>
@@ -54,7 +69,22 @@ export default function Home() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {months.map(m => <MonthCard key={m.month} {...m} />)}
+          {months.map((m, i) => {
+            const prevMonth = months[i - 1]
+            const showDivider = prevMonth && prevMonth.month >= currentMonth && m.month < currentMonth
+            return (
+              <>
+                {showDivider && (
+                  <div key="divider" className="flex items-center gap-3 my-2">
+                    <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800/60" />
+                    <span className="text-xs text-zinc-300 dark:text-zinc-700">History</span>
+                    <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800/60" />
+                  </div>
+                )}
+                <MonthCard key={m.month} {...m} isCurrent={m.month === currentMonth} isPast={m.month < currentMonth} />
+              </>
+            )
+          })}
         </div>
       )}
     </div>
