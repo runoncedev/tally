@@ -140,7 +140,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           <button
             type="button"
             onClick={() => dateInputRef.current?.showPicker()}
-            className="flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+            className="flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
           >
             {new Date(form.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -195,7 +195,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
             onChange={e => patch({ recurrent: e.target.checked })}
             className="sr-only"
           />
-          <div className={`relative w-9 h-5 rounded-full transition-colors ${form.recurrent ? 'bg-zinc-900 dark:bg-zinc-50' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
+          <div className={`relative w-9 h-5 rounded-full transition-colors ${form.recurrent ? 'bg-zinc-600 dark:bg-zinc-50' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
             <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform ${form.recurrent ? 'translate-x-4' : 'translate-x-0'}`} />
           </div>
           <span className="text-sm text-zinc-500 dark:text-zinc-400">Recurring {form.recurrent ? 'on' : 'off'}</span>

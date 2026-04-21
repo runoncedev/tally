@@ -36,7 +36,7 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3"/>
               <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
             </svg>
-          : <span className={balance >= 0 ? 'text-green-600 dark:text-green-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>{formatCurrency(balance)}</span>
+          : <span className={balance > 0 ? 'text-green-600 dark:text-green-400 font-medium' : balance < 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-zinc-500 dark:text-zinc-400 font-medium'}>{formatCurrency(balance)}</span>
         }
       </div>
       <div className="flex gap-4 mt-1 text-sm text-zinc-500 dark:text-zinc-400 min-h-[1.25rem]">

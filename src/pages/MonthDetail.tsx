@@ -89,8 +89,6 @@ export default function MonthDetail() {
   const removeRow = (publicId: string) =>
     setNewRows(prev => prev.filter(r => r.publicId !== publicId))
 
-  const hasNoData = transactions.length === 0 && recurringPrefills.length === 0 && newRows.length === 0
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -138,7 +136,7 @@ export default function MonthDetail() {
       <div style={{ viewTransitionName: 'month-content' }}>
       <div className="mb-8">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
-        <p className={`text-3xl font-bold ${summary.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        <p className={`text-3xl font-bold ${summary.balance > 0 ? 'text-green-600 dark:text-green-400' : summary.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
           {formatCurrency(summary.balance)}
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">

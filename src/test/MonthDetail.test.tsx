@@ -40,7 +40,7 @@ describe('MonthDetail', () => {
     renderMonthDetail('2026-04')
 
     await user.click(await screen.findByRole('button', { name: /expense/i }))
-    await user.type(screen.getByPlaceholderText('0.00'), '99')
+    await user.type(screen.getByPlaceholderText('0'), '99')
     await user.selectOptions(screen.getByRole('combobox'), '2')
     await user.click(screen.getByRole('button', { name: /save/i }))
 

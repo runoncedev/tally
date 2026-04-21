@@ -5,13 +5,14 @@ import { supabase } from './supabase'
 import { publicTransactionsRowSchema, publicCategoriesRowSchema } from '../types/database.schemas'
 import type { z } from 'zod'
 
-export type Transaction = z.infer<typeof publicTransactionsRowSchema> & { id?: number; created_at?: string }
 export type Category = z.infer<typeof publicCategoriesRowSchema>
 
 const transactionSchema = publicTransactionsRowSchema.extend({
   id: publicTransactionsRowSchema.shape.id.optional(),
   created_at: publicTransactionsRowSchema.shape.created_at.optional(),
 })
+
+export type Transaction = z.infer<typeof transactionSchema>
 
 export const queryClient = new QueryClient()
 

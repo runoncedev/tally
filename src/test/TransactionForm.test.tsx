@@ -38,7 +38,7 @@ describe('TransactionForm', () => {
       />
     )
 
-    await user.type(screen.getByPlaceholderText('0.00'), '50')
+    await user.type(screen.getByPlaceholderText('0'), '50')
     await user.selectOptions(screen.getByRole('combobox'), '2')
     await user.click(screen.getByRole('button', { name: /save/i }))
 

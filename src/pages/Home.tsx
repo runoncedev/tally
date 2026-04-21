@@ -59,7 +59,7 @@ export default function Home() {
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Total balance</p>
         {isLoading
           ? <div className="h-[2.25rem] w-32 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
-          : <p className={`text-3xl font-bold ${totalBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(totalBalance)}</p>
+          : <p className={`text-3xl font-bold ${totalBalance > 0 ? 'text-green-600 dark:text-green-400' : totalBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>{formatCurrency(totalBalance)}</p>
         }
       </div>
 
