@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { transactionsCollection } from '../lib/collections'
-import type { Category, Transaction } from '../types/app.types'
+import type { Category, Transaction } from '../lib/collections'
 
 type TransactionFormProps = {
   tx?: Transaction
@@ -18,7 +18,7 @@ type TransactionFormProps = {
 type FormState = {
   date: string
   amount: string
-  category_id: number | ''
+  category_id: number | null
   type: 'income' | 'expense'
   description: string
   recurrent: boolean
@@ -34,7 +34,7 @@ function txToForm(tx: Transaction, categoriesById: Record<number, Category>): Fo
     date: tx.date.slice(0, 10),
     amount: String(tx.amount),
     category_id: tx.category_id,
-    type: (categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense',
+    type: (categoriesById[Number(tx.category_id)]?.type ?? 'expense') as 'income' | 'expense',
     description: tx.description ?? '',
     recurrent: tx.recurrent,
   }
@@ -44,7 +44,7 @@ function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryTyp
   return {
     date: `${month}-01`,
     amount: '',
-    category_id: prefillCategoryId ?? '',
+    category_id: prefillCategoryId ?? null,
     type: prefillCategoryType ?? 'expense',
     description: '',
     recurrent: false,
@@ -62,8 +62,11 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     setIsDirty(true)
   }
 
-  const filteredCategories = categories.filter(c => c.type === form.type)
-  const canSave = isDirty && form.amount !== '' && form.category_id !== ''
+  const type = tx
+    ? (categoriesById[Number(tx.category_id)]?.type ?? form.type) as 'income' | 'expense'
+    : form.type
+  const filteredCategories = categories.filter(c => c.type === type)
+  const canSave = isDirty && form.amount !== '' && form.category_id !== null
 
   const handleSave = async () => {
     if (!canSave) return
@@ -73,7 +76,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     const payload = {
       date: form.date,
       amount,
-      category_id: form.category_id as number,
+      category_id: form.category_id!,
       description: form.description || null,
       recurrent: form.recurrent,
     }
@@ -117,8 +120,8 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   return (
     <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
       <div className="flex justify-between">
-        <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${form.type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
-          {form.type === 'income' ? 'Income' : 'Expense'}
+        <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+          {type === 'income' ? 'Income' : 'Expense'}
         </span>
 
         <input
@@ -146,9 +149,9 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
       <div className="relative">
         <select
-          value={form.category_id}
-          onChange={e => patch({ category_id: e.target.value ? Number(e.target.value) : '' })}
-          className={`w-full appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg pl-3 pr-8 py-2 ${form.category_id === '' ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'}`}
+          value={form.category_id ?? ''}
+          onChange={e => patch({ category_id: e.target.value ? Number(e.target.value) : null })}
+          className={`w-full appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg pl-3 pr-8 py-2 ${form.category_id === null ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'}`}
         >
           <option value="" disabled>Category</option>
           {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -174,14 +177,16 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         <div className="flex gap-2">
           {tx && (
             <button
+              type="button"
               onClick={handleDelete}
               className="text-sm px-3 py-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
             >
               Delete
             </button>
           )}
-          {(isDirty || !tx) && (
+          {!prefillCategoryId && (isDirty || !tx) && (
             <button
+              type="button"
               onClick={handleCancel}
               className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
