@@ -35,12 +35,12 @@ function lastDayOfMonth(month: string) {
   return new Date(year, mon, 0).toISOString().slice(0, 10)
 }
 
-function txToForm(tx: Transaction, categoriesById: Record<number, Category>): FormState {
+function txToForm(tx: Transaction): FormState {
   return {
     date: tx.date.slice(0, 10),
-    amount: String(tx.amount),
+    amount: String(Math.abs(tx.amount)),
     category_id: tx.category_id,
-    type: (categoriesById[Number(tx.category_id)]?.type ?? 'expense') as 'income' | 'expense',
+    type: tx.amount >= 0 ? 'income' : 'expense',
     description: tx.description ?? '',
     recurrent: tx.recurrent,
   }
@@ -59,7 +59,7 @@ function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryTyp
 
 export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, prefillAmount, initialType, publicId, focusOnMount = false, isRecurringPrefill = false, isRecurringCategory = false, recurringSourceId, onSaved, onDelete }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(() =>
-    tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount)
+    tx ? txToForm(tx) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount)
   )
   const [isDirty, setIsDirty] = useState(false)
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -70,16 +70,15 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     setIsDirty(true)
   }
 
-  const type = tx
-    ? (categoriesById[Number(tx.category_id)]?.type ?? form.type) as 'income' | 'expense'
-    : form.type
+  const type = form.type
   const filteredCategories = categories.filter(c => c.type === type)
   const canSave = (isDirty || isRecurringPrefill) && form.amount !== '' && form.category_id !== null
 
   const handleSave = async () => {
     if (!canSave) return
-    const amount = parseInt(form.amount, 10)
-    if (isNaN(amount)) return
+    const rawAmount = parseInt(form.amount, 10)
+    if (isNaN(rawAmount)) return
+    const amount = form.type === 'expense' ? -rawAmount : rawAmount
 
     const payload = {
       date: form.date,
@@ -111,7 +110,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     if (!tx) {
       onDelete?.()
     } else {
-      setForm(txToForm(tx, categoriesById))
+      setForm(txToForm(tx))
       setIsDirty(false)
     }
   }

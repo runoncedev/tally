@@ -39,12 +39,12 @@ describe('TransactionForm', () => {
     )
 
     await user.type(screen.getByPlaceholderText('0'), '50')
-    await user.selectOptions(screen.getByRole('combobox'), '2')
+    await user.selectOptions(screen.getAllByRole('combobox')[0], '2')
     await user.click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() => {
       expect(insertedBody).toMatchObject({
-        amount: 50,
+        amount: -50,
         category_id: 2,
         public_id: publicId,
       })

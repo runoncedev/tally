@@ -27,12 +27,11 @@ function monthDateRange(month: string) {
   return { start, end }
 }
 
-function computeSummary(transactions: Transaction[], categoriesById: Record<number, Category>) {
+function computeSummary(transactions: Transaction[]) {
   let income = 0, expenses = 0
   for (const tx of transactions) {
-    const type = categoriesById[Number(tx.category_id)]?.type
-    if (type === 'income') income += tx.amount
-    else expenses += tx.amount
+    if (tx.amount >= 0) income += tx.amount
+    else expenses += Math.abs(tx.amount)
   }
   return { income, expenses, balance: income - expenses }
 }
@@ -76,7 +75,7 @@ export default function MonthDetail() {
 
   const transactions = monthTransactions
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
-  const summary = useMemo(() => computeSummary(transactions, categoriesById), [transactions, categoriesById])
+  const summary = useMemo(() => computeSummary(transactions), [transactions])
   const activeRecurringIds = useMemo(() => new Set(allRecurring.map(tx => tx.public_id)), [allRecurring])
 
 
@@ -226,8 +225,8 @@ const recurringPrefills = useMemo(() => {
             month={month}
             categoriesById={categoriesById}
             prefillCategoryId={tx.category_id}
-            prefillCategoryType={(categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense'}
-            prefillAmount={tx.amount}
+            prefillCategoryType={tx.amount >= 0 ? 'income' : 'expense'}
+            prefillAmount={Math.abs(tx.amount)}
             isRecurringPrefill
             recurringSourceId={tx.public_id}
             onSaved={() => {}}

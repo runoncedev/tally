@@ -1,0 +1,16 @@
+insert into categories (name, type) values
+  ('Checkmarx', 'income'),
+  ('Alquiler', 'expense'),
+  ('Expensas', 'expense'),
+  ('Luz', 'expense'),
+  ('Agua', 'expense'),
+  ('Gas', 'expense'),
+  ('Internet', 'expense'),
+  ('Jardín', 'expense'),
+  ('Banmedica', 'expense'),
+  ('Contadora', 'expense'),
+  ('Tarjeta', 'expense'),
+  ('Mecánico', 'expense'),
+  ('Impuestos', 'expense'),
+  ('Supermercado', 'expense'),
+  ('Otro', 'expense');

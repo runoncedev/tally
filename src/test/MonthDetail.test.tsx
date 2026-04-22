@@ -41,7 +41,7 @@ describe('MonthDetail', () => {
 
     await user.click(await screen.findByRole('button', { name: /expense/i }))
     await user.type(screen.getByPlaceholderText('0'), '99')
-    await user.selectOptions(screen.getByRole('combobox'), '2')
+    await user.selectOptions(screen.getAllByRole('combobox')[0], '2')
     await user.click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() => {
