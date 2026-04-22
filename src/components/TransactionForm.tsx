@@ -11,6 +11,9 @@ type TransactionFormProps = {
   prefillCategoryType?: 'income' | 'expense'
   initialType?: 'income' | 'expense'
   publicId?: string
+  focusOnMount?: boolean
+  isRecurringPrefill?: boolean
+  isRecurringCategory?: boolean
   onSaved?: () => void
   onDelete?: () => void
 }
@@ -51,7 +54,7 @@ function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryTyp
   }
 }
 
-export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, initialType, publicId, onSaved, onDelete }: TransactionFormProps) {
+export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, initialType, publicId, focusOnMount = false, isRecurringPrefill = false, isRecurringCategory = false, onSaved, onDelete }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(() =>
     tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType)
   )
@@ -132,9 +135,17 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   return (
     <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
       <div className="flex justify-between">
-        <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
-          {type === 'income' ? 'Income' : 'Expense'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+            {type === 'income' ? 'Income' : 'Expense'}
+          </span>
+          {(isRecurringPrefill || isRecurringCategory) && (
+            <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Recurring
+            </span>
+          )}
+        </div>
 
         <div className="relative">
           <button
@@ -164,7 +175,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           inputMode="numeric"
           value={form.amount === '' ? '' : Number(form.amount).toLocaleString('en-US')}
           placeholder="0"
-          autoFocus={!tx}
+          autoFocus={focusOnMount}
           onChange={e => {
             const raw = e.target.value.replace(/,/g, '')
             if (raw === '' || /^\d+$/.test(raw)) patch({ amount: raw })
@@ -188,18 +199,21 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
       </div>
 
       <div className="flex items-center justify-between pt-1">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={form.recurrent}
-            onChange={e => patch({ recurrent: e.target.checked })}
-            className="sr-only"
-          />
-          <div className={`relative w-9 h-5 rounded-full transition-colors ${form.recurrent ? 'bg-zinc-600 dark:bg-zinc-50' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
-            <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform ${form.recurrent ? 'translate-x-4' : 'translate-x-0'}`} />
-          </div>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">Recurring {form.recurrent ? 'on' : 'off'}</span>
-        </label>
+        {!isRecurringPrefill && !isRecurringCategory && (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.recurrent}
+              onChange={e => patch({ recurrent: e.target.checked })}
+              className="sr-only"
+            />
+            <div className={`relative w-9 h-5 rounded-full transition-colors ${form.recurrent ? 'bg-zinc-600 dark:bg-zinc-50' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
+              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform ${form.recurrent ? 'translate-x-4' : 'translate-x-0'}`} />
+            </div>
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">Recurring {form.recurrent ? 'on' : 'off'}</span>
+          </label>
+        )}
+        {(isRecurringPrefill || isRecurringCategory) && <div />}
         <div className="flex gap-2">
           {tx && (
             <button

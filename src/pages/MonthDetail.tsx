@@ -76,16 +76,25 @@ export default function MonthDetail() {
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const summary = useMemo(() => computeSummary(transactions, categoriesById), [transactions, categoriesById])
 
+  const recurringCategoryIds = useMemo(() => {
+    const seen = new Set<number>()
+    allRecurring.forEach(tx => {
+      if (tx.date.slice(0, 7) <= month) seen.add(tx.category_id)
+    })
+    return seen
+  }, [allRecurring, month])
+
   const recurringPrefills = useMemo(() => {
     const existingCategoryIds = new Set(transactions.map(tx => tx.category_id))
     const seen = new Set<number>()
     return allRecurring.filter(tx => {
+      if (tx.date.slice(0, 7) > month) return false
       if (existingCategoryIds.has(tx.category_id)) return false
       if (seen.has(tx.category_id)) return false
       seen.add(tx.category_id)
       return true
     })
-  }, [transactions, allRecurring])
+  }, [transactions, allRecurring, month])
 
   const addRow = (type: 'income' | 'expense') =>
     setNewRows(prev => [{ publicId: crypto.randomUUID(), type }, ...prev])
@@ -104,6 +113,7 @@ export default function MonthDetail() {
             <a
               href={`/month/${currentMonth}`}
               onClick={(e) => navigateMonth(e, currentMonth, month < currentMonth ? 'forward' : 'back')}
+              title="Go to current month"
               className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-xs font-semibold leading-none"
             >
               {currentMonthLabel}
@@ -112,6 +122,7 @@ export default function MonthDetail() {
           <a
             href={`/month/${adjacentMonth(month, -1)}`}
             onClick={(e) => navigateMonth(e, adjacentMonth(month, -1), 'back')}
+            title={formatMonthLabel(adjacentMonth(month, -1))}
             className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -119,6 +130,7 @@ export default function MonthDetail() {
           <a
             href={`/month/${adjacentMonth(month, 1)}`}
             onClick={(e) => navigateMonth(e, adjacentMonth(month, 1), 'forward')}
+            title={formatMonthLabel(adjacentMonth(month, 1))}
             className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -126,6 +138,7 @@ export default function MonthDetail() {
           <div className="relative ml-1.5">
             <button
               onClick={() => monthPickerRef.current?.showPicker()}
+              title="Pick a month"
               className="p-2.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -190,6 +203,7 @@ export default function MonthDetail() {
             categoriesById={categoriesById}
             initialType={row.type}
             publicId={row.publicId}
+            focusOnMount
             onSaved={() => removeRow(row.publicId)}
             onDelete={() => removeRow(row.publicId)}
           />
@@ -201,6 +215,7 @@ export default function MonthDetail() {
             categories={categories}
             month={month}
             categoriesById={categoriesById}
+            isRecurringCategory={recurringCategoryIds.has(tx.category_id)}
           />
         ))}
         {recurringPrefills.map(tx => (
@@ -211,6 +226,7 @@ export default function MonthDetail() {
             categoriesById={categoriesById}
             prefillCategoryId={tx.category_id}
             prefillCategoryType={(categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense'}
+            isRecurringPrefill
             onSaved={() => {}}
           />
         ))}
