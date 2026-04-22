@@ -60,7 +60,7 @@ export default function MonthDetail() {
 
   const { start, end } = useMemo(() => monthDateRange(month), [month])
 
-  const { data: monthTransactions = [] } = useLiveQuery(
+  const { data: monthTransactions = [], isLoading: txLoading } = useLiveQuery(
     (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => and(gte(tx.date, start), lt(tx.date, end))),
     [start, end],
   )
@@ -70,7 +70,9 @@ export default function MonthDetail() {
     [],
   )
 
-  const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
+  const { data: categories = [], isLoading: categoriesLoading } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
+
+  const isLoading = txLoading || categoriesLoading
 
   const transactions = monthTransactions
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
@@ -165,15 +167,18 @@ export default function MonthDetail() {
       </div>
 
       <div style={{ viewTransitionName: 'month-content' }}>
+      <>
       <div className="mb-8">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
-        <p className={`text-3xl font-bold ${summary.balance > 0 ? 'text-green-600 dark:text-green-400' : summary.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
-          {formatCurrency(summary.balance)}
+        <p className={`text-3xl font-bold h-10 flex items-center ${summary.balance > 0 ? 'text-green-600 dark:text-green-400' : summary.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
+          {isLoading ? <span className="inline-block w-28 h-8 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" /> : formatCurrency(summary.balance)}
         </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Income <span className={summary.income > 0 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{formatCurrency(summary.income)}</span>
-          {' · '}
-          Expenses <span className={summary.expenses > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{formatCurrency(summary.expenses)}</span>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 h-5">
+          {!isLoading && <>
+            Income <span className={summary.income > 0 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{formatCurrency(summary.income)}</span>
+            {' · '}
+            Expenses <span className={summary.expenses > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{formatCurrency(summary.expenses)}</span>
+          </>}
         </p>
       </div>
 
@@ -231,6 +236,7 @@ export default function MonthDetail() {
           />
         ))}
       </div>
+      </>
       </div>
     </div>
   )
