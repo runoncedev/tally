@@ -3,7 +3,7 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { useLiveQuery, eq, and, gte, lt } from '@tanstack/react-db'
 import { transactionsCollection, categoriesCollection } from '../lib/collections'
 import { TransactionForm } from '../components/TransactionForm'
-import type { Category, Transaction } from '../lib/collections'
+import type { Transaction } from '../lib/collections'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState, useRef } from 'react'
 import { transactionsCollection } from '../lib/collections'
 import { supabase } from '../lib/supabase'
 import type { Category, Transaction } from '../lib/collections'
@@ -31,10 +31,6 @@ type FormState = {
   recurrent: boolean
 }
 
-function lastDayOfMonth(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  return new Date(year, mon, 0).toISOString().slice(0, 10)
-}
 
 function txToForm(tx: Transaction): FormState {
   return {
@@ -63,7 +59,6 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     tx ? txToForm(tx) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount, prefillDescription)
   )
   const [isDirty, setIsDirty] = useState(false)
-  const dateInputRef = useRef<HTMLInputElement>(null)
   const confirmDialogRef = useRef<HTMLDialogElement>(null)
 
   const patch = (p: Partial<FormState>) => {
