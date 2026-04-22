@@ -16,7 +16,7 @@ function buildMonthSummaries(transactions: Array<Transaction>, categoriesById: R
     if (!months[month]) months[month] = { income: 0, expenses: 0 }
     const type = categoriesById[Number(tx.category_id)]?.type
     if (type === 'income') months[month].income += tx.amount
-    else months[month].expenses += tx.amount
+    else months[month].expenses += Math.abs(tx.amount)
   }
   return Object.entries(months)
     .map(([month, { income, expenses }]) => ({ month, income, expenses, balance: income - expenses }))

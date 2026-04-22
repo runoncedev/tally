@@ -56,6 +56,7 @@ export default function MonthDetail() {
 
   const monthPickerRef = useRef<HTMLInputElement>(null)
   const [newRows, setNewRows] = useState<{ publicId: string; type: 'income' | 'expense' }[]>([])
+  const [recurringExpanded, setRecurringExpanded] = useState(false)
 
   const { start, end } = useMemo(() => monthDateRange(month), [month])
 
@@ -77,6 +78,8 @@ export default function MonthDetail() {
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const summary = useMemo(() => computeSummary(transactions), [transactions])
   const activeRecurringIds = useMemo(() => new Set(allRecurring.map(tx => tx.public_id)), [allRecurring])
+  const regularTransactions = useMemo(() => transactions.filter(tx => !tx.recurring_source_id || !activeRecurringIds.has(tx.recurring_source_id)), [transactions, activeRecurringIds])
+  const recurringTransactions = useMemo(() => transactions.filter(tx => tx.recurring_source_id && activeRecurringIds.has(tx.recurring_source_id)), [transactions, activeRecurringIds])
 
 
 const recurringPrefills = useMemo(() => {
@@ -208,31 +211,82 @@ const recurringPrefills = useMemo(() => {
             onDelete={() => removeRow(row.publicId)}
           />
         ))}
-        {transactions.map(tx => (
+        {regularTransactions.map(tx => (
           <TransactionForm
             key={tx.public_id}
             tx={tx}
             categories={categories}
             month={month}
             categoriesById={categoriesById}
-            isRecurringCategory={tx.recurring_source_id != null && activeRecurringIds.has(tx.recurring_source_id)}
           />
         ))}
-        {recurringPrefills.map(tx => (
-          <TransactionForm
-            key={`recurring-${tx.category_id}`}
-            categories={categories}
-            month={month}
-            categoriesById={categoriesById}
-            prefillCategoryId={tx.category_id}
-            prefillCategoryType={tx.amount >= 0 ? 'income' : 'expense'}
-            prefillAmount={Math.abs(tx.amount)}
-            prefillDescription={tx.description ?? undefined}
-            isRecurringPrefill
-            recurringSourceId={tx.public_id}
-            onSaved={() => {}}
-          />
-        ))}
+        {(recurringPrefills.length > 0 || recurringTransactions.length > 0) && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-3 h-10">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-semibold text-zinc-700 dark:text-zinc-200">Recurring</span>
+                <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 tracking-widest">{recurringTransactions.length}/{recurringTransactions.length + recurringPrefills.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {recurringPrefills.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      recurringPrefills.forEach(tx => {
+                        transactionsCollection.insert({
+                          public_id: crypto.randomUUID(),
+                          date: `${month}-01`,
+                          amount: tx.amount,
+                          category_id: tx.category_id,
+                          description: tx.description ?? null,
+                          recurrent: false,
+                          recurring_source_id: tx.public_id,
+                        })
+                      })
+                    }}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 hover:opacity-80 transition-opacity"
+                  >
+                    Add all
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setRecurringExpanded(e => !e)}
+                  className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${recurringExpanded ? '' : 'rotate-180'}`}><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+            </div>
+            {recurringExpanded && <div className="flex flex-col gap-3">
+                {recurringTransactions.map(tx => (
+                  <TransactionForm
+                    key={tx.public_id}
+                    tx={tx}
+                    categories={categories}
+                    month={month}
+                    categoriesById={categoriesById}
+                    isRecurringCategory
+                  />
+                ))}
+                {recurringPrefills.map(tx => (
+                  <TransactionForm
+                    key={`recurring-${tx.public_id}`}
+                    categories={categories}
+                    month={month}
+                    categoriesById={categoriesById}
+                    prefillCategoryId={tx.category_id}
+                    prefillCategoryType={tx.amount >= 0 ? 'income' : 'expense'}
+                    prefillAmount={Math.abs(tx.amount)}
+                    prefillDescription={tx.description ?? undefined}
+                    isRecurringPrefill
+                    recurringSourceId={tx.public_id}
+                    onSaved={() => {}}
+                  />
+                ))}
+            </div>}
+          </div>
+        )}
       </div>
       </>
       </div>

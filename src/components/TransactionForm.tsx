@@ -155,26 +155,17 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
             </div>
           </div>
         </div>
-        <div className="flex gap-2 ml-auto">
-          {!prefillCategoryId && (isDirty || !tx) && (
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              Cancel
-            </button>
-          )}
-          {(!tx || canSave) && (
-            <button
-              type="submit"
-              disabled={!canSave}
-              className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 disabled:opacity-30 transition-opacity"
-            >
-              {tx ? 'Save' : 'Add'}
-            </button>
-          )}
-        </div>
+        {tx && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+          >
+            <span className="block sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-100 sm:delay-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 flex items-baseline gap-1">
@@ -225,17 +216,26 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           )}
         </div>
 
-        {tx && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
-          >
-            <span className="block sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-100 sm:delay-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </span>
-          </button>
-        )}
+        <div className="flex gap-2 ml-auto">
+          {!prefillCategoryId && (isDirty || !tx) && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+          {(!tx || canSave) && (
+            <button
+              type="submit"
+              disabled={!canSave}
+              className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 disabled:opacity-30 transition-opacity"
+            >
+              {tx ? 'Save' : 'Add'}
+            </button>
+          )}
+        </div>
       </div>
       <dialog
         ref={confirmDialogRef}
