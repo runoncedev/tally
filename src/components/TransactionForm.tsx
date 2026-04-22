@@ -117,12 +117,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
   const handleDelete = () => {
     if (!tx) return
-    if (tx.recurrent) {
-      confirmDialogRef.current?.showModal()
-    } else {
-      transactionsCollection.delete(tx.public_id)
-      onDelete?.()
-    }
+    confirmDialogRef.current?.showModal()
   }
 
   const handleConfirmDelete = () => {
@@ -243,8 +238,8 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         ref={confirmDialogRef}
         className="rounded-2xl p-6 w-80 bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0"
       >
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 mb-1">Delete recurring transaction?</p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-5">This will only delete this entry, not future ones.</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 mb-1">Delete transaction?</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-5">{tx?.recurrent ? 'This will only delete this entry, not future ones.' : 'This action cannot be undone.'}</p>
         <div className="flex justify-end gap-2">
           <button
             type="button"
