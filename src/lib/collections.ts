@@ -34,7 +34,7 @@ export const transactionsCollection = createCollection(
     schema: transactionSchema,
     queryKey: ['transactions'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false })
+      const { data, error } = await supabase.from('transactions').select('*').order('created_at', { ascending: false })
       if (error) throw error
       return data
     },

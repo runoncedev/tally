@@ -61,7 +61,7 @@ export default function MonthDetail() {
   const { start, end } = useMemo(() => monthDateRange(month), [month])
 
   const { data: monthTransactions = [], isLoading: txLoading } = useLiveQuery(
-    (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => and(gte(tx.date, start), lt(tx.date, end))),
+    (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => and(gte(tx.date, start), lt(tx.date, end))).orderBy(({ tx }) => tx.created_at, 'desc'),
     [start, end],
   )
 

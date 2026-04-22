@@ -134,7 +134,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   }
 
   return (
-    <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           <span className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
@@ -168,7 +168,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         )}
       </div>
 
-      <div className="border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 flex items-baseline gap-1">
+      <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 flex items-baseline gap-1">
         <span className="text-2xl font-semibold text-zinc-400 dark:text-zinc-500">$</span>
         <input
           type="text"
@@ -189,7 +189,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         value={form.description}
         onChange={e => patch({ description: e.target.value })}
         placeholder="Note (optional)"
-        className="bg-transparent outline-none text-sm text-zinc-500 dark:text-zinc-400 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2"
+        className="bg-transparent outline-none text-sm text-zinc-500 dark:text-zinc-400 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2"
       />
 
       <div className="flex items-center justify-between gap-4 pt-1 h-8">
