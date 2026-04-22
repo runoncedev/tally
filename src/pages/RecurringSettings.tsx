@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useLiveQuery, eq } from '@tanstack/react-db'
 import { transactionsCollection, categoriesCollection } from '../lib/collections'
 
@@ -10,6 +11,7 @@ export default function RecurringSettings() {
     (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => eq(tx.recurrent, true)),
     [],
   )
+  const { data: allTx = [] } = useLiveQuery((q) => q.from({ tx: transactionsCollection }), [])
   const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
   const categoriesById = Object.fromEntries(categories.map(c => [c.id, c]))
 
@@ -20,8 +22,15 @@ export default function RecurringSettings() {
     return true
   })
 
-  const handleDelete = (publicId: string) => {
-    transactionsCollection.delete(publicId)
+  const handleStopRecurring = (publicId: string) => {
+    transactionsCollection.update(publicId, (draft) => {
+      draft.recurrent = false
+    })
+    allTx
+      .filter(tx => tx.recurring_source_id === publicId)
+      .forEach(tx => transactionsCollection.update(tx.public_id, (draft) => {
+        draft.recurring_source_id = null
+      }))
   }
 
   return (
@@ -46,14 +55,23 @@ export default function RecurringSettings() {
                   </span>
                   <div>
                     <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{category?.name ?? '—'}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatCurrency(tx.amount)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{formatCurrency(tx.amount)}</p>
+                      <Link
+                        to="/month/$month"
+                        params={{ month: tx.date.slice(0, 7) }}
+                        className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 underline underline-offset-2"
+                      >
+                        {tx.date.slice(0, 7)}
+                      </Link>
+                    </div>
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDelete(tx.public_id)}
-                  className="text-sm px-3 py-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                  onClick={() => handleStopRecurring(tx.public_id)}
+                  className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  Delete
+                  Stop recurring
                 </button>
               </div>
             )

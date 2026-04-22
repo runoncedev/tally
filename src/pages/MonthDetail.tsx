@@ -77,23 +77,19 @@ export default function MonthDetail() {
   const transactions = monthTransactions
   const categoriesById = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const summary = useMemo(() => computeSummary(transactions, categoriesById), [transactions, categoriesById])
+  const activeRecurringIds = useMemo(() => new Set(allRecurring.map(tx => tx.public_id)), [allRecurring])
 
-  const recurringCategoryIds = useMemo(() => {
-    const seen = new Set<number>()
-    allRecurring.forEach(tx => {
-      if (tx.date.slice(0, 7) <= month) seen.add(tx.category_id)
-    })
-    return seen
-  }, [allRecurring, month])
 
-  const recurringPrefills = useMemo(() => {
-    const existingCategoryIds = new Set(transactions.map(tx => tx.category_id))
-    const seen = new Set<number>()
+const recurringPrefills = useMemo(() => {
+    const completedRecurringIds = new Set(transactions.map(tx => tx.recurring_source_id).filter(Boolean))
+    const existingPublicIds = new Set(transactions.map(tx => tx.public_id))
+    const seen = new Set<string>()
     return allRecurring.filter(tx => {
       if (tx.date.slice(0, 7) > month) return false
-      if (existingCategoryIds.has(tx.category_id)) return false
-      if (seen.has(tx.category_id)) return false
-      seen.add(tx.category_id)
+      if (completedRecurringIds.has(tx.public_id)) return false
+      if (existingPublicIds.has(tx.public_id)) return false
+      if (seen.has(tx.public_id)) return false
+      seen.add(tx.public_id)
       return true
     })
   }, [transactions, allRecurring, month])
@@ -220,7 +216,7 @@ export default function MonthDetail() {
             categories={categories}
             month={month}
             categoriesById={categoriesById}
-            isRecurringCategory={recurringCategoryIds.has(tx.category_id)}
+            isRecurringCategory={tx.recurring_source_id != null && activeRecurringIds.has(tx.recurring_source_id)}
           />
         ))}
         {recurringPrefills.map(tx => (
@@ -231,7 +227,9 @@ export default function MonthDetail() {
             categoriesById={categoriesById}
             prefillCategoryId={tx.category_id}
             prefillCategoryType={(categoriesById[tx.category_id]?.type ?? 'expense') as 'income' | 'expense'}
+            prefillAmount={tx.amount}
             isRecurringPrefill
+            recurringSourceId={tx.public_id}
             onSaved={() => {}}
           />
         ))}

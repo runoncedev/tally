@@ -50,6 +50,7 @@ export const transactionsCollection = createCollection(
         category_id: m.category_id,
         description: m.description ?? null,
         recurrent: m.recurrent ?? false,
+        recurring_source_id: m.recurring_source_id ?? null,
       })
       if (error) throw error
     },

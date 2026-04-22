@@ -49,6 +49,7 @@ export const publicTransactionsRowSchema = z.object({
   id: z.number(),
   public_id: z.string(),
   recurrent: z.boolean(),
+  recurring_source_id: z.string().nullable(),
 });
 
 export const publicTransactionsInsertSchema = z.object({
@@ -60,6 +61,7 @@ export const publicTransactionsInsertSchema = z.object({
   id: z.number().optional(),
   public_id: z.string().optional(),
   recurrent: z.boolean().optional(),
+  recurring_source_id: z.string().optional().nullable(),
 });
 
 export const publicTransactionsUpdateSchema = z.object({
@@ -71,6 +73,7 @@ export const publicTransactionsUpdateSchema = z.object({
   id: z.number().optional(),
   public_id: z.string().optional(),
   recurrent: z.boolean().optional(),
+  recurring_source_id: z.string().optional().nullable(),
 });
 
 export const publicTransactionsRelationshipsSchema = z.tuple([
@@ -80,5 +83,12 @@ export const publicTransactionsRelationshipsSchema = z.tuple([
     isOneToOne: z.literal(false),
     referencedRelation: z.literal("categories"),
     referencedColumns: z.tuple([z.literal("id")]),
+  }),
+  z.object({
+    foreignKeyName: z.literal("transactions_recurring_source_id_fkey"),
+    columns: z.tuple([z.literal("recurring_source_id")]),
+    isOneToOne: z.literal(false),
+    referencedRelation: z.literal("transactions"),
+    referencedColumns: z.tuple([z.literal("public_id")]),
   }),
 ]);

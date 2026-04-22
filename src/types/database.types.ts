@@ -45,6 +45,7 @@ export type Database = {
           id: number
           public_id: string
           recurrent: boolean
+          recurring_source_id: string | null
         }
         Insert: {
           amount: number
@@ -55,6 +56,7 @@ export type Database = {
           id?: number
           public_id?: string
           recurrent?: boolean
+          recurring_source_id?: string | null
         }
         Update: {
           amount?: number
@@ -65,6 +67,7 @@ export type Database = {
           id?: number
           public_id?: string
           recurrent?: boolean
+          recurring_source_id?: string | null
         }
         Relationships: [
           {
@@ -73,6 +76,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_recurring_source_id_fkey"
+            columns: ["recurring_source_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["public_id"]
           },
         ]
       }

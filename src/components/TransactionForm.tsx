@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { transactionsCollection } from '../lib/collections'
+import { supabase } from '../lib/supabase'
 import type { Category, Transaction } from '../lib/collections'
 
 type TransactionFormProps = {
@@ -9,11 +10,13 @@ type TransactionFormProps = {
   categoriesById: Record<number, Category>
   prefillCategoryId?: number
   prefillCategoryType?: 'income' | 'expense'
+  prefillAmount?: number
   initialType?: 'income' | 'expense'
   publicId?: string
   focusOnMount?: boolean
   isRecurringPrefill?: boolean
   isRecurringCategory?: boolean
+  recurringSourceId?: string
   onSaved?: () => void
   onDelete?: () => void
 }
@@ -43,10 +46,10 @@ function txToForm(tx: Transaction, categoriesById: Record<number, Category>): Fo
   }
 }
 
-function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryType?: 'income' | 'expense'): FormState {
+function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryType?: 'income' | 'expense', prefillAmount?: number): FormState {
   return {
     date: `${month}-01`,
-    amount: '',
+    amount: prefillAmount != null ? String(prefillAmount) : '',
     category_id: prefillCategoryId ?? null,
     type: prefillCategoryType ?? 'expense',
     description: '',
@@ -54,9 +57,9 @@ function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryTyp
   }
 }
 
-export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, initialType, publicId, focusOnMount = false, isRecurringPrefill = false, isRecurringCategory = false, onSaved, onDelete }: TransactionFormProps) {
+export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, prefillAmount, initialType, publicId, focusOnMount = false, isRecurringPrefill = false, isRecurringCategory = false, recurringSourceId, onSaved, onDelete }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(() =>
-    tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType)
+    tx ? txToForm(tx, categoriesById) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount)
   )
   const [isDirty, setIsDirty] = useState(false)
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -71,7 +74,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     ? (categoriesById[Number(tx.category_id)]?.type ?? form.type) as 'income' | 'expense'
     : form.type
   const filteredCategories = categories.filter(c => c.type === type)
-  const canSave = isDirty && form.amount !== '' && form.category_id !== null
+  const canSave = (isDirty || isRecurringPrefill) && form.amount !== '' && form.category_id !== null
 
   const handleSave = async () => {
     if (!canSave) return
@@ -87,6 +90,9 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     }
 
     if (tx) {
+      if (tx.recurrent && !payload.recurrent) {
+        await supabase.from('transactions').update({ recurring_source_id: null }).eq('recurring_source_id', tx.public_id)
+      }
       transactionsCollection.update(tx.public_id, (draft) => {
         draft.date = payload.date
         draft.amount = payload.amount
@@ -96,7 +102,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
       })
       setIsDirty(false)
     } else {
-      transactionsCollection.insert({ ...payload, public_id: publicId ?? crypto.randomUUID() })
+      transactionsCollection.insert({ ...payload, public_id: publicId ?? crypto.randomUUID(), recurring_source_id: recurringSourceId ?? null })
       onSaved?.()
     }
   }
@@ -134,20 +140,34 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
   return (
     <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-3">
-      <div className="flex justify-between">
-        <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+      <div className="flex justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          <span className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
             {type === 'income' ? 'Income' : 'Expense'}
           </span>
           {(isRecurringPrefill || isRecurringCategory) && (
-            <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
-              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-              Recurring
+            <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 min-w-0 overflow-hidden">
+              <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <span className="truncate">Recurring</span>
             </span>
+          )}
+          {!isRecurringPrefill && !isRecurringCategory && (
+            <label className="flex items-center gap-2 cursor-pointer pl-2 min-w-0">
+              <input
+                type="checkbox"
+                checked={form.recurrent}
+                onChange={e => patch({ recurrent: e.target.checked })}
+                className="sr-only"
+              />
+              <div className={`relative w-9 h-5 shrink-0 rounded-full transition-colors ${form.recurrent ? 'bg-zinc-600 dark:bg-zinc-50' : 'bg-zinc-200 dark:bg-zinc-700'}`}>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform ${form.recurrent ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+              <span className={`text-sm truncate ${form.recurrent ? 'text-zinc-700 dark:text-zinc-200' : 'text-zinc-400 dark:text-zinc-600'}`}>Recurring {form.recurrent ? 'on' : 'off'}</span>
+            </label>
           )}
         </div>
 
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             type="button"
             onClick={() => dateInputRef.current?.showPicker()}
@@ -168,7 +188,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         </div>
       </div>
 
-      <div className="flex items-baseline gap-1 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2">
+      <div className="border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 flex items-baseline gap-1">
         <span className="text-2xl font-semibold text-zinc-400 dark:text-zinc-500">$</span>
         <input
           type="text"
@@ -184,11 +204,12 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         />
       </div>
 
-      <div className="relative">
+      <div className="sm:hidden relative">
         <select
           value={form.category_id ?? ''}
           onChange={e => patch({ category_id: e.target.value ? Number(e.target.value) : null })}
-          className={`w-full appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg pl-3 pr-8 py-2 ${form.category_id === null ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'}`}
+          disabled={isRecurringCategory || isRecurringPrefill}
+          className={`w-full appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm rounded-lg pl-3 pr-8 py-2 ${form.category_id === null ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-600 dark:text-zinc-300'} ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <option value="" disabled>Category</option>
           {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -198,23 +219,23 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-1">
-        {!isRecurringPrefill && !isRecurringCategory && (
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.recurrent}
-              onChange={e => patch({ recurrent: e.target.checked })}
-              className="sr-only"
-            />
-            <div className={`relative w-9 h-5 rounded-full transition-colors ${form.recurrent ? 'bg-zinc-600 dark:bg-zinc-50' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
-              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-zinc-900 shadow transition-transform ${form.recurrent ? 'translate-x-4' : 'translate-x-0'}`} />
-            </div>
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">Recurring {form.recurrent ? 'on' : 'off'}</span>
-          </label>
-        )}
-        {(isRecurringPrefill || isRecurringCategory) && <div />}
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between gap-4 pt-1">
+        <div className="relative hidden sm:flex sm:items-center">
+          <select
+            value={form.category_id ?? ''}
+            onChange={e => patch({ category_id: e.target.value ? Number(e.target.value) : null })}
+            disabled={isRecurringCategory || isRecurringPrefill}
+            className={`appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm font-medium rounded-lg pl-3 pr-8 py-1.5 ${form.category_id === null ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-800 dark:text-zinc-100'} ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            <option value="" disabled>Category</option>
+            {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+
+        <div className="flex gap-2 ml-auto">
           {tx && (
             <button
               type="button"
