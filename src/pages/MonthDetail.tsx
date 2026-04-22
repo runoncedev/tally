@@ -66,7 +66,7 @@ export default function MonthDetail() {
   )
 
   const { data: allRecurring = [] } = useLiveQuery(
-    (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => eq(tx.recurrent, true)),
+    (q) => q.from({ tx: transactionsCollection }).where(({ tx }) => eq(tx.recurrent, true)).orderBy(({ tx }) => tx.created_at, 'desc'),
     [],
   )
 
