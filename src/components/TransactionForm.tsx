@@ -11,6 +11,7 @@ type TransactionFormProps = {
   prefillCategoryId?: number
   prefillCategoryType?: 'income' | 'expense'
   prefillAmount?: number
+  prefillDescription?: string
   initialType?: 'income' | 'expense'
   publicId?: string
   focusOnMount?: boolean
@@ -46,20 +47,20 @@ function txToForm(tx: Transaction): FormState {
   }
 }
 
-function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryType?: 'income' | 'expense', prefillAmount?: number): FormState {
+function emptyForm(month: string, prefillCategoryId?: number, prefillCategoryType?: 'income' | 'expense', prefillAmount?: number, prefillDescription?: string): FormState {
   return {
     date: `${month}-01`,
     amount: prefillAmount != null ? String(prefillAmount) : '',
     category_id: prefillCategoryId ?? null,
     type: prefillCategoryType ?? 'expense',
-    description: '',
+    description: prefillDescription ?? '',
     recurrent: false,
   }
 }
 
-export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, prefillAmount, initialType, publicId, focusOnMount = false, isRecurringPrefill = false, isRecurringCategory = false, recurringSourceId, onSaved, onDelete }: TransactionFormProps) {
+export function TransactionForm({ tx, categories, month, categoriesById, prefillCategoryId, prefillCategoryType, prefillAmount, prefillDescription, initialType, publicId, focusOnMount = false, isRecurringPrefill = false, isRecurringCategory = false, recurringSourceId, onSaved, onDelete }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(() =>
-    tx ? txToForm(tx) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount)
+    tx ? txToForm(tx) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount, prefillDescription)
   )
   const [isDirty, setIsDirty] = useState(false)
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -154,17 +155,25 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
             </div>
           </div>
         </div>
-        {tx && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
-          >
-            <span className="block sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-100 sm:delay-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </span>
-          </button>
-        )}
+        <div className="flex gap-2 ml-auto">
+          {!prefillCategoryId && (isDirty || !tx) && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+          {canSave && (
+            <button
+              type="submit"
+              className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 transition-opacity"
+            >
+              {tx ? 'Save' : 'Add'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 flex items-baseline gap-1">
@@ -191,7 +200,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         className="bg-transparent outline-none text-sm text-zinc-500 dark:text-zinc-400 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2"
       />
 
-      <div className="flex items-center justify-between gap-4 pt-1">
+      <div className="flex items-center justify-between gap-4 pt-1 h-8">
         <div>
           {(isRecurringPrefill || isRecurringCategory) && (
             <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
@@ -215,24 +224,17 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           )}
         </div>
 
-        <div className="flex gap-2 ml-auto">
-          {!prefillCategoryId && (isDirty || !tx) && (
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              Cancel
-            </button>
-          )}
+        {tx && (
           <button
-            type="submit"
-            disabled={!canSave}
-            className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 disabled:opacity-30 transition-opacity"
+            type="button"
+            onClick={handleDelete}
+            className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
           >
-            Save
+            <span className="block sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-100 sm:delay-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </span>
           </button>
-        </div>
+        )}
       </div>
       <dialog
         ref={confirmDialogRef}

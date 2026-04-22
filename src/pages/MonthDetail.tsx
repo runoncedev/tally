@@ -227,6 +227,7 @@ const recurringPrefills = useMemo(() => {
             prefillCategoryId={tx.category_id}
             prefillCategoryType={tx.amount >= 0 ? 'income' : 'expense'}
             prefillAmount={Math.abs(tx.amount)}
+            prefillDescription={tx.description ?? undefined}
             isRecurringPrefill
             recurringSourceId={tx.public_id}
             onSaved={() => {}}
