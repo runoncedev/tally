@@ -40,7 +40,7 @@ describe('TransactionForm', () => {
 
     await user.type(screen.getByPlaceholderText('0'), '50')
     await user.selectOptions(screen.getAllByRole('combobox')[0], '2')
-    await user.click(screen.getByRole('button', { name: /save/i }))
+    await user.click(screen.getByRole('button', { name: /add/i }))
 
     await waitFor(() => {
       expect(insertedBody).toMatchObject({
