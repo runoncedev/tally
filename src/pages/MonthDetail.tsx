@@ -3,8 +3,7 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import React, { useMemo, useRef, useState } from 'react'
 import { TransactionForm } from '../components/TransactionForm'
 import type { Transaction } from '../lib/collections'
-import { categoriesCollection, queryClient, transactionsCollection } from '../lib/collections'
-import { supabase } from '../lib/supabase'
+import { categoriesCollection, transactionsCollection } from '../lib/collections'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
@@ -262,8 +261,8 @@ export default function MonthDetail() {
                   <circle cx="7.5" cy="4.5" r="2.5" />
                 </g>
               </svg>
-              <p className="text-sm tracking-widest select-none" aria-label="Nothing to show yet">
-                {'nothing to show yet'.split('').map((char, i) => (
+              <p className="font-semibold text-lg tracking-widest select-none" aria-label="Nothing to show yet">
+                {'Nothing to show yet'.split('').map((char, i) => (
                   <span
                     key={i}
                     style={{
