@@ -56,6 +56,21 @@ dialog::backdrop {
 }
 
 
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+
+@keyframes float-small {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+
 @keyframes slide-out-left {
   to { opacity: 0; transform: translateX(-24px); }
 }
