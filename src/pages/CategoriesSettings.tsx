@@ -69,8 +69,8 @@ export default function CategoriesSettings() {
 
       <h1 className="text-xl font-semibold mb-4">Categories</h1>
 
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+        <div className="flex self-start rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs">
           {(['all', 'expense', 'income'] as const).map(t => (
             <button
               key={t}
@@ -81,7 +81,7 @@ export default function CategoriesSettings() {
             </button>
           ))}
         </div>
-        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs ml-auto">
+        <div className="flex self-start rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs sm:ml-auto">
           {(['type', 'tx', 'name'] as const).map(field => (
             <button
               key={field}
