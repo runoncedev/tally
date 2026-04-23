@@ -255,7 +255,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="w-full p-4 flex items-center gap-3 text-left"
+            className="w-full p-4 flex items-center gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
           >
             {categoryName && (
               <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
