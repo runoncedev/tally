@@ -19,7 +19,7 @@ function TrendChart({ months }: { months: Array<{ month: string; income: number;
   const chronological = [...months].sort((a, b) => b.month.localeCompare(a.month))
   const max = Math.max(...chronological.map(m => Math.abs(m.income - m.expenses)), 1)
   return (
-    <div className="mt-6 flex flex-col gap-1.5">
+    <div className="mt-6 hidden lg:flex flex-col gap-1.5">
       {chronological.map(m => {
         const balance = m.income - m.expenses
         const zero = balance === 0
