@@ -169,6 +169,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           >
             {type === 'income' ? 'Income' : 'Expense'}
           </button>
+          <div className="min-w-0">
           <Autocomplete.Root
             items={filteredCategories}
             value={categoryInputValue}
@@ -180,7 +181,6 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
             }}
             itemToStringValue={(c: Category) => c.name}
             disabled={isRecurringCategory || isRecurringPrefill}
-            className="min-w-0"
           >
             <Autocomplete.Input
               placeholder="Category"
@@ -204,6 +204,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
               </Autocomplete.Positioner>
             </Autocomplete.Portal>
           </Autocomplete.Root>
+          </div>
         </div>
         {tx && (
           <button
