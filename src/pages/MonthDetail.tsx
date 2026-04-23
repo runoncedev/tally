@@ -103,7 +103,7 @@ export default function MonthDetail() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="sticky top-0 z-10 bg-white dark:bg-zinc-900 flex items-center justify-between mb-6 py-3">
         <div className="flex items-center gap-2 mr-2.5">
           <h1 className="text-xl font-semibold">{formatMonthLabel(month)}</h1>
           {month === currentMonth && <span className="text-xs px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">current</span>}
@@ -166,7 +166,7 @@ export default function MonthDetail() {
 
       <div style={{ viewTransitionName: 'month-content' }} className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-10 lg:items-start">
         {/* sidebar — sticky on desktop */}
-        <div className="lg:sticky lg:top-8">
+        <div className="lg:sticky lg:top-20">
           <div className="mb-8">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
             <p className={`text-3xl font-bold h-10 flex items-center ${summary.balance > 0 ? 'text-green-600 dark:text-green-400' : summary.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>

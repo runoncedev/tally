@@ -276,9 +276,11 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
   if (!tx) {
     return (
-      <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex flex-col gap-3 my-3 first:mt-0 last:mb-0">
-        {formFields}
-      </form>
+      <div className="group border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl relative hover:z-10 overflow-hidden">
+        <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-3">
+          {formFields}
+        </form>
+      </div>
     )
   }
 
