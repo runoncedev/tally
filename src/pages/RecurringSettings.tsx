@@ -27,7 +27,8 @@ export default function RecurringSettings() {
 
   const seen = new Set<number>()
   const recurring = allTransactions
-    .filter(tx => {
+    .filter((tx): tx is typeof tx & { category_id: number } => {
+      if (tx.category_id == null) return false
       if (seen.has(tx.category_id)) return false
       seen.add(tx.category_id)
       return true
