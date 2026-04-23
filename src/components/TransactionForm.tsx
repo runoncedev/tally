@@ -340,19 +340,16 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
       <dialog
         ref={confirmDialogRef}
-        className="rounded-2xl p-6 w-80 bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0"
+        className="rounded-2xl p-6 w-[min(28rem,calc(100vw-2rem))] bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0"
       >
         <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 mb-4">Delete transaction?</p>
         <div className="flex items-center justify-between gap-3 rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-2 mb-4">
           <div className="flex items-center gap-2 min-w-0">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${tx.amount >= 0 ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
-              {tx.amount >= 0 ? 'Income' : 'Expense'}
-            </span>
             {tx.category_id && <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{categoriesById[tx.category_id]?.name}</span>}
             {tx.description && <span className="text-xs text-zinc-400 dark:text-zinc-500 truncate">· {tx.description}</span>}
           </div>
-          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 shrink-0">
-            ${Math.abs(tx.amount).toLocaleString('en-US')}
+          <span className={`text-sm font-semibold shrink-0 ${tx.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+            {tx.amount >= 0 ? '+' : '-'}${Math.abs(tx.amount).toLocaleString('en-US')}
           </span>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-5">{tx.recurrent ? 'This will only delete this entry, not future ones.' : 'This action cannot be undone.'}</p>
