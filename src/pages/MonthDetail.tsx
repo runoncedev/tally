@@ -250,6 +250,7 @@ const recurringPrefills = useMemo(() => {
                         recurring_source_id: tx.public_id,
                       })
                     })
+                    setRecurringExpanded(true)
                   }}
                   className="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 hover:opacity-80 transition-opacity"
                 >
