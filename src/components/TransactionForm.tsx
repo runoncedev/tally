@@ -156,10 +156,19 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   const formFields = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-          <span className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            disabled={isRecurringCategory || isRecurringPrefill}
+            onClick={() => {
+              const newType = type === 'income' ? 'expense' : 'income'
+              patch({ type: newType, category_id: null })
+              setCategoryInputValue('')
+            }}
+            className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-75 cursor-pointer'} ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}
+          >
             {type === 'income' ? 'Income' : 'Expense'}
-          </span>
+          </button>
           <Autocomplete.Root
             items={filteredCategories}
             value={categoryInputValue}
@@ -171,10 +180,11 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
             }}
             itemToStringValue={(c: Category) => c.name}
             disabled={isRecurringCategory || isRecurringPrefill}
+            className="min-w-0"
           >
             <Autocomplete.Input
               placeholder="Category"
-              className={`appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm font-medium rounded-lg pl-3 pr-3 py-1.5 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-zinc-800 dark:text-zinc-100 ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : ''}`}
+              className={`appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm font-medium rounded-lg pl-3 pr-3 py-1.5 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-zinc-800 dark:text-zinc-100 w-full min-w-0 ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : ''}`}
             />
             <Autocomplete.Portal>
               <Autocomplete.Positioner sideOffset={6}>
@@ -290,7 +300,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   const categoryName = tx.category_id ? categoriesById[tx.category_id]?.name : null
 
   return (
-    <div className={`group border border-zinc-300 dark:border-zinc-700 -mt-px relative hover:z-10 focus-within:z-10 overflow-hidden ${isFirst ? 'mt-0 rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}>
+    <div className={`group border border-zinc-300 dark:border-zinc-700 -mt-px relative hover:z-10 focus-within:z-10 overflow-clip ${isFirst ? 'mt-0 rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}>
       <div style={{ interpolateSize: 'allow-keywords' } as React.CSSProperties}>
         <div
           className="overflow-hidden transition-[height] duration-300 ease-in-out"
