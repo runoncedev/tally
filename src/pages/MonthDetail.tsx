@@ -218,7 +218,7 @@ const recurringPrefills = useMemo(() => {
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col">
         {newRows.map(row => (
           <TransactionForm
             key={row.publicId}

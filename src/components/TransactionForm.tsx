@@ -138,7 +138,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
       <button
         type="button"
         onClick={() => setIsEditing(true)}
-        className="group w-full rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex items-center gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors text-left"
+        className="group w-full border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl p-4 flex items-center gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors text-left relative hover:z-10"
       >
         {categoryName && (
           <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
@@ -157,7 +157,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   }
 
   return (
-    <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex flex-col gap-3 my-3 first:mt-0 last:mb-0">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           <span className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
