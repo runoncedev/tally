@@ -224,7 +224,7 @@ export default function MonthDetail() {
         <div className="flex flex-col">
 
           {!isLoading && newRows.length === 0 && regularTransactions.length === 0 && recurringTransactions.length === 0 && (
-            <div className="hidden lg:flex flex-col items-center justify-center py-16 text-zinc-400 dark:text-zinc-500">
+            <div className="hidden lg:flex flex-col items-center justify-center py-16 text-zinc-400 dark:text-zinc-500" style={{ viewTransitionName: 'empty-state' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible' }}>
                 {/* big bubble + shine — float together */}
                 <g style={{ animation: 'float 4s ease-in-out infinite' }}>
