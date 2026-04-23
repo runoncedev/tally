@@ -41,17 +41,19 @@ export const transactionsCollection = createCollection(
     queryClient,
     getKey: (item) => item.public_id,
     onInsert: async ({ transaction }) => {
-      const mutation = transaction.mutations[0]
-      const m = mutation.modified
-      const { error } = await supabase.from('transactions').insert({
-        public_id: m.public_id,
-        date: m.date,
-        amount: m.amount,
-        category_id: m.category_id,
-        description: m.description ?? null,
-        recurrent: m.recurrent ?? false,
-        recurring_source_id: m.recurring_source_id ?? null,
+      const rows = transaction.mutations.map(mutation => {
+        const m = mutation.modified
+        return {
+          public_id: m.public_id,
+          date: m.date,
+          amount: m.amount,
+          category_id: m.category_id,
+          description: m.description ?? null,
+          recurrent: m.recurrent ?? false,
+          recurring_source_id: m.recurring_source_id ?? null,
+        }
       })
+      const { error } = await supabase.from('transactions').insert(rows)
       if (error) throw error
     },
     onUpdate: async ({ transaction }) => {
