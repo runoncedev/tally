@@ -59,6 +59,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     tx ? txToForm(tx) : emptyForm(month, prefillCategoryId, prefillCategoryType ?? initialType, prefillAmount, prefillDescription)
   )
   const [isDirty, setIsDirty] = useState(false)
+  const [isEditing, setIsEditing] = useState(!tx)
   const confirmDialogRef = useRef<HTMLDialogElement>(null)
 
   const patch = (p: Partial<FormState>) => {
@@ -96,6 +97,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         draft.recurrent = payload.recurrent
       })
       setIsDirty(false)
+      setIsEditing(false)
     } else {
       transactionsCollection.insert({ ...payload, public_id: publicId ?? crypto.randomUUID(), recurring_source_id: recurringSourceId ?? null })
       onSaved?.()
@@ -108,6 +110,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     } else {
       setForm(txToForm(tx))
       setIsDirty(false)
+      setIsEditing(false)
     }
   }
 
@@ -126,6 +129,31 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     handleSave()
+  }
+
+  if (tx && !isEditing) {
+    const isIncome = tx.amount >= 0
+    const categoryName = tx.category_id ? categoriesById[tx.category_id]?.name : null
+    return (
+      <button
+        type="button"
+        onClick={() => setIsEditing(true)}
+        className="group w-full rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex items-center gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors text-left"
+      >
+        {categoryName && (
+          <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
+        )}
+        {tx.description && (
+          <>
+            <span className="text-zinc-300 dark:text-zinc-600 shrink-0">·</span>
+            <span className="text-[15px] text-zinc-400 dark:text-zinc-500 truncate min-w-0">{tx.description}</span>
+          </>
+        )}
+        <span className={`text-[15px] font-semibold shrink-0 ml-auto ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+          {isIncome ? '+' : '-'}${Math.abs(tx.amount).toLocaleString('en-US')}
+        </span>
+      </button>
+    )
   }
 
   return (
@@ -212,24 +240,20 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         </div>
 
         <div className="flex gap-2 ml-auto">
-          {!prefillCategoryId && (isDirty || !tx) && (
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              Cancel
-            </button>
-          )}
-          {(!tx || canSave) && (
-            <button
-              type="submit"
-              disabled={!canSave}
-              className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 disabled:opacity-30 transition-opacity"
-            >
-              {tx ? 'Save' : 'Add'}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="text-sm px-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canSave}
+            className="text-sm px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 disabled:opacity-30 transition-opacity"
+          >
+            {tx ? 'Save' : 'Add'}
+          </button>
         </div>
       </div>
       <dialog
