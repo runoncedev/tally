@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, Link } from '@tanstack/react-router'
+import { Outlet, Link, HeadContent } from '@tanstack/react-router'
 import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 
@@ -44,6 +44,7 @@ export function Layout() {
 
   return (
     <>
+      <HeadContent />
       <nav className="border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <Link to="/" className="font-bold text-lg">Tally</Link>

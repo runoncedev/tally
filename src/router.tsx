@@ -6,12 +6,17 @@ import Settings from './pages/Settings'
 import RecurringSettings from './pages/RecurringSettings'
 import CategoriesSettings from './pages/CategoriesSettings'
 
+function formatMonthTitle(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  return new Date(year, mon - 1).toLocaleString('default', { month: 'long', year: 'numeric' })
+}
+
 const rootRoute = createRootRoute({ component: Layout })
-const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: Home })
-const monthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/month/$month', component: MonthDetail })
-const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: Settings })
-const recurringRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings/recurring', component: RecurringSettings })
-const categoriesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings/categories', component: CategoriesSettings })
+const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: Home, head: () => ({ meta: [{ title: 'Tally' }] }) })
+const monthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/month/$month', component: MonthDetail, head: ({ params }) => ({ meta: [{ title: `${formatMonthTitle(params.month)} — Tally` }] }) })
+const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: Settings, head: () => ({ meta: [{ title: 'Settings — Tally' }] }) })
+const recurringRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings/recurring', component: RecurringSettings, head: () => ({ meta: [{ title: 'Recurring — Tally' }] }) })
+const categoriesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings/categories', component: CategoriesSettings, head: () => ({ meta: [{ title: 'Categories — Tally' }] }) })
 
 export const routeTree = rootRoute.addChildren([homeRoute, monthRoute, settingsRoute, recurringRoute, categoriesRoute])
 
