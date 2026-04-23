@@ -126,7 +126,9 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     if (!tx) {
       onDelete?.()
     } else {
-      setForm(txToForm(tx))
+      const restored = txToForm(tx)
+      setForm(restored)
+      setCategoryInputValue(tx.category_id ? categories.find(c => c.id === tx.category_id)?.name ?? '' : '')
       setIsDirty(false)
       setIsEditing(false)
     }

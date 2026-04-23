@@ -199,7 +199,8 @@ export default function MonthDetail() {
             {recurringPrefills.length > 0 && (
               <button
                 onClick={() => {
-                  for (const tx of recurringPrefills) {
+                  const now = Date.now()
+                  recurringPrefills.forEach((tx, i) => {
                     transactionsCollection.insert({
                       public_id: crypto.randomUUID(),
                       date: `${month}-01`,
@@ -208,8 +209,9 @@ export default function MonthDetail() {
                       description: tx.description ?? null,
                       recurrent: false,
                       recurring_source_id: tx.public_id,
+                      created_at: new Date(now + i).toISOString(),
                     })
-                  }
+                  })
                 }}
                 className="w-full sm:w-auto sm:ml-auto lg:ml-0 py-2 px-4 rounded-xl border text-sm transition-colors border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-500 flex items-center justify-center gap-2"
               >

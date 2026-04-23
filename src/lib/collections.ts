@@ -51,6 +51,7 @@ export const transactionsCollection = createCollection(
           description: m.description ?? null,
           recurrent: m.recurrent ?? false,
           recurring_source_id: m.recurring_source_id ?? null,
+          created_at: m.created_at ?? new Date().toISOString(),
         }
       })
       const { error } = await supabase.from('transactions').insert(rows)
