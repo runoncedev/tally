@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useLiveQuery, eq } from '@tanstack/react-db'
 import { transactionsCollection, categoriesCollection } from '../lib/collections'
@@ -15,12 +16,35 @@ export default function RecurringSettings() {
   const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
   const categoriesById = Object.fromEntries(categories.map(c => [c.id, c]))
 
+  const [sortBy, setSortBy] = useState<'type' | 'name' | 'amount'>('type')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [filterType, setFilterType] = useState<'all' | 'expense' | 'income'>('all')
+
+  const toggleSort = (field: 'name' | 'amount' | 'type') => {
+    if (sortBy === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortBy(field); setSortDir(field === 'amount' ? 'desc' : 'asc') }
+  }
+
   const seen = new Set<number>()
-  const recurring = allTransactions.filter(tx => {
-    if (seen.has(tx.category_id)) return false
-    seen.add(tx.category_id)
-    return true
-  })
+  const recurring = allTransactions
+    .filter(tx => {
+      if (seen.has(tx.category_id)) return false
+      seen.add(tx.category_id)
+      return true
+    })
+    .filter(tx => {
+      if (filterType === 'all') return true
+      return (categoriesById[tx.category_id]?.type ?? 'expense') === filterType
+    })
+    .sort((a, b) => {
+      const catA = categoriesById[a.category_id]
+      const catB = categoriesById[b.category_id]
+      let cmp = 0
+      if (sortBy === 'name') cmp = (catA?.name ?? '').localeCompare(catB?.name ?? '')
+      else if (sortBy === 'amount') cmp = Math.abs(a.amount) - Math.abs(b.amount)
+      else if (sortBy === 'type') cmp = (catA?.type ?? '').localeCompare(catB?.type ?? '')
+      return sortDir === 'asc' ? cmp : -cmp
+    })
 
   const handleStopRecurring = (publicId: string) => {
     transactionsCollection.update(publicId, (draft) => {
@@ -41,7 +65,37 @@ export default function RecurringSettings() {
           Settings
         </Link>
       </nav>
-      <h1 className="text-xl font-semibold mb-6">Recurring transactions</h1>
+      <h1 className="text-xl font-semibold mb-4">Recurring transactions</h1>
+
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs">
+          {(['all', 'expense', 'income'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setFilterType(t)}
+              className={`px-3 py-1.5 transition-colors ${filterType === t ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+            >
+              {t === 'all' ? 'All' : t === 'expense' ? 'Expenses' : 'Income'}
+            </button>
+          ))}
+        </div>
+        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs ml-auto">
+          {(['type', 'name', 'amount'] as const).map(field => (
+            <button
+              key={field}
+              onClick={() => toggleSort(field)}
+              className={`px-3 py-1.5 flex items-center gap-1 transition-colors ${sortBy === field ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+            >
+              {field === 'name' ? 'Category' : field === 'amount' ? 'Amount' : 'Type'}
+              {sortBy === field && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  {sortDir === 'asc' ? <path d="M12 19V5M5 12l7-7 7 7"/> : <path d="M12 5v14M5 12l7 7 7-7"/>}
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {recurring.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">No recurring transactions.</p>

@@ -11,8 +11,29 @@ export default function CategoriesSettings() {
   const [editName, setEditName] = useState('')
   const [editType, setEditType] = useState<'expense' | 'income'>('expense')
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [sortBy, setSortBy] = useState<'type' | 'tx' | 'name'>('type')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [filterType, setFilterType] = useState<'all' | 'expense' | 'income'>('all')
 
-  const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name))
+  const txCountById = allTx.reduce<Record<number, number>>((acc, tx) => {
+    if (tx.category_id != null) acc[tx.category_id] = (acc[tx.category_id] ?? 0) + 1
+    return acc
+  }, {})
+
+  const toggleSort = (field: 'tx' | 'name' | 'type') => {
+    if (sortBy === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortBy(field); setSortDir(field === 'name' ? 'asc' : 'desc') }
+  }
+
+  const sorted = [...categories]
+    .filter(c => filterType === 'all' || c.type === filterType)
+    .sort((a, b) => {
+      let cmp = 0
+      if (sortBy === 'tx') cmp = (txCountById[a.id] ?? 0) - (txCountById[b.id] ?? 0)
+      else if (sortBy === 'name') cmp = a.name.localeCompare(b.name)
+      else if (sortBy === 'type') cmp = a.type.localeCompare(b.type)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
 
   const startEdit = (cat: (typeof categories)[number]) => {
     setEditingId(cat.id)
@@ -52,7 +73,37 @@ export default function CategoriesSettings() {
           Settings
         </Link>
       </nav>
-      <h1 className="text-xl font-semibold mb-6">Categories</h1>
+      <h1 className="text-xl font-semibold mb-4">Categories</h1>
+
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs">
+          {(['all', 'expense', 'income'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setFilterType(t)}
+              className={`px-3 py-1.5 transition-colors ${filterType === t ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+            >
+              {t === 'all' ? 'All' : t === 'expense' ? 'Expenses' : 'Income'}
+            </button>
+          ))}
+        </div>
+        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden text-xs ml-auto">
+          {(['type', 'tx', 'name'] as const).map(field => (
+            <button
+              key={field}
+              onClick={() => toggleSort(field)}
+              className={`px-3 py-1.5 flex items-center gap-1 transition-colors ${sortBy === field ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+            >
+              {field === 'type' ? 'Type' : field === 'tx' ? '# tx' : 'Name'}
+              {sortBy === field && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  {sortDir === 'asc' ? <path d="M12 19V5M5 12l7-7 7 7"/> : <path d="M12 5v14M5 12l7 7 7-7"/>}
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {sorted.length === 0 ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">No categories.</p>
