@@ -198,18 +198,18 @@ export default function MonthDetail() {
             </button>
             {recurringPrefills.length > 0 && (
               <button
-                onClick={async () => {
-                  const rows = recurringPrefills.map(tx => ({
-                    public_id: crypto.randomUUID(),
-                    date: `${month}-01`,
-                    amount: tx.amount,
-                    category_id: tx.category_id,
-                    description: tx.description ?? null,
-                    recurrent: false,
-                    recurring_source_id: tx.public_id,
-                  }))
-                  await supabase.from('transactions').insert(rows)
-                  await queryClient.invalidateQueries({ queryKey: ['transactions'] })
+                onClick={() => {
+                  for (const tx of recurringPrefills) {
+                    transactionsCollection.insert({
+                      public_id: crypto.randomUUID(),
+                      date: `${month}-01`,
+                      amount: tx.amount,
+                      category_id: tx.category_id,
+                      description: tx.description ?? null,
+                      recurrent: false,
+                      recurring_source_id: tx.public_id,
+                    })
+                  }
                 }}
                 className="w-full sm:w-auto sm:ml-auto lg:ml-0 py-2 px-4 rounded-xl border text-sm transition-colors border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-500 flex items-center justify-center gap-2"
               >
