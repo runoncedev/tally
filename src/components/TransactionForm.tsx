@@ -290,7 +290,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   const categoryName = tx.category_id ? categoriesById[tx.category_id]?.name : null
 
   return (
-    <div className={`group border border-zinc-300 dark:border-zinc-700 -mt-px relative hover:z-10 focus-within:z-10 focus-within:outline-2 focus-within:outline-blue-500 focus-within:outline overflow-hidden ${isFirst ? 'mt-0 rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}>
+    <div className={`group border border-zinc-300 dark:border-zinc-700 -mt-px relative hover:z-10 focus-within:z-10 overflow-hidden ${isFirst ? 'mt-0 rounded-t-xl' : ''} ${isLast ? 'rounded-b-xl' : ''}`}>
       <div style={{ interpolateSize: 'allow-keywords' } as React.CSSProperties}>
         <div
           className="overflow-hidden transition-[height] duration-300 ease-in-out"
@@ -300,7 +300,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="w-full p-4 flex items-center gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors focus-visible:outline-none"
+            className="w-full p-4 flex items-center gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors focus-visible:outline-none focus-visible:bg-zinc-50 dark:focus-visible:bg-zinc-800/50"
           >
             {categoryName && (
               <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
