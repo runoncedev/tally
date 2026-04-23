@@ -38,7 +38,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
-          category_id: number
+          category_id: number | null
           created_at: string
           date: string
           description: string | null
@@ -49,7 +49,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          category_id: number
+          category_id?: number | null
           created_at?: string
           date?: string
           description?: string | null
@@ -60,7 +60,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          category_id?: number
+          category_id?: number | null
           created_at?: string
           date?: string
           description?: string | null

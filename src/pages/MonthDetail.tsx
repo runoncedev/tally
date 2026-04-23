@@ -1,6 +1,6 @@
 import { and, eq, gte, lt, useLiveQuery } from '@tanstack/react-db'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { TransactionForm } from '../components/TransactionForm'
 import type { Transaction } from '../lib/collections'
 import { categoriesCollection, queryClient, transactionsCollection } from '../lib/collections'
@@ -57,6 +57,11 @@ export default function MonthDetail() {
 
   const monthPickerRef = useRef<HTMLInputElement>(null)
   const [newRows, setNewRows] = useState<{ publicId: string; type: 'income' | 'expense' }[]>([])
+  const prevMonthRef = useRef(month)
+  if (prevMonthRef.current !== month) {
+    prevMonthRef.current = month
+    if (newRows.length > 0) setNewRows([])
+  }
 
   const { start, end } = useMemo(() => monthDateRange(month), [month])
 
@@ -165,7 +170,7 @@ export default function MonthDetail() {
         </div>
       </div>
 
-      <div style={{ viewTransitionName: 'month-content' }} className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-10 lg:items-start">
+      <div style={{ viewTransitionName: 'month-content' }} className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 lg:items-start">
         {/* sidebar — sticky on desktop */}
         <div className="lg:sticky lg:top-20">
           <div className="mb-8">
@@ -173,13 +178,13 @@ export default function MonthDetail() {
             <p className={`text-3xl font-bold h-10 flex items-center ${summary.balance > 0 ? 'text-green-600 dark:text-green-400' : summary.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
               {isLoading ? <span className="inline-block w-28 h-8 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" /> : formatCurrency(summary.balance)}
             </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 h-5">
+            <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex gap-3">
               {!isLoading && <>
-                Income <span className={summary.income > 0 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{formatCurrency(summary.income)}</span>
-                {' · '}
-                Expenses <span className={summary.expenses > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{formatCurrency(summary.expenses)}</span>
+                <span>Income <span className={summary.income > 0 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{formatCurrency(summary.income)}</span></span>
+                <span>·</span>
+                <span>Expenses <span className={summary.expenses > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{formatCurrency(summary.expenses)}</span></span>
               </>}
-            </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6 lg:flex-col">
@@ -226,58 +231,88 @@ export default function MonthDetail() {
         {/* transactions list */}
         <div className="flex flex-col">
 
+          {newRows.map(row => (
+            <div key={row.publicId} className="mb-4">
+              <TransactionForm
+                categories={categories}
+                month={month}
+                categoriesById={categoriesById}
+                initialType={row.type}
+                publicId={row.publicId}
+                focusOnMount
+                isFirst
+                isLast
+                onSaved={() => removeRow(row.publicId)}
+                onDelete={() => removeRow(row.publicId)}
+              />
+            </div>
+          ))}
+
           {!isLoading && newRows.length === 0 && regularTransactions.length === 0 && recurringTransactions.length === 0 && (
-            <div className="hidden lg:flex flex-col items-center justify-center py-16 text-zinc-400 dark:text-zinc-500" style={{ viewTransitionName: 'empty-state' }}>
+            <div className="hidden lg:flex flex-col items-center justify-center gap-6 py-16 text-zinc-400 dark:text-zinc-500" style={{ viewTransitionName: 'empty-state' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ overflow: 'visible' }}>
-                {/* big bubble + shine — float together */}
                 <g style={{ animation: 'float 4s ease-in-out infinite' }}>
                   <circle cx="7.5" cy="16.5" r="5.5" />
                   <path d="M7.001 15.085A1.5 1.5 0 0 1 9 16.5" />
                 </g>
-                {/* medium bubble — offset timing */}
                 <g style={{ animation: 'float-slow 5s ease-in-out infinite 1s' }}>
                   <circle cx="18.5" cy="8.5" r="3.5" />
                 </g>
-                {/* small bubble — faster, more travel */}
                 <g style={{ animation: 'float-small 3.5s ease-in-out infinite 0.5s' }}>
                   <circle cx="7.5" cy="4.5" r="2.5" />
                 </g>
               </svg>
-              {/* <p className="mt-4 text-base">No transactions</p> */}
+              <p className="text-sm tracking-widest select-none" aria-label="Nothing to show yet">
+                {'nothing to show yet'.split('').map((char, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      display: 'inline-block',
+                      animation: `wave-letter 4s ease-in-out infinite`,
+                      animationDelay: `${i % 2 === 0 ? 0 : 2}s`,
+                    }}
+                  >
+                    {char === ' ' ? ' ' : char}
+                  </span>
+                ))}
+              </p>
             </div>
           )}
-          {newRows.map(row => (
-            <TransactionForm
-              key={row.publicId}
-              categories={categories}
-              month={month}
-              categoriesById={categoriesById}
-              initialType={row.type}
-              publicId={row.publicId}
-              focusOnMount
-              onSaved={() => removeRow(row.publicId)}
-              onDelete={() => removeRow(row.publicId)}
-            />
-          ))}
-          {regularTransactions.map(tx => (
-            <TransactionForm
-              key={tx.public_id}
-              tx={tx}
-              categories={categories}
-              month={month}
-              categoriesById={categoriesById}
-            />
-          ))}
-          {recurringTransactions.map(tx => (
-            <TransactionForm
-              key={tx.public_id}
-              tx={tx}
-              categories={categories}
-              month={month}
-              categoriesById={categoriesById}
-              isRecurringCategory
-            />
-          ))}
+          {(() => {
+            const allRows: React.ReactNode[] = []
+            const total = regularTransactions.length + recurringTransactions.length
+            let idx = 0
+            regularTransactions.forEach(tx => {
+              allRows.push(
+                <TransactionForm
+                  key={tx.public_id}
+                  tx={tx}
+                  categories={categories}
+                  month={month}
+                  categoriesById={categoriesById}
+                  isFirst={idx === 0}
+                  isLast={idx === total - 1}
+                />
+              )
+              idx++
+            })
+            recurringTransactions.forEach(tx => {
+              allRows.push(
+                <TransactionForm
+                  key={tx.public_id}
+                  tx={tx}
+                  categories={categories}
+                  month={month}
+                  categoriesById={categoriesById}
+                  isRecurringCategory
+                  isFirst={idx === 0}
+                  isLast={idx === total - 1}
+                />
+              )
+              idx++
+            })
+            return allRows
+          })()}
         </div>
       </div>
     </div>

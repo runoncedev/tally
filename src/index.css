@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *), @media (prefers-color-scheme: dark));
@@ -72,6 +70,11 @@ dialog::backdrop {
 @keyframes float-small {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2.5px); }
+}
+
+@keyframes wave-letter {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
 }
 
 @keyframes slide-out-left {

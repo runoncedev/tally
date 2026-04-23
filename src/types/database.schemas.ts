@@ -42,7 +42,7 @@ export const publicCategoriesUpdateSchema = z.object({
 
 export const publicTransactionsRowSchema = z.object({
   amount: z.number(),
-  category_id: z.number(),
+  category_id: z.number().nullable(),
   created_at: z.string(),
   date: z.string(),
   description: z.string().nullable(),
@@ -54,7 +54,7 @@ export const publicTransactionsRowSchema = z.object({
 
 export const publicTransactionsInsertSchema = z.object({
   amount: z.number(),
-  category_id: z.number(),
+  category_id: z.number().optional().nullable(),
   created_at: z.string().optional(),
   date: z.string().optional(),
   description: z.string().optional().nullable(),
@@ -66,7 +66,7 @@ export const publicTransactionsInsertSchema = z.object({
 
 export const publicTransactionsUpdateSchema = z.object({
   amount: z.number().optional(),
-  category_id: z.number().optional(),
+  category_id: z.number().optional().nullable(),
   created_at: z.string().optional(),
   date: z.string().optional(),
   description: z.string().optional().nullable(),
