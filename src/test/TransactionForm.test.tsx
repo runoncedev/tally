@@ -39,7 +39,8 @@ describe('TransactionForm', () => {
     )
 
     await user.type(screen.getByPlaceholderText('0'), '50')
-    await user.selectOptions(screen.getAllByRole('combobox')[0], '2')
+    await user.type(screen.getByPlaceholderText('Category'), 'Food')
+    await user.click(await screen.findByRole('option', { name: 'Food' }))
     await user.click(screen.getByRole('button', { name: /add/i }))
 
     await waitFor(() => {
