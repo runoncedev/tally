@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
+import type { Category, Transaction } from '../lib/collections'
 import { transactionsCollection } from '../lib/collections'
 import { supabase } from '../lib/supabase'
-import type { Category, Transaction } from '../lib/collections'
 
 type TransactionFormProps = {
   tx?: Transaction
@@ -131,33 +131,8 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     handleSave()
   }
 
-  if (tx && !isEditing) {
-    const isIncome = tx.amount >= 0
-    const categoryName = tx.category_id ? categoriesById[tx.category_id]?.name : null
-    return (
-      <button
-        type="button"
-        onClick={() => setIsEditing(true)}
-        className="group w-full border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl p-4 flex items-center gap-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors text-left relative hover:z-10"
-      >
-        {categoryName && (
-          <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
-        )}
-        {tx.description && (
-          <>
-            <span className="text-zinc-300 dark:text-zinc-600 shrink-0">·</span>
-            <span className="text-[15px] text-zinc-400 dark:text-zinc-500 truncate min-w-0">{tx.description}</span>
-          </>
-        )}
-        <span className={`text-[15px] font-semibold shrink-0 ml-auto ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-          {isIncome ? '+' : '-'}${Math.abs(tx.amount).toLocaleString('en-US')}
-        </span>
-      </button>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex flex-col gap-3 my-3 first:mt-0 last:mb-0">
+  const formFields = (
+    <>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           <span className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
@@ -174,7 +149,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
               {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
             </div>
           </div>
         </div>
@@ -185,7 +160,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
             className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
           >
             <span className="block sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-100 sm:delay-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
             </span>
           </button>
         )}
@@ -219,7 +194,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         <div>
           {(isRecurringPrefill || isRecurringCategory) && (
             <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
-              <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
               Recurring
             </span>
           )}
@@ -256,26 +231,74 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           </button>
         </div>
       </div>
+    </>
+  )
+
+  if (!tx) {
+    return (
+      <form onSubmit={handleSubmit} className="group rounded-xl border border-zinc-300 dark:border-zinc-700 p-4 flex flex-col gap-3 my-3 first:mt-0 last:mb-0">
+        {formFields}
+      </form>
+    )
+  }
+
+  const isIncome = tx.amount >= 0
+  const categoryName = tx.category_id ? categoriesById[tx.category_id]?.name : null
+
+  return (
+    <div className="group border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl relative hover:z-10 overflow-hidden">
+      <div style={{ interpolateSize: 'allow-keywords' } as React.CSSProperties}>
+        <div
+          className="overflow-hidden transition-[height] duration-300 ease-in-out"
+          style={{ height: isEditing ? 0 : 'auto' }}
+        >
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="w-full p-4 flex items-center gap-3 text-left"
+          >
+            {categoryName && (
+              <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
+            )}
+            {tx.description && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-600 shrink-0">·</span>
+                <span className="text-[15px] text-zinc-400 dark:text-zinc-500 truncate min-w-0">{tx.description}</span>
+              </>
+            )}
+            <span className={`text-[15px] font-semibold shrink-0 ml-auto ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+              {isIncome ? '+' : '-'}${Math.abs(tx.amount).toLocaleString('en-US')}
+            </span>
+          </button>
+        </div>
+        <div
+          className="overflow-hidden transition-[height] duration-300 ease-in-out"
+          style={{ height: isEditing ? 'auto' : 0 }}
+        >
+          <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-3">
+            {formFields}
+          </form>
+        </div>
+      </div>
+
       <dialog
         ref={confirmDialogRef}
         className="rounded-2xl p-6 w-80 bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0"
       >
         <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 mb-4">Delete transaction?</p>
-        {tx && (
-          <div className="flex items-center justify-between gap-3 rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-2 mb-4">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${tx.amount >= 0 ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
-                {tx.amount >= 0 ? 'Income' : 'Expense'}
-              </span>
-              {tx.category_id && <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{categoriesById[tx.category_id]?.name}</span>}
-              {tx.description && <span className="text-xs text-zinc-400 dark:text-zinc-500 truncate">· {tx.description}</span>}
-            </div>
-            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 shrink-0">
-              ${Math.abs(tx.amount).toLocaleString('en-US')}
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-2 mb-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${tx.amount >= 0 ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
+              {tx.amount >= 0 ? 'Income' : 'Expense'}
             </span>
+            {tx.category_id && <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{categoriesById[tx.category_id]?.name}</span>}
+            {tx.description && <span className="text-xs text-zinc-400 dark:text-zinc-500 truncate">· {tx.description}</span>}
           </div>
-        )}
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-5">{tx?.recurrent ? 'This will only delete this entry, not future ones.' : 'This action cannot be undone.'}</p>
+          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 shrink-0">
+            ${Math.abs(tx.amount).toLocaleString('en-US')}
+          </span>
+        </div>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-5">{tx.recurrent ? 'This will only delete this entry, not future ones.' : 'This action cannot be undone.'}</p>
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -293,6 +316,6 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           </button>
         </div>
       </dialog>
-    </form>
+    </div>
   )
 }
