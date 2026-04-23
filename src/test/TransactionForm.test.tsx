@@ -43,11 +43,11 @@ describe('TransactionForm', () => {
     await user.click(screen.getByRole('button', { name: /add/i }))
 
     await waitFor(() => {
-      expect(insertedBody).toMatchObject({
+      expect(insertedBody).toMatchObject([{
         amount: -50,
         category_id: 2,
         public_id: publicId,
-      })
+      }])
     })
   })
 })
