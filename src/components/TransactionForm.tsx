@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import type { Category, Transaction } from '../lib/collections'
-import { transactionsCollection } from '../lib/collections'
+import { transactionsCollection, categoriesCollection } from '../lib/collections'
 import { supabase } from '../lib/supabase'
+import { Autocomplete } from '@base-ui/react/autocomplete'
 
 type TransactionFormProps = {
   tx?: Transaction
@@ -67,9 +68,14 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     setIsDirty(true)
   }
 
+  const [categoryInputValue, setCategoryInputValue] = useState(() => {
+    if (form.category_id === null) return ''
+    return categories.find(c => c.id === form.category_id)?.name ?? ''
+  })
+
   const type = form.type
   const filteredCategories = categories.filter(c => c.type === type)
-  const canSave = (isDirty || isRecurringPrefill) && form.amount !== '' && form.category_id !== null
+  const canSave = (isDirty || isRecurringPrefill) && form.amount !== ''
 
   const handleSave = async () => {
     if (!canSave) return
@@ -77,10 +83,22 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
     if (isNaN(rawAmount)) return
     const amount = form.type === 'expense' ? -rawAmount : rawAmount
 
+    let categoryId = form.category_id
+    if (categoryId === -1) {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({ name: categoryInputValue.trim(), type: form.type })
+        .select('id')
+        .single()
+      if (error) throw error
+      categoryId = data.id
+      await categoriesCollection.utils.refetch()
+    }
+
     const payload = {
       date: form.date,
       amount,
-      category_id: form.category_id!,
+      category_id: categoryId,
       description: form.description || null,
       recurrent: form.recurrent,
     }
@@ -138,20 +156,40 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
           <span className={`text-sm font-medium px-2.5 py-1 rounded-lg shrink-0 ${type === 'income' ? 'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400'}`}>
             {type === 'income' ? 'Income' : 'Expense'}
           </span>
-          <div className="relative min-w-0">
-            <select
-              value={form.category_id ?? ''}
-              onChange={e => patch({ category_id: e.target.value ? Number(e.target.value) : null })}
-              disabled={isRecurringCategory || isRecurringPrefill}
-              className={`appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm font-medium rounded-lg pl-3 pr-8 py-1.5 ${form.category_id === null ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-800 dark:text-zinc-100'} ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              <option value="" disabled>Category</option>
-              {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-            </div>
-          </div>
+          <Autocomplete.Root
+            items={filteredCategories}
+            value={categoryInputValue}
+            openOnInputClick
+            onValueChange={(val: string) => {
+              setCategoryInputValue(val)
+              const match = filteredCategories.find(c => c.name === val)
+              patch({ category_id: match ? match.id : (val.trim() ? -1 : null) })
+            }}
+            itemToStringValue={(c: Category) => c.name}
+            disabled={isRecurringCategory || isRecurringPrefill}
+          >
+            <Autocomplete.Input
+              placeholder="Category"
+              className={`appearance-none bg-zinc-100 dark:bg-zinc-800 outline-none text-sm font-medium rounded-lg pl-3 pr-3 py-1.5 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-zinc-800 dark:text-zinc-100 ${isRecurringCategory || isRecurringPrefill ? 'opacity-60 cursor-not-allowed' : ''}`}
+            />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner sideOffset={6}>
+                <Autocomplete.Popup className="z-50 w-(--anchor-width) overflow-hidden rounded-lg bg-white dark:bg-zinc-800 shadow-md ring-1 ring-zinc-200 dark:ring-zinc-700 p-1 data-empty:hidden">
+                  <Autocomplete.List className="max-h-60 overflow-y-auto">
+                    {(c: Category) => (
+                      <Autocomplete.Item
+                        key={c.id}
+                        value={c}
+                        className="relative flex w-full cursor-default items-center rounded-md py-1.5 px-2 text-sm text-zinc-800 dark:text-zinc-100 outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-700"
+                      >
+                        {c.name}
+                      </Autocomplete.Item>
+                    )}
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
         </div>
         {tx && (
           <button
