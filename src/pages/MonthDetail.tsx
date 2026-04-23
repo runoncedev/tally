@@ -158,6 +158,7 @@ export default function MonthDetail() {
                   navigate({ to: '/month/$month', params: { month: m } })
                 }
               }}
+              tabIndex={-1}
               className="absolute inset-0 opacity-0 pointer-events-none w-full"
             />
           </div>

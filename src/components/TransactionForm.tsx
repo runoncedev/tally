@@ -276,7 +276,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
 
   if (!tx) {
     return (
-      <div className="group border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl relative hover:z-10 overflow-hidden">
+      <div className="group border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl relative hover:z-10">
         <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-3">
           {formFields}
         </form>
@@ -288,16 +288,17 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   const categoryName = tx.category_id ? categoriesById[tx.category_id]?.name : null
 
   return (
-    <div className="group border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl relative hover:z-10 overflow-hidden">
+    <div className="group border border-zinc-300 dark:border-zinc-700 -mt-px first:mt-0 first:rounded-t-xl last:rounded-b-xl relative hover:z-10 focus-within:z-10 focus-within:outline-2 focus-within:outline-blue-500 focus-within:outline">
       <div style={{ interpolateSize: 'allow-keywords' } as React.CSSProperties}>
         <div
           className="overflow-hidden transition-[height] duration-300 ease-in-out"
           style={{ height: isEditing ? 0 : 'auto' }}
+          inert={isEditing ? true : undefined}
         >
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="w-full p-4 flex items-center gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+            className="w-full p-4 flex items-center gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors focus-visible:outline-none"
           >
             {categoryName && (
               <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
@@ -316,6 +317,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
         <div
           className="overflow-hidden transition-[height] duration-300 ease-in-out"
           style={{ height: isEditing ? 'auto' : 0 }}
+          inert={!isEditing ? true : undefined}
         >
           <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-3">
             {formFields}
