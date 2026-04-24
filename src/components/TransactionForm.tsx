@@ -64,6 +64,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
   const [isDirty, setIsDirty] = useState(false)
   const [isEditing, setIsEditing] = useState(!tx)
   const confirmDialogRef = useRef<HTMLDialogElement>(null)
+  const amountInputRef = useRef<HTMLInputElement>(null)
 
   const patch = (p: Partial<FormState>) => {
     setForm(prev => ({ ...prev, ...p }))
@@ -222,14 +223,79 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
       <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 flex items-baseline gap-1">
         <span className="text-2xl font-semibold text-zinc-400 dark:text-zinc-500">$</span>
         <input
+          ref={amountInputRef}
           type="text"
           inputMode="numeric"
           value={form.amount === '' ? '' : Number(form.amount).toLocaleString('en-US')}
           placeholder="0"
           autoFocus={focusOnMount}
+          onKeyDown={e => {
+            const input = amountInputRef.current
+            if (!input) return
+            const cursor = input.selectionStart ?? 0
+            const selEnd = input.selectionEnd ?? 0
+            const value = input.value
+            // no selection: if key would land on a comma, skip it
+            if (cursor === selEnd) {
+              if (e.key === 'Backspace' && value[cursor - 1] === ',') {
+                e.preventDefault()
+                // delete the digit before the comma
+                const raw = value.replace(/,/g, '')
+                const rawCursor = cursor - (value.slice(0, cursor).match(/,/g) ?? []).length
+                const newRaw = raw.slice(0, rawCursor - 1) + raw.slice(rawCursor)
+                if (newRaw === '' || /^\d+$/.test(newRaw)) {
+                  patch({ amount: newRaw })
+                  requestAnimationFrame(() => {
+                    if (!amountInputRef.current) return
+                    const formatted = newRaw === '' ? '' : Number(newRaw).toLocaleString('en-US')
+                    const targetRawCursor = rawCursor - 1
+                    let digits = 0, pos = formatted.length
+                    for (let i = 0; i < formatted.length; i++) {
+                      if (digits === targetRawCursor) { pos = i; break }
+                      if (formatted[i] !== ',') digits++
+                    }
+                    amountInputRef.current.setSelectionRange(pos, pos)
+                  })
+                }
+              } else if (e.key === 'Delete' && value[cursor] === ',') {
+                e.preventDefault()
+                const raw = value.replace(/,/g, '')
+                const rawCursor = cursor - (value.slice(0, cursor).match(/,/g) ?? []).length
+                const newRaw = raw.slice(0, rawCursor) + raw.slice(rawCursor + 1)
+                if (newRaw === '' || /^\d+$/.test(newRaw)) {
+                  patch({ amount: newRaw })
+                  requestAnimationFrame(() => {
+                    if (!amountInputRef.current) return
+                    const formatted = newRaw === '' ? '' : Number(newRaw).toLocaleString('en-US')
+                    let digits = 0, pos = formatted.length
+                    for (let i = 0; i < formatted.length; i++) {
+                      if (digits === rawCursor) { pos = i; break }
+                      if (formatted[i] !== ',') digits++
+                    }
+                    amountInputRef.current.setSelectionRange(pos, pos)
+                  })
+                }
+              }
+            }
+          }}
           onChange={e => {
-            const raw = e.target.value.replace(/,/g, '')
-            if (raw === '' || /^\d+$/.test(raw)) patch({ amount: raw })
+            const input = e.target
+            const cursorBefore = input.selectionStart ?? 0
+            const commasBefore = (input.value.slice(0, cursorBefore).match(/,/g) ?? []).length
+            const rawCursor = cursorBefore - commasBefore
+            const raw = input.value.replace(/,/g, '')
+            if (raw !== '' && !/^\d+$/.test(raw)) return
+            patch({ amount: raw })
+            requestAnimationFrame(() => {
+              if (!amountInputRef.current) return
+              const formatted = raw === '' ? '' : Number(raw).toLocaleString('en-US')
+              let digits = 0, pos = formatted.length
+              for (let i = 0; i < formatted.length; i++) {
+                if (digits === rawCursor) { pos = i; break }
+                if (formatted[i] !== ',') digits++
+              }
+              amountInputRef.current.setSelectionRange(pos, pos)
+            })
           }}
           className="bg-transparent outline-none text-2xl font-semibold w-full placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
         />
