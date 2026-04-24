@@ -6,9 +6,6 @@ import { TransactionForm } from '../components/TransactionForm'
 import type { Transaction } from '../lib/collections'
 import { categoriesCollection, transactionsCollection } from '../lib/collections'
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
-}
 
 function formatMonthLabel(month: string) {
   const [year, mon] = month.split('-').map(Number)

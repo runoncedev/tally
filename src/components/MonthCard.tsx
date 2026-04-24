@@ -1,4 +1,4 @@
-import NumberFlow from '@number-flow/react'
+import NumberFlow, { type Format } from '@number-flow/react'
 import { Link } from '@tanstack/react-router'
 
 type MonthCardProps = {
@@ -16,7 +16,7 @@ function formatMonthLabel(month: string) {
   return new Date(year, mon - 1).toLocaleString('default', { month: 'long', year: 'numeric' })
 }
 
-const currencyFormat: Intl.NumberFormatOptions = { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }
+const currencyFormat: Format = { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }
 
 export function MonthCard({ month, income, expenses, balance, isCurrent, isPast, isLoading }: MonthCardProps) {
   const savingsPct = income > 0 ? Math.max(0, Math.min(balance / income, 1)) * 100 : 0
