@@ -10,7 +10,7 @@ function LoginScreen() {
     options: { redirectTo: window.location.origin }
   })
   return (
-    <div className="flex items-center justify-center bg-white dark:bg-zinc-900">
+    <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-zinc-900">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-8 text-zinc-900 dark:text-zinc-50">Tally</h1>
         <button

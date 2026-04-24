@@ -28,15 +28,14 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
       params={{ month }}
       className={`group relative block rounded-xl border p-4 overflow-hidden transition-colors ${isPast ? 'border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
     >
-      {!isLoading && savingsPct > 0 && (
-        <div
-          className="absolute inset-y-0 left-0 pointer-events-none"
-          style={{
-            width: `${savingsPct}%`,
-            backgroundColor: positive ? 'rgb(34 197 94 / 0.07)' : 'rgb(239 68 68 / 0.07)',
-          }}
-        />
-      )}
+      <div
+        className="absolute inset-y-0 left-0 pointer-events-none transition-all duration-500 ease-in-out"
+        style={{
+          width: `${!isLoading && savingsPct > 0 ? savingsPct : 0}%`,
+          opacity: !isLoading && savingsPct > 0 ? 1 : 0,
+          backgroundColor: positive ? 'rgb(34 197 94 / 0.07)' : 'rgb(239 68 68 / 0.07)',
+        }}
+      />
       {/* mobile: two rows */}
       <div className="flex justify-between items-center sm:hidden">
         <div className="flex items-center gap-2">
