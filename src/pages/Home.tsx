@@ -2,48 +2,14 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { MonthCard } from '../components/MonthCard'
-import { categoriesCollection, transactionsCollection } from '../lib/collections'
-import type { Category, Transaction } from '../lib/collections'
+import { transactionsCollection } from '../lib/collections'
+import type { Transaction } from '../lib/collections'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
 }
 
-function formatMonthShort(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  return new Date(year, mon - 1).toLocaleString('default', { month: 'short' })
-}
 
-function TrendChart({ months }: { months: Array<{ month: string; income: number; expenses: number }> }) {
-  if (months.length < 2) return null
-  const chronological = [...months].sort((a, b) => b.month.localeCompare(a.month))
-  const max = Math.max(...chronological.map(m => Math.abs(m.income - m.expenses)), 1)
-  return (
-    <div className="mt-6 hidden lg:flex flex-col gap-1.5">
-      {chronological.map(m => {
-        const balance = m.income - m.expenses
-        const zero = balance === 0
-        const positive = balance > 0
-        const pct = Math.max((Math.abs(balance) / max) * 100, 0)
-        const bg = zero ? 'rgb(113 113 122 / 0.4)' : positive ? 'rgb(34 197 94 / 0.75)' : 'rgb(239 68 68 / 0.75)'
-        const label = formatMonthShort(m.month)
-        const amount = formatCurrency(balance)
-        return (
-          <Link
-            key={m.month}
-            to="/month/$month"
-            params={{ month: m.month }}
-            className="h-6 rounded flex items-center justify-between px-2 overflow-hidden hover:brightness-110 transition-[filter]"
-            style={{ width: zero ? '64px' : `max(${pct}%, 110px)`, backgroundColor: bg, transition: 'width 0.3s ease' }}
-          >
-            <span className="text-[11px] font-medium text-white/80 shrink-0">{label}</span>
-            <span className="text-[11px] font-medium text-white/80 shrink-0 ml-2">{amount}</span>
-          </Link>
-        )
-      })}
-    </div>
-  )
-}
 
 function buildMonthSummaries(transactions: Array<Transaction>) {
   const months: Record<string, { income: number; expenses: number }> = {}
@@ -60,7 +26,6 @@ function buildMonthSummaries(transactions: Array<Transaction>) {
 
 export default function Home() {
   const { data: transactions = [], isLoading } = useLiveQuery((q) => q.from({ tx: transactionsCollection }), [])
-  const { data: categories = [] } = useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
 
   const today = new Date()
   const currentMonth = today.toISOString().slice(0, 7)
@@ -69,11 +34,6 @@ export default function Home() {
     const d = new Date(today.getFullYear(), today.getMonth() + 1, 1)
     return d.toISOString().slice(0, 7)
   })()
-
-  const categoriesById = useMemo(
-    () => Object.fromEntries(categories.map((c) => [c.id, c])),
-    [categories],
-  )
 
   const months = useMemo(() => {
     const summaries = buildMonthSummaries(transactions)
