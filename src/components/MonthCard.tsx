@@ -1,5 +1,7 @@
 import NumberFlow, { type Format } from '@number-flow/react'
 import { Link } from '@tanstack/react-router'
+import { useSpring, useTransform, useMotionValueEvent, motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 
 type MonthCardProps = {
   month: string
@@ -20,8 +22,17 @@ const currencyFormat: Format = { style: 'currency', currency: 'USD', maximumFrac
 
 export function MonthCard({ month, income, expenses, balance, isCurrent, isPast, isLoading }: MonthCardProps) {
   const savingsPct = income > 0 ? Math.max(0, Math.min(balance / income, 1)) * 100 : 0
-  const positive = balance > 0
   const balanceClass = balance > 0 ? 'text-green-600 dark:text-green-400 font-medium' : balance < 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-zinc-500 dark:text-zinc-400 font-medium'
+
+  const wSpring = useSpring(0, { stiffness: 60, damping: 20 })
+  const [wVal, setWVal] = useState(0)
+
+  useEffect(() => {
+    wSpring.set(!isLoading && savingsPct > 0 ? savingsPct : 0)
+  }, [isLoading, savingsPct])
+
+  useMotionValueEvent(wSpring, 'change', (v) => setWVal(v))
+
   return (
     <Link
       to="/month/$month"
@@ -29,10 +40,10 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
       className={`group relative block rounded-xl border p-4 overflow-hidden transition-colors ${isPast ? 'border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
     >
       {(() => {
-        const w = !isLoading && savingsPct > 0 ? savingsPct : 0
         const opacity = !isLoading && savingsPct > 0 ? 1 : 0
         const fill1 = savingsPct > 66 ? 'rgb(34 197 94 / 0.05)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.07)' : 'rgb(239 68 68 / 0.05)'
         const fill2 = savingsPct > 66 ? 'rgb(34 197 94 / 0.09)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.13)' : 'rgb(239 68 68 / 0.09)'
+        const w = wVal
         return <>
           {/* back wave: slightly wider, more transparent, slower */}
           <svg className="absolute top-0 left-0 w-full pointer-events-none" viewBox="0 0 100 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
