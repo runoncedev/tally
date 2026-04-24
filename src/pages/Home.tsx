@@ -3,7 +3,7 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { MonthCard } from '../components/MonthCard'
-import { transactionsCollection } from '../lib/collections'
+import { categoriesCollection, transactionsCollection } from '../lib/collections'
 import type { Transaction } from '../lib/collections'
 
 
@@ -22,6 +22,7 @@ function buildMonthSummaries(transactions: Array<Transaction>) {
 
 export default function Home() {
   const { data: transactions = [], isLoading } = useLiveQuery((q) => q.from({ tx: transactionsCollection }), [])
+  useLiveQuery((q) => q.from({ c: categoriesCollection }), [])
 
   const today = new Date()
   const currentMonth = today.toISOString().slice(0, 7)
