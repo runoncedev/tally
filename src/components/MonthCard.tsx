@@ -30,18 +30,18 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
     >
       <svg
         className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        viewBox="0 0 100 100"
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <rect
-          x="0"
-          y="0"
-          width={`${!isLoading && savingsPct > 0 ? savingsPct : 0}%`}
-          height="100%"
+        <path
+          d={(() => {
+            const w = !isLoading && savingsPct > 0 ? savingsPct : 0
+            return `M 0,0 L ${w},0 C ${w + 2},25 ${w - 2},75 ${w},100 L 0,100 Z`
+          })()}
           fill={savingsPct > 66 ? 'rgb(34 197 94 / 0.07)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.1)' : 'rgb(239 68 68 / 0.07)'}
           style={{
             opacity: !isLoading && savingsPct > 0 ? 1 : 0,
-            transition: 'width 500ms ease-in-out, opacity 500ms ease-in-out',
           }}
         />
       </svg>
