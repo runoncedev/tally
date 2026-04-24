@@ -28,14 +28,23 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
       params={{ month }}
       className={`group relative block rounded-xl border p-4 overflow-hidden transition-colors ${isPast ? 'border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
     >
-      <div
-        className="absolute inset-y-0 left-0 pointer-events-none transition-all duration-500 ease-in-out"
-        style={{
-          width: `${!isLoading && savingsPct > 0 ? savingsPct : 0}%`,
-          opacity: !isLoading && savingsPct > 0 ? 1 : 0,
-          backgroundColor: savingsPct > 66 ? 'rgb(34 197 94 / 0.07)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.1)' : 'rgb(239 68 68 / 0.07)',
-        }}
-      />
+      <svg
+        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          x="0"
+          y="0"
+          width={`${!isLoading && savingsPct > 0 ? savingsPct : 0}%`}
+          height="100%"
+          fill={savingsPct > 66 ? 'rgb(34 197 94 / 0.07)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.1)' : 'rgb(239 68 68 / 0.07)'}
+          style={{
+            opacity: !isLoading && savingsPct > 0 ? 1 : 0,
+            transition: 'width 500ms ease-in-out, opacity 500ms ease-in-out',
+          }}
+        />
+      </svg>
       {/* mobile: two rows */}
       <div className="flex justify-between items-center sm:hidden">
         <div className="flex items-center gap-2">
