@@ -33,7 +33,7 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
         style={{
           width: `${!isLoading && savingsPct > 0 ? savingsPct : 0}%`,
           opacity: !isLoading && savingsPct > 0 ? 1 : 0,
-          backgroundColor: positive ? 'rgb(34 197 94 / 0.07)' : 'rgb(239 68 68 / 0.07)',
+          backgroundColor: savingsPct > 66 ? 'rgb(34 197 94 / 0.07)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.1)' : 'rgb(239 68 68 / 0.07)',
         }}
       />
       {/* mobile: two rows */}
