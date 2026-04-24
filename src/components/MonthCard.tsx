@@ -28,23 +28,27 @@ export function MonthCard({ month, income, expenses, balance, isCurrent, isPast,
       params={{ month }}
       className={`group relative block rounded-xl border p-4 overflow-hidden transition-colors ${isPast ? 'border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
     >
-      <svg
-        className="absolute top-0 left-0 w-full h-full pointer-events-none"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d={(() => {
-            const w = !isLoading && savingsPct > 0 ? savingsPct : 0
-            return `M 0,0 L ${w},0 C ${w + 2},25 ${w - 2},75 ${w},100 L 0,100 Z`
-          })()}
-          fill={savingsPct > 66 ? 'rgb(34 197 94 / 0.07)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.1)' : 'rgb(239 68 68 / 0.07)'}
-          style={{
-            opacity: !isLoading && savingsPct > 0 ? 1 : 0,
-          }}
-        />
-      </svg>
+      {(() => {
+        const w = !isLoading && savingsPct > 0 ? savingsPct : 0
+        const opacity = !isLoading && savingsPct > 0 ? 1 : 0
+        const fill1 = savingsPct > 66 ? 'rgb(34 197 94 / 0.05)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.07)' : 'rgb(239 68 68 / 0.05)'
+        const fill2 = savingsPct > 66 ? 'rgb(34 197 94 / 0.09)' : savingsPct > 33 ? 'rgb(234 179 8 / 0.13)' : 'rgb(239 68 68 / 0.09)'
+        return <>
+          {/* back wave: slightly wider, more transparent, slower */}
+          <svg className="absolute top-0 left-0 w-full pointer-events-none" viewBox="0 0 100 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ height: '200%', opacity, animation: 'wave-slide 6s linear infinite' }}>
+            <path d={`M 0,0 L ${w + 0.7},0 C ${w + 1.5},25 ${w - 0.5},75 ${w + 0.7},100 L 0,100 Z`} fill={fill1} />
+            <path d={`M 0,100 L ${w + 0.7},100 C ${w + 1.5},125 ${w - 0.5},175 ${w + 0.7},200 L 0,200 Z`} fill={fill1} />
+          </svg>
+          {/* front wave: exact width, more opaque, faster, offset start */}
+          <svg className="absolute top-0 left-0 w-full pointer-events-none" viewBox="0 0 100 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ height: '200%', opacity, animation: 'wave-slide 4s linear -2s infinite' }}>
+            <path d={`M 0,0 L ${w},0 C ${w + 2},25 ${w - 2},75 ${w},100 L 0,100 Z`} fill={fill2} />
+            <path d={`M 0,100 L ${w},100 C ${w + 2},125 ${w - 2},175 ${w},200 L 0,200 Z`} fill={fill2} />
+          </svg>
+          <style>{`@keyframes wave-slide { from { transform: translateY(-50%); } to { transform: translateY(0); } }`}</style>
+        </>
+      })()}
       {/* mobile: two rows */}
       <div className="flex justify-between items-center sm:hidden">
         <div className="flex items-center gap-2">
