@@ -317,10 +317,7 @@ export function TransactionForm({ tx, categories, month, categoriesById, prefill
               <span className="text-[15px] text-zinc-500 dark:text-zinc-400 shrink-0">{categoryName}</span>
             )}
             {tx.description && (
-              <>
-                <span className="text-zinc-300 dark:text-zinc-600 shrink-0">·</span>
-                <span className="text-[15px] text-zinc-400 dark:text-zinc-500 truncate min-w-0">{tx.description}</span>
-              </>
+              <span className="text-[15px] text-zinc-400 dark:text-zinc-500 truncate min-w-0">{tx.description}</span>
             )}
             <span className={`text-[15px] font-semibold shrink-0 ml-auto ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
               {isIncome ? '+' : '-'}${Math.abs(tx.amount).toLocaleString('en-US')}
