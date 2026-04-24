@@ -45,13 +45,12 @@ function TrendChart({ months }: { months: Array<{ month: string; income: number;
   )
 }
 
-function buildMonthSummaries(transactions: Array<Transaction>, categoriesById: Record<number, Category>) {
+function buildMonthSummaries(transactions: Array<Transaction>) {
   const months: Record<string, { income: number; expenses: number }> = {}
   for (const tx of transactions) {
     const month = tx.date.slice(0, 7)
     if (!months[month]) months[month] = { income: 0, expenses: 0 }
-    const type = categoriesById[Number(tx.category_id)]?.type
-    if (type === 'income') months[month].income += tx.amount
+    if (tx.amount >= 0) months[month].income += tx.amount
     else months[month].expenses += Math.abs(tx.amount)
   }
   return Object.entries(months)
@@ -77,7 +76,7 @@ export default function Home() {
   )
 
   const months = useMemo(() => {
-    const summaries = buildMonthSummaries(transactions, categoriesById)
+    const summaries = buildMonthSummaries(transactions)
     if (!summaries.find((m) => m.month === currentMonth)) {
       summaries.push({ month: currentMonth, income: 0, expenses: 0, balance: 0 })
     }
@@ -85,19 +84,19 @@ export default function Home() {
       summaries.push({ month: nextMonth, income: 0, expenses: 0, balance: 0 })
     }
     return summaries.sort((a, b) => b.month.localeCompare(a.month))
-  }, [transactions, categoriesById, currentMonth, isAfterMidMonth, nextMonth])
+  }, [transactions, currentMonth, isAfterMidMonth, nextMonth])
 
   const totalBalance = useMemo(() => months.reduce((sum, m) => sum + m.balance, 0), [months])
 
   return (
-    <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-20 lg:items-start">
-      <div className="lg:sticky lg:top-20 mb-8 lg:mb-0">
+    <div>
+      <div className="mb-8">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Total balance</p>
         {isLoading
           ? <div className="h-[2.25rem] w-32 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
           : <p className={`text-3xl font-bold ${totalBalance > 0 ? 'text-green-600 dark:text-green-400' : totalBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>{formatCurrency(totalBalance)}</p>
         }
-        {!isLoading && <TrendChart months={months} />}
+        {/* {!isLoading && <TrendChart months={months} />} */}
       </div>
 
       <div>
