@@ -1,3 +1,4 @@
+import NumberFlow from '@number-flow/react'
 import { and, eq, gte, lt, useLiveQuery } from '@tanstack/react-db'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import React, { useMemo, useRef, useState } from 'react'
@@ -175,14 +176,12 @@ export default function MonthDetail() {
           <div className="mb-8">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
             <p className={`text-3xl font-bold h-10 flex items-center ${summary.balance > 0 ? 'text-green-600 dark:text-green-400' : summary.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
-              {isLoading ? <span className="inline-block w-28 h-8 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" /> : formatCurrency(summary.balance)}
+              <NumberFlow key={month} value={summary.balance} format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }} className={isLoading ? 'animate-pulse' : ''} />
             </p>
             <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex gap-3">
-              {!isLoading && <>
-                <span>Income <span className={summary.income > 0 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{formatCurrency(summary.income)}</span></span>
-                <span>·</span>
-                <span>Expenses <span className={summary.expenses > 0 ? 'text-red-600 dark:text-red-400 font-medium' : ''}>{formatCurrency(summary.expenses)}</span></span>
-              </>}
+              <span>Income <NumberFlow key={`${month}-income`} value={summary.income} format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }} className={`font-medium ${isLoading ? 'animate-pulse' : summary.income > 0 ? 'text-green-600 dark:text-green-400' : 'text-zinc-400 dark:text-zinc-500'}`} /></span>
+              <span>·</span>
+              <span>Expenses <NumberFlow key={`${month}-expenses`} value={summary.expenses} format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }} className={`font-medium ${isLoading ? 'animate-pulse' : summary.expenses > 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-400 dark:text-zinc-500'}`} /></span>
             </div>
           </div>
 

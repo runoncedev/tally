@@ -1,14 +1,10 @@
+import NumberFlow from '@number-flow/react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { MonthCard } from '../components/MonthCard'
 import { transactionsCollection } from '../lib/collections'
 import type { Transaction } from '../lib/collections'
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
-}
-
 
 
 function buildMonthSummaries(transactions: Array<Transaction>) {
@@ -52,10 +48,9 @@ export default function Home() {
     <div>
       <div className="mb-8">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Total balance</p>
-        {isLoading
-          ? <div className="h-[2.25rem] w-32 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
-          : <p className={`text-3xl font-bold ${totalBalance > 0 ? 'text-green-600 dark:text-green-400' : totalBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>{formatCurrency(totalBalance)}</p>
-        }
+        <p className={`text-3xl font-bold ${totalBalance > 0 ? 'text-green-600 dark:text-green-400' : totalBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
+          <NumberFlow value={totalBalance} format={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }} className={isLoading ? 'animate-pulse' : ''} />
+        </p>
         {/* {!isLoading && <TrendChart months={months} />} */}
       </div>
 
