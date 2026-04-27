@@ -45,6 +45,7 @@
     "globals": "^17.5.0",
     "jsdom": "^29.0.2",
     "msw": "^2.13.4",
+    "prettier": "3.8.3",
     "supazod": "^4.5.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
