@@ -2,9 +2,7 @@ import NumberFlow, { type Format } from "@number-flow/react";
 import { Link } from "@tanstack/react-router";
 import {
   useSpring,
-  useTransform,
   useMotionValueEvent,
-  motion,
 } from "framer-motion";
 import { useEffect, useState } from "react";
 
