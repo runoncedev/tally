@@ -13,7 +13,7 @@ import { useHousehold } from "../lib/household";
 function formatMonthLabel(month: string) {
   const [year, mon] = month.split("-").map(Number);
   return new Date(year, mon - 1).toLocaleString("default", {
-    month: "long",
+    month: "short",
     year: "numeric",
   });
 }
@@ -158,7 +158,7 @@ export default function MonthDetail() {
 
   return (
     <div>
-      <div className="sticky top-0 z-10 mb-6 flex items-center justify-between bg-white py-3 dark:bg-zinc-900">
+      <div className="sticky top-0 z-10 mb-6 flex flex-wrap items-center justify-between bg-white py-3 dark:bg-zinc-900">
         <div className="mr-2.5 flex items-center gap-2">
           <h1 className="text-xl font-semibold">{formatMonthLabel(month)}</h1>
           {month === currentMonth && (
@@ -167,7 +167,7 @@ export default function MonthDetail() {
             </span>
           )}
         </div>
-        <div className="flex items-center">
+        <div className="flex shrink-0 items-center">
           {month !== currentMonth && (
             <a
               href={`/month/${currentMonth}`}
