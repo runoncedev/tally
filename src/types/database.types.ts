@@ -7,31 +7,81 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       categories: {
         Row: {
           created_at: string | null
+          household_id: string | null
           id: number
           name: string
           type: string
         }
         Insert: {
           created_at?: string | null
+          household_id?: string | null
           id?: number
           name: string
           type: string
         }
         Update: {
           created_at?: string | null
+          household_id?: string | null
           id?: number
           name?: string
           type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      household_members: {
+        Row: {
+          household_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          household_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          household_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_members_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      households: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -42,6 +92,7 @@ export type Database = {
           created_at: string
           date: string
           description: string | null
+          household_id: string | null
           id: number
           public_id: string
           recurrent: boolean
@@ -53,6 +104,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          household_id?: string | null
           id?: number
           public_id?: string
           recurrent?: boolean
@@ -64,6 +116,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          household_id?: string | null
           id?: number
           public_id?: string
           recurrent?: boolean
@@ -75,6 +128,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
             referencedColumns: ["id"]
           },
           {
@@ -91,7 +151,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_household: { Args: { household_name: string }; Returns: string }
+      join_household: {
+        Args: { target_household_id: string }
+        Returns: undefined
+      }
+      my_household_ids: { Args: never; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
@@ -224,3 +289,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

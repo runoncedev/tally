@@ -2,6 +2,8 @@ import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
+const isLocal = process.argv.includes('--local')
+
 const env = Object.fromEntries(
   readFileSync(resolve(process.cwd(), '.env'), 'utf-8')
     .split('\n')
@@ -10,14 +12,16 @@ const env = Object.fromEntries(
 )
 
 const projectId = env['SUPABASE_PROJECT_ID']
-if (!projectId) {
+if (!isLocal && !projectId) {
   console.error('Missing SUPABASE_PROJECT_ID in .env')
   process.exit(1)
 }
 
-console.log('Generating Supabase types...')
+const genFlag = isLocal ? '--local' : `--project-id ${projectId}`
+
+console.log(`Generating Supabase types (${isLocal ? 'local' : 'remote'})...`)
 execSync(
-  `npx supabase gen types typescript --project-id ${projectId} --schema public > src/types/database.types.ts`,
+  `npx supabase gen types typescript ${genFlag} --schema public > src/types/database.types.ts`,
   { stdio: 'inherit', shell: '/bin/zsh' }
 )
 

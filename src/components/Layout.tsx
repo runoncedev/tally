@@ -2,14 +2,26 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, HeadContent, useNavigate } from "@tanstack/react-router";
 import { Menu } from "@base-ui/react/menu";
 import { supabase } from "../lib/supabase";
+import { HouseholdContext, fetchHousehold, createHousehold, joinHousehold } from "../lib/household";
 import type { User } from "@supabase/supabase-js";
+import type { Household } from "../lib/household";
 
 function LoginScreen() {
-  const signIn = () =>
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const isLocal = window.location.hostname === "localhost";
+
+  const signInGoogle = () =>
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
+
+  const signInEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await supabase.auth.signInWithPassword({ email, password });
+  };
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-zinc-900">
       <div className="text-center">
@@ -17,11 +29,119 @@ function LoginScreen() {
           Tally
         </h1>
         <button
-          onClick={signIn}
+          onClick={signInGoogle}
           className="rounded-lg bg-zinc-900 px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900"
         >
           Sign in with Google
         </button>
+        {isLocal && (
+          <form onSubmit={signInEmail} className="mt-6 flex flex-col gap-2">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            />
+            <button
+              type="submit"
+              className="rounded-lg border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
+            >
+              Sign in (local)
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HouseholdSetup({ onDone }: { onDone: (h: Household) => void }) {
+  const [name, setName] = useState("");
+  const [joinId, setJoinId] = useState("");
+  const [mode, setMode] = useState<"create" | "join">("create");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      if (mode === "create") {
+        const h = await createHousehold(name.trim() || "My Household");
+        onDone(h);
+      } else {
+        await joinHousehold(joinId.trim());
+        const h = await fetchHousehold();
+        if (!h) throw new Error("Household not found");
+        onDone(h);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-zinc-900">
+      <div className="w-full max-w-sm px-4">
+        <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+          Set up your account
+        </h1>
+        <p className="mb-6 text-sm text-zinc-500">
+          Create a new household or join an existing one.
+        </p>
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={() => setMode("create")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${mode === "create" ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900" : "border border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"}`}
+          >
+            Create new
+          </button>
+          <button
+            onClick={() => setMode("join")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${mode === "join" ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900" : "border border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400"}`}
+          >
+            Join existing
+          </button>
+        </div>
+        <form onSubmit={submit} className="flex flex-col gap-3">
+          {mode === "create" ? (
+            <input
+              type="text"
+              placeholder="Household name (e.g. Rivera family)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            />
+          ) : (
+            <input
+              type="text"
+              placeholder="Household ID"
+              value={joinId}
+              onChange={(e) => setJoinId(e.target.value)}
+              required
+              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            />
+          )}
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-zinc-900 px-6 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+          >
+            {loading ? "..." : mode === "create" ? "Create household" : "Join household"}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -29,25 +149,34 @@ function LoginScreen() {
 
 export function Layout() {
   const [user, setUser] = useState<User | null>(null);
+  const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      if (event === "INITIAL_SESSION") setLoading(false);
+      if (event === "SIGNED_OUT") setHousehold(null);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user === null && !loading) return;
+    fetchHousehold()
+      .then(setHousehold)
+      .catch((err) => console.error("fetchHousehold failed:", err))
+      .finally(() => setLoading(false));
+  }, [user]);
 
   if (loading) return null;
 
   if (!user) return <LoginScreen />;
 
+  if (!household) return <HouseholdSetup onDone={setHousehold} />;
+
   return (
-    <>
+    <HouseholdContext.Provider value={household}>
       <HeadContent />
       <nav className="border-b border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -104,6 +233,6 @@ export function Layout() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Outlet />
       </main>
-    </>
+    </HouseholdContext.Provider>
   );
 }

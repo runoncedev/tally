@@ -5,6 +5,7 @@ import {
   categoriesCollection,
 } from "../lib/collections";
 import { supabase } from "../lib/supabase";
+import { useHousehold } from "../lib/household";
 import { Autocomplete } from "@base-ui/react/autocomplete";
 
 type TransactionFormProps = {
@@ -98,6 +99,7 @@ export function TransactionForm({
   );
   const [isDirty, setIsDirty] = useState(false);
   const [isEditing, setIsEditing] = useState(!tx);
+  const household = useHousehold();
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,7 +127,7 @@ export function TransactionForm({
     if (categoryId === -1) {
       const { data, error } = await supabase
         .from("categories")
-        .insert({ name: categoryInputValue.trim(), type: form.type })
+        .insert({ name: categoryInputValue.trim(), type: form.type, household_id: household.id })
         .select("id")
         .single();
       if (error) throw error;
@@ -162,6 +164,7 @@ export function TransactionForm({
         ...payload,
         public_id: publicId ?? crypto.randomUUID(),
         recurring_source_id: recurringSourceId ?? null,
+        household_id: household.id,
       });
       onSaved?.();
     }

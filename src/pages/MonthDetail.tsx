@@ -8,6 +8,7 @@ import {
   categoriesCollection,
   transactionsCollection,
 } from "../lib/collections";
+import { useHousehold } from "../lib/household";
 
 function formatMonthLabel(month: string) {
   const [year, mon] = month.split("-").map(Number);
@@ -46,6 +47,7 @@ function computeSummary(transactions: Transaction[]) {
 export default function MonthDetail() {
   const { month } = useParams({ from: "/month/$month" });
   const navigate = useNavigate();
+  const household = useHousehold();
   const currentMonth = new Date().toISOString().slice(0, 7);
   const now = new Date();
   const currentMonthLabel = `${now.getMonth() + 1}-${String(now.getFullYear()).slice(2)}`;
@@ -415,6 +417,7 @@ export default function MonthDetail() {
                       recurrent: false,
                       recurring_source_id: tx.public_id,
                       created_at: new Date(now + i).toISOString(),
+                      household_id: household.id,
                     });
                   });
                 }}

@@ -26,6 +26,19 @@ export const categoriesCollection = createCollection(
     },
     queryClient,
     getKey: (item) => item.id,
+    onUpdate: async ({ transaction }) => {
+      const mutation = transaction.mutations[0]
+      const patch = mutation.changes
+      const { error } = await supabase.from('categories').update(patch).eq('id', mutation.key as number)
+      if (error) throw error
+      await categoriesCollection.utils.refetch()
+    },
+    onDelete: async ({ transaction }) => {
+      const mutation = transaction.mutations[0]
+      const { error } = await supabase.from('categories').delete().eq('id', mutation.key as number)
+      if (error) throw error
+      await categoriesCollection.utils.refetch()
+    },
   }),
 )
 
@@ -52,6 +65,7 @@ export const transactionsCollection = createCollection(
           recurrent: m.recurrent ?? false,
           recurring_source_id: m.recurring_source_id ?? null,
           created_at: m.created_at ?? new Date().toISOString(),
+          household_id: m.household_id,
         }
       })
       const { error } = await supabase.from('transactions').insert(rows)
