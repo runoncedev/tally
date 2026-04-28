@@ -4,7 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "./mocks/node";
 import { TransactionForm } from "../components/TransactionForm";
+import { HouseholdContext } from "../lib/household";
 import type { Category } from "../lib/collections";
+
+const testHousehold = { id: "test-household-id", name: "Test Household" };
 
 const categories: Category[] = [
   { id: 1, name: "Salary", type: "income", created_at: "", household_id: null },
@@ -32,13 +35,15 @@ describe("TransactionForm", () => {
     const publicId = crypto.randomUUID();
 
     render(
-      <TransactionForm
-        categories={categories}
-        month="2026-04"
-        categoriesById={categoriesById}
-        initialType="expense"
-        publicId={publicId}
-      />,
+      <HouseholdContext.Provider value={testHousehold}>
+        <TransactionForm
+          categories={categories}
+          month="2026-04"
+          categoriesById={categoriesById}
+          initialType="expense"
+          publicId={publicId}
+        />
+      </HouseholdContext.Provider>,
     );
 
     await user.type(screen.getByPlaceholderText("0"), "50");

@@ -21,11 +21,25 @@ export async function fetchHousehold(): Promise<Household | null> {
   return data
 }
 
+const DEFAULT_CATEGORIES: { name: string; type: 'income' | 'expense' }[] = [
+  { name: 'Salary', type: 'income' },
+  { name: 'Rent', type: 'expense' },
+  { name: 'Groceries', type: 'expense' },
+  { name: 'Utilities', type: 'expense' },
+  { name: 'Transport', type: 'expense' },
+  { name: 'Health', type: 'expense' },
+  { name: 'Entertainment', type: 'expense' },
+  { name: 'Other', type: 'expense' },
+]
+
 export async function createHousehold(name: string): Promise<Household> {
   const { error } = await supabase.rpc('create_household', { household_name: name })
   if (error) throw error
   const household = await fetchHousehold()
   if (!household) throw new Error('Failed to fetch household after creation')
+  await supabase.from('categories').insert(
+    DEFAULT_CATEGORIES.map((c) => ({ ...c, household_id: household.id }))
+  )
   return household
 }
 

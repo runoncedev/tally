@@ -9,6 +9,7 @@ import type { Household } from "../lib/household";
 function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const isLocal = window.location.hostname === "localhost";
 
   const signInGoogle = () =>
@@ -19,12 +20,14 @@ function LoginScreen() {
 
   const signInEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    await supabase.auth.signInWithPassword({ email, password });
+    setError(null);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setError("Invalid email or password");
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-zinc-900">
-      <div className="text-center">
+    <div className="bg-white dark:bg-zinc-900">
+      <div className="mx-auto max-w-5xl px-4 py-8 text-center">
         <h1 className="mb-8 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
           Tally
         </h1>
@@ -35,7 +38,7 @@ function LoginScreen() {
           Sign in with Google
         </button>
         {isLocal && (
-          <form onSubmit={signInEmail} className="mt-6 flex flex-col gap-2">
+          <form onSubmit={signInEmail} className="mt-6 mx-auto flex w-full max-w-sm flex-col gap-2">
             <input
               type="email"
               placeholder="Email"
@@ -56,6 +59,7 @@ function LoginScreen() {
             >
               Sign in (local)
             </button>
+            {error && <p className="text-sm text-red-500">{error}</p>}
           </form>
         )}
       </div>
@@ -92,8 +96,8 @@ function HouseholdSetup({ onDone }: { onDone: (h: Household) => void }) {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-zinc-900">
-      <div className="w-full max-w-sm px-4">
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mx-auto max-w-sm">
         <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
           Set up your account
         </h1>
@@ -118,7 +122,7 @@ function HouseholdSetup({ onDone }: { onDone: (h: Household) => void }) {
           {mode === "create" ? (
             <input
               type="text"
-              placeholder="Household name (e.g. Rivera family)"
+              placeholder="Household name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
@@ -173,63 +177,79 @@ export function Layout() {
 
   if (!user) return <LoginScreen />;
 
-  if (!household) return <HouseholdSetup onDone={setHousehold} />;
+  const nav = (
+    <nav className="border-b border-zinc-200 dark:border-zinc-800">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <Link to="/" className="text-lg font-bold">
+          Tally
+        </Link>
+        <div className="flex items-center text-sm text-zinc-400 dark:text-zinc-500">
+          <Menu.Root>
+            <Menu.Trigger className="rounded-lg p-2 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner align="end" sideOffset={4} className="z-50">
+                <Menu.Popup className="min-w-40 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg outline-none dark:border-zinc-800 dark:bg-zinc-900">
+                  {household && (
+                    <>
+                      <Menu.Item
+                        className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
+                        onClick={() => navigate({ to: "/settings/categories" })}
+                      >
+                        Categories
+                      </Menu.Item>
+                      <Menu.Item
+                        className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
+                        onClick={() => navigate({ to: "/settings/recurring" })}
+                      >
+                        Recurring transactions
+                      </Menu.Item>
+                      <Menu.Separator className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
+                    </>
+                  )}
+                  <Menu.Item
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
+                    onClick={() => supabase.auth.signOut()}
+                  >
+                    Sign out
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+      </div>
+    </nav>
+  );
+
+  if (!household) {
+    return (
+      <>
+        <HeadContent />
+        {nav}
+        <HouseholdSetup onDone={setHousehold} />
+      </>
+    );
+  }
 
   return (
     <HouseholdContext.Provider value={household}>
       <HeadContent />
-      <nav className="border-b border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to="/" className="text-lg font-bold">
-            Tally
-          </Link>
-          <div className="flex items-center text-sm text-zinc-400 dark:text-zinc-500">
-            <Menu.Root>
-              <Menu.Trigger className="rounded-lg p-2 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </Menu.Trigger>
-              <Menu.Portal>
-                <Menu.Positioner align="end" sideOffset={4} className="z-50">
-                  <Menu.Popup className="min-w-40 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg outline-none dark:border-zinc-800 dark:bg-zinc-900">
-                    <Menu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
-                      onClick={() => navigate({ to: "/settings/categories" })}
-                    >
-                      Categories
-                    </Menu.Item>
-                    <Menu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
-                      onClick={() => navigate({ to: "/settings/recurring" })}
-                    >
-                      Recurring transactions
-                    </Menu.Item>
-                    <Menu.Separator className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
-                    <Menu.Item
-                      className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
-                      onClick={() => supabase.auth.signOut()}
-                    >
-                      Sign out
-                    </Menu.Item>
-                  </Menu.Popup>
-                </Menu.Positioner>
-              </Menu.Portal>
-            </Menu.Root>
-          </div>
-        </div>
-      </nav>
+      {nav}
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Outlet />
       </main>

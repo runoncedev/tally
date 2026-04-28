@@ -13,7 +13,10 @@ import {
 } from "@tanstack/react-router";
 import { server } from "./mocks/node";
 import MonthDetail from "../pages/MonthDetail";
+import { HouseholdContext } from "../lib/household";
 import type { TablesInsert } from "../types/database.types";
+
+const testHousehold = { id: "test-household-id", name: "Test Household" };
 
 function renderMonthDetail(month: string) {
   const rootRoute = createRootRoute();
@@ -26,7 +29,11 @@ function renderMonthDetail(month: string) {
     routeTree: rootRoute.addChildren([monthRoute]),
     history: createMemoryHistory({ initialEntries: [`/month/${month}`] }),
   });
-  return render(<RouterProvider router={router} />);
+  return render(
+    <HouseholdContext.Provider value={testHousehold}>
+      <RouterProvider router={router} />
+    </HouseholdContext.Provider>,
+  );
 }
 
 describe("MonthDetail", () => {
