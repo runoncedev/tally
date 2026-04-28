@@ -148,8 +148,8 @@ export function MonthCard({
         />
       </div>
       <div className="mt-1 flex min-h-[1.25rem] gap-4 text-sm text-zinc-500 sm:hidden dark:text-zinc-400">
-        <span>
-          Income{" "}
+        <span className="flex flex-col">
+          <span>Income</span>
           <NumberFlow
             key={`${month}-income`}
             value={income}
@@ -157,8 +157,8 @@ export function MonthCard({
             className={`font-medium ${isLoading ? "animate-pulse" : income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
           />
         </span>
-        <span>
-          Expenses{" "}
+        <span className="flex flex-col">
+          <span>Expenses</span>
           <NumberFlow
             key={`${month}-expenses`}
             value={expenses}

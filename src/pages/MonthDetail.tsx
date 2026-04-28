@@ -292,11 +292,41 @@ export default function MonthDetail() {
                 className={isLoading ? "animate-pulse" : ""}
               />
             </p>
-            <div className="mt-1 flex gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+            {/* mobile: stacked */}
+            <div className="mt-1 flex gap-4 text-sm text-zinc-500 sm:hidden dark:text-zinc-400">
+              <span className="flex flex-col">
+                <span>Income</span>
+                <NumberFlow
+                  key={`${month}-income`}
+                  value={summary.income}
+                  format={{
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 0,
+                  }}
+                  className={`font-medium ${isLoading ? "animate-pulse" : summary.income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
+                />
+              </span>
+              <span className="flex flex-col">
+                <span>Expenses</span>
+                <NumberFlow
+                  key={`${month}-expenses`}
+                  value={summary.expenses}
+                  format={{
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 0,
+                  }}
+                  className={`font-medium ${isLoading ? "animate-pulse" : summary.expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+                />
+              </span>
+            </div>
+            {/* sm+: inline with dot */}
+            <div className="mt-1 hidden gap-3 text-sm text-zinc-500 sm:flex dark:text-zinc-400">
               <span>
                 Income{" "}
                 <NumberFlow
-                  key={`${month}-income`}
+                  key={`${month}-income-sm`}
                   value={summary.income}
                   format={{
                     style: "currency",
@@ -310,7 +340,7 @@ export default function MonthDetail() {
               <span>
                 Expenses{" "}
                 <NumberFlow
-                  key={`${month}-expenses`}
+                  key={`${month}-expenses-sm`}
                   value={summary.expenses}
                   format={{
                     style: "currency",
