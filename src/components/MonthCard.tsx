@@ -1,4 +1,4 @@
-import NumberFlow, { type Format } from "@number-flow/react";
+import { CurrencyFlow } from "./CurrencyFlow";
 import { Link } from "@tanstack/react-router";
 import {
   useSpring,
@@ -24,11 +24,6 @@ function formatMonthLabel(month: string) {
   });
 }
 
-const currencyFormat: Format = {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-};
 
 export function MonthCard({
   month,
@@ -140,29 +135,23 @@ export function MonthCard({
             </span>
           )}
         </div>
-        <NumberFlow
-          key={month}
+        <CurrencyFlow
           value={balance}
-          format={currencyFormat}
           className={`${balanceClass} ${isLoading ? "animate-pulse" : ""}`}
         />
       </div>
       <div className="mt-1 flex min-h-[1.25rem] gap-4 text-sm text-zinc-500 sm:hidden dark:text-zinc-400">
         <span className="flex flex-col">
           <span>Income</span>
-          <NumberFlow
-            key={`${month}-income`}
+          <CurrencyFlow
             value={income}
-            format={currencyFormat}
             className={`font-medium ${isLoading ? "animate-pulse" : income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
           />
         </span>
         <span className="flex flex-col">
           <span>Expenses</span>
-          <NumberFlow
-            key={`${month}-expenses`}
+          <CurrencyFlow
             value={expenses}
-            format={currencyFormat}
             className={`font-medium ${isLoading ? "animate-pulse" : expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
           />
         </span>
@@ -184,28 +173,22 @@ export function MonthCard({
         <div className="flex min-h-[1.25rem] items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
           <span>
             Income{" "}
-            <NumberFlow
-              key={`${month}-income-sm`}
+            <CurrencyFlow
               value={income}
-              format={currencyFormat}
               className={`font-medium ${isLoading ? "animate-pulse" : income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
             />
           </span>
           <span>
             Expenses{" "}
-            <NumberFlow
-              key={`${month}-expenses-sm`}
+            <CurrencyFlow
               value={expenses}
-              format={currencyFormat}
               className={`font-medium ${isLoading ? "animate-pulse" : expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
             />
           </span>
         </div>
         <div className="ml-auto">
-          <NumberFlow
-            key={`${month}-sm`}
+          <CurrencyFlow
             value={balance}
-            format={currencyFormat}
             className={`${balanceClass} ${isLoading ? "animate-pulse" : ""}`}
           />
         </div>

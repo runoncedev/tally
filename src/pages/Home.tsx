@@ -1,7 +1,7 @@
-import NumberFlow from "@number-flow/react";
 import { useLiveQuery } from "@tanstack/react-db";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { CurrencyFlow } from "../components/CurrencyFlow";
 import { MonthCard } from "../components/MonthCard";
 import {
   categoriesCollection,
@@ -72,13 +72,8 @@ export default function Home() {
         <p
           className={`text-3xl font-bold ${totalBalance > 0 ? "text-green-600 dark:text-green-400" : totalBalance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-500 dark:text-zinc-400"}`}
         >
-          <NumberFlow
+          <CurrencyFlow
             value={totalBalance}
-            format={{
-              style: "currency",
-              currency: "USD",
-              maximumFractionDigits: 0,
-            }}
             className={isLoading ? "animate-pulse" : ""}
           />
         </p>

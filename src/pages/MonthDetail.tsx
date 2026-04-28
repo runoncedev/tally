@@ -1,7 +1,7 @@
-import NumberFlow from "@number-flow/react";
 import { and, eq, gte, lt, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import React, { useMemo, useRef, useState } from "react";
+import { CurrencyFlow } from "../components/CurrencyFlow";
 import { TransactionForm } from "../components/TransactionForm";
 import type { Transaction } from "../lib/collections";
 import {
@@ -281,14 +281,8 @@ export default function MonthDetail() {
             <p
               className={`flex h-10 items-center text-3xl font-bold ${summary.balance > 0 ? "text-green-600 dark:text-green-400" : summary.balance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-500 dark:text-zinc-400"}`}
             >
-              <NumberFlow
-                key={month}
+              <CurrencyFlow
                 value={summary.balance}
-                format={{
-                  style: "currency",
-                  currency: "USD",
-                  maximumFractionDigits: 0,
-                }}
                 className={isLoading ? "animate-pulse" : ""}
               />
             </p>
@@ -296,27 +290,15 @@ export default function MonthDetail() {
             <div className="mt-1 flex gap-4 text-sm text-zinc-500 sm:hidden dark:text-zinc-400">
               <span className="flex flex-col">
                 <span>Income</span>
-                <NumberFlow
-                  key={`${month}-income`}
+                <CurrencyFlow
                   value={summary.income}
-                  format={{
-                    style: "currency",
-                    currency: "USD",
-                    maximumFractionDigits: 0,
-                  }}
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
               </span>
               <span className="flex flex-col">
                 <span>Expenses</span>
-                <NumberFlow
-                  key={`${month}-expenses`}
+                <CurrencyFlow
                   value={summary.expenses}
-                  format={{
-                    style: "currency",
-                    currency: "USD",
-                    maximumFractionDigits: 0,
-                  }}
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
               </span>
@@ -325,28 +307,16 @@ export default function MonthDetail() {
             <div className="mt-1 hidden gap-3 text-sm text-zinc-500 sm:flex dark:text-zinc-400">
               <span>
                 Income{" "}
-                <NumberFlow
-                  key={`${month}-income-sm`}
+                <CurrencyFlow
                   value={summary.income}
-                  format={{
-                    style: "currency",
-                    currency: "USD",
-                    maximumFractionDigits: 0,
-                  }}
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
               </span>
               <span>·</span>
               <span>
                 Expenses{" "}
-                <NumberFlow
-                  key={`${month}-expenses-sm`}
+                <CurrencyFlow
                   value={summary.expenses}
-                  format={{
-                    style: "currency",
-                    currency: "USD",
-                    maximumFractionDigits: 0,
-                  }}
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
               </span>
