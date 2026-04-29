@@ -2,6 +2,7 @@ import { and, eq, gte, lt, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import React, { useMemo, useRef, useState } from "react";
 import { CurrencyFlow } from "../components/CurrencyFlow";
+import { GroupRow } from "../components/GroupRow";
 import { TransactionForm } from "../components/TransactionForm";
 import type { Transaction } from "../lib/collections";
 import {
@@ -9,6 +10,14 @@ import {
   transactionsCollection,
 } from "../lib/collections";
 import { useHousehold } from "../lib/household";
+
+type GroupRowData = {
+  kind: "group";
+  categoryId: number | null;
+  total: number;
+  rows: Transaction[];
+};
+type Row = GroupRowData | (Transaction & { kind: "tx" });
 
 function formatMonthLabel(month: string) {
   const [year, mon] = month.split("-").map(Number);
@@ -116,24 +125,29 @@ export default function MonthDetail() {
     () => new Set(allRecurring.map((tx) => tx.public_id)),
     [allRecurring],
   );
-  const regularTransactions = useMemo(
-    () =>
-      transactions.filter(
-        (tx) =>
-          !tx.recurring_source_id ||
-          !activeRecurringIds.has(tx.recurring_source_id),
-      ),
-    [transactions, activeRecurringIds],
-  );
-  const recurringTransactions = useMemo(
-    () =>
-      transactions.filter(
-        (tx) =>
-          tx.recurring_source_id &&
-          activeRecurringIds.has(tx.recurring_source_id),
-      ),
-    [transactions, activeRecurringIds],
-  );
+
+  const rows = useMemo<Row[]>(() => {
+    const groupMap = new Map<number | null, Transaction[]>();
+    for (const tx of transactions) {
+      const key = tx.category_id ?? null;
+      if (!groupMap.has(key)) groupMap.set(key, []);
+      groupMap.get(key)!.push(tx);
+    }
+    const result: Row[] = [];
+    for (const [categoryId, txs] of groupMap.entries()) {
+      if (txs.length === 1) {
+        result.push({ kind: "tx" as const, ...txs[0] });
+      } else {
+        result.push({
+          kind: "group" as const,
+          categoryId,
+          total: txs.reduce((sum, tx) => sum + tx.amount, 0),
+          rows: txs,
+        });
+      }
+    }
+    return result;
+  }, [transactions]);
 
   const recurringPrefills = useMemo(() => {
     const completedRecurringIds = new Set(
@@ -466,8 +480,7 @@ export default function MonthDetail() {
 
           {!isLoading &&
             newRows.length === 0 &&
-            regularTransactions.length === 0 &&
-            recurringTransactions.length === 0 && (
+            transactions.length === 0 && (
               <div
                 className="hidden flex-col items-center justify-center gap-6 py-16 text-zinc-400 lg:flex dark:text-zinc-500"
                 style={{ viewTransitionName: "empty-state" }}
@@ -522,42 +535,36 @@ export default function MonthDetail() {
                 </p>
               </div>
             )}
-          {(() => {
-            const allRows: React.ReactNode[] = [];
-            const total =
-              regularTransactions.length + recurringTransactions.length;
-            let idx = 0;
-            regularTransactions.forEach((tx) => {
-              allRows.push(
-                <TransactionForm
-                  key={tx.public_id}
-                  tx={tx}
-                  categories={categories}
-                  month={month}
-                  categoriesById={categoriesById}
-                  isFirst={idx === 0}
-                  isLast={idx === total - 1}
-                />,
-              );
-              idx++;
-            });
-            recurringTransactions.forEach((tx) => {
-              allRows.push(
-                <TransactionForm
-                  key={tx.public_id}
-                  tx={tx}
-                  categories={categories}
-                  month={month}
-                  categoriesById={categoriesById}
-                  isRecurringCategory
-                  isFirst={idx === 0}
-                  isLast={idx === total - 1}
-                />,
-              );
-              idx++;
-            });
-            return allRows;
-          })()}
+          {rows.map((row, i) =>
+            row.kind === "tx" ? (
+              <TransactionForm
+                key={row.public_id}
+                tx={row}
+                categories={categories}
+                month={month}
+                categoriesById={categoriesById}
+                isRecurringCategory={
+                  row.recurring_source_id != null &&
+                  activeRecurringIds.has(row.recurring_source_id)
+                }
+                isFirst={i === 0}
+                isLast={i === rows.length - 1}
+              />
+            ) : (
+              <GroupRow
+                key={row.categoryId ?? "uncategorized"}
+                categoryId={row.categoryId}
+                total={row.total}
+                rows={row.rows}
+                categories={categories}
+                categoriesById={categoriesById}
+                month={month}
+                activeRecurringIds={activeRecurringIds}
+                isFirst={i === 0}
+                isLast={i === rows.length - 1}
+              />
+            ),
+          )}
         </div>
       </div>
     </div>

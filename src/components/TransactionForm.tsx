@@ -7,6 +7,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { useHousehold } from "../lib/household";
 import { Autocomplete } from "@base-ui/react/autocomplete";
+import { ExpandableRow } from "./ExpandableRow";
 
 type TransactionFormProps = {
   tx?: Transaction;
@@ -25,6 +26,7 @@ type TransactionFormProps = {
   recurringSourceId?: string;
   isFirst?: boolean;
   isLast?: boolean;
+  nested?: boolean;
   onSaved?: () => void;
   onDelete?: () => void;
 };
@@ -83,6 +85,7 @@ export function TransactionForm({
   recurringSourceId,
   isFirst = false,
   isLast = false,
+  nested = false,
   onSaved,
   onDelete,
 }: TransactionFormProps) {
@@ -98,7 +101,6 @@ export function TransactionForm({
         ),
   );
   const [isDirty, setIsDirty] = useState(false);
-  const [isEditing, setIsEditing] = useState(!tx);
   const household = useHousehold();
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -158,7 +160,6 @@ export function TransactionForm({
         draft.recurrent = payload.recurrent;
       });
       setIsDirty(false);
-      setIsEditing(false);
     } else {
       transactionsCollection.insert({
         ...payload,
@@ -182,7 +183,6 @@ export function TransactionForm({
           : "",
       );
       setIsDirty(false);
-      setIsEditing(false);
     }
   };
 
@@ -258,33 +258,6 @@ export function TransactionForm({
             </Autocomplete.Root>
           </div>
         </div>
-        {tx && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"
-          >
-            <span className="block transition-opacity duration-100 sm:opacity-0 sm:delay-300 sm:group-hover:opacity-100">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
-            </span>
-          </button>
-        )}
       </div>
 
       <div className="flex items-baseline gap-1 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700">
@@ -492,49 +465,39 @@ export function TransactionForm({
     ? categoriesById[tx.category_id]?.name
     : null;
 
+  const summary = (
+    <>
+      {categoryName && !nested && (
+        <span className="shrink-0 text-[15px] text-zinc-500 dark:text-zinc-400">
+          {categoryName}
+        </span>
+      )}
+      {tx.description && (
+        <span className="min-w-0 truncate text-[15px] text-zinc-400 dark:text-zinc-500">
+          {tx.description}
+        </span>
+      )}
+      <span
+        className={`ml-auto shrink-0 text-[15px] font-semibold ${isIncome ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
+      >
+        {isIncome ? "+" : "-"}$
+        {Math.abs(tx.amount).toLocaleString("en-US")}
+      </span>
+    </>
+  );
+
   return (
-    <div
-      className={`group relative -mt-px overflow-clip border border-zinc-300 focus-within:z-10 hover:z-10 dark:border-zinc-700 ${isFirst ? "mt-0 rounded-t-xl" : ""} ${isLast ? "rounded-b-xl" : ""}`}
-    >
-      <div style={{ interpolateSize: "allow-keywords" } as React.CSSProperties}>
-        <div
-          className="overflow-hidden transition-[height] duration-300 ease-in-out"
-          style={{ height: isEditing ? 0 : "auto" }}
-          inert={isEditing ? true : undefined}
-        >
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-none dark:hover:bg-zinc-800/50 dark:focus-visible:bg-zinc-800/50"
-          >
-            {categoryName && (
-              <span className="shrink-0 text-[15px] text-zinc-500 dark:text-zinc-400">
-                {categoryName}
-              </span>
-            )}
-            {tx.description && (
-              <span className="min-w-0 truncate text-[15px] text-zinc-400 dark:text-zinc-500">
-                {tx.description}
-              </span>
-            )}
-            <span
-              className={`ml-auto shrink-0 text-[15px] font-semibold ${isIncome ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
-            >
-              {isIncome ? "+" : "-"}$
-              {Math.abs(tx.amount).toLocaleString("en-US")}
-            </span>
-          </button>
-        </div>
-        <div
-          className="overflow-hidden transition-[height] duration-300 ease-in-out"
-          style={{ height: isEditing ? "auto" : 0 }}
-          inert={!isEditing ? true : undefined}
-        >
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
-            {formFields}
-          </form>
-        </div>
-      </div>
+    <>
+      <ExpandableRow
+        summary={summary}
+        isFirst={isFirst}
+        isLast={isLast}
+        nested={nested}
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
+          {formFields}
+        </form>
+      </ExpandableRow>
 
       <dialog
         ref={confirmDialogRef}
@@ -585,6 +548,6 @@ export function TransactionForm({
           </button>
         </div>
       </dialog>
-    </div>
+    </>
   );
 }
