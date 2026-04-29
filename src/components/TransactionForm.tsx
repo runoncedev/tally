@@ -171,7 +171,7 @@ export function TransactionForm({
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = (close: () => void) => {
     if (!tx) {
       onDelete?.();
     } else {
@@ -183,6 +183,7 @@ export function TransactionForm({
           : "",
       );
       setIsDirty(false);
+      close();
     }
   };
 
@@ -203,7 +204,7 @@ export function TransactionForm({
     handleSave();
   };
 
-  const formFields = (
+  const formFields = (close: () => void) => (
     <>
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -456,7 +457,7 @@ export function TransactionForm({
         <div className="ml-auto flex gap-2">
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={() => handleCancel(close)}
             className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
             Cancel
@@ -479,7 +480,7 @@ export function TransactionForm({
         className={`group relative -mt-px overflow-hidden border border-zinc-300 hover:z-10 dark:border-zinc-700 ${isFirst ? "mt-0 rounded-t-xl" : ""} ${isLast ? "rounded-b-xl" : ""}`}
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
-          {formFields}
+          {formFields(() => onDelete?.())}
         </form>
       </div>
     );
@@ -520,9 +521,11 @@ export function TransactionForm({
         nested={nested}
         dimSummaryWhenOpen
       >
-        <form onSubmit={handleSubmit} className="group/form flex flex-col gap-3 p-4">
-          {formFields}
-        </form>
+        {(close) => (
+          <form onSubmit={handleSubmit} className="group/form flex flex-col gap-3 p-4">
+            {formFields(close)}
+          </form>
+        )}
       </ExpandableRow>
 
       <dialog

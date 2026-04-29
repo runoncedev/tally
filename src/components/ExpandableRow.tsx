@@ -2,7 +2,7 @@ import { useState } from "react";
 
 type ExpandableRowProps = {
   summary: React.ReactNode;
-  children: React.ReactNode;
+  children: React.ReactNode | ((close: () => void) => React.ReactNode);
   isFirst?: boolean;
   isLast?: boolean;
   defaultExpanded?: boolean;
@@ -46,7 +46,7 @@ export function ExpandableRow({
         className="overflow-hidden transition-[height] duration-300 ease-in-out"
         inert={!open ? true : undefined}
       >
-        {children}
+        {typeof children === "function" ? children(() => setOpen(false)) : children}
       </div>
     </div>
   );
