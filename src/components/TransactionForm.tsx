@@ -493,6 +493,7 @@ export function TransactionForm({
         isFirst={isFirst}
         isLast={isLast}
         nested={nested}
+        dimSummaryWhenOpen
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
           {formFields}

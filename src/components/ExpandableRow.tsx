@@ -7,6 +7,7 @@ type ExpandableRowProps = {
   isLast?: boolean;
   defaultExpanded?: boolean;
   nested?: boolean;
+  dimSummaryWhenOpen?: boolean;
 };
 
 export function ExpandableRow({
@@ -16,6 +17,7 @@ export function ExpandableRow({
   isLast = false,
   defaultExpanded = false,
   nested = false,
+  dimSummaryWhenOpen = false,
 }: ExpandableRowProps) {
   const [open, setOpen] = useState(defaultExpanded);
 
@@ -32,7 +34,7 @@ export function ExpandableRow({
         onClick={() => setOpen((o) => !o)}
         className={`flex w-full items-center gap-3 py-3 pr-4 text-left transition-colors hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-none dark:hover:bg-zinc-800/50 dark:focus-visible:bg-zinc-800/50 ${nested ? "pl-8" : "pl-4"}`}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className={`flex min-w-0 flex-1 items-center gap-3 transition-opacity duration-300 ${dimSummaryWhenOpen && open ? "opacity-40" : ""}`}>
           {summary}
         </div>
       </button>
