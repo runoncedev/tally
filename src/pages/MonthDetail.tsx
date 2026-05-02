@@ -292,7 +292,7 @@ export default function MonthDetail() {
       >
         {/* sidebar — sticky on desktop */}
         <div className="lg:sticky lg:top-20">
-          <div className="mb-8">
+          <div key={month} className="mb-8">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Balance</p>
             <p
               className={`flex h-10 items-center text-3xl font-bold ${summary.balance > 0 ? "text-green-600 dark:text-green-400" : summary.balance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-500 dark:text-zinc-400"}`}
