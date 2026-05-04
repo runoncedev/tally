@@ -1,6 +1,7 @@
 import type { Category, Transaction } from "../lib/collections";
 import { ExpandableRow } from "./ExpandableRow";
 import { TransactionForm } from "./TransactionForm";
+import type { TransactionFormPayload } from "./TransactionForm";
 
 type GroupRowProps = {
   categoryId: number | null;
@@ -12,6 +13,8 @@ type GroupRowProps = {
   activeRecurringIds: Set<string>;
   isFirst?: boolean;
   isLast?: boolean;
+  onSubmit?: (payload: TransactionFormPayload) => void;
+  onDelete?: (publicId: string) => void;
 };
 
 export function GroupRow({
@@ -24,6 +27,8 @@ export function GroupRow({
   activeRecurringIds,
   isFirst = false,
   isLast = false,
+  onSubmit,
+  onDelete,
 }: GroupRowProps) {
   const category = categoryId != null ? categoriesById[categoryId] : null;
   const isIncome = total >= 0;
@@ -58,6 +63,8 @@ export function GroupRow({
             isFirst={i === 0}
             isLast={i === rows.length - 1}
             nested
+            onSubmit={onSubmit}
+            onDelete={() => onDelete?.(tx.public_id)}
           />
         ))}
       </div>

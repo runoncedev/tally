@@ -204,6 +204,11 @@ export function Layout() {
             <Menu.Portal>
               <Menu.Positioner align="end" sideOffset={4} className="z-50">
                 <Menu.Popup className="min-w-40 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg outline-none dark:border-zinc-800 dark:bg-zinc-900">
+                  {user?.email && (
+                    <p className="truncate px-3 py-2 text-xs text-zinc-400 dark:text-zinc-500">
+                      {user.email}
+                    </p>
+                  )}
                   {household && (
                     <>
                       <Menu.Item

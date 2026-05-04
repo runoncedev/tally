@@ -4,11 +4,13 @@ import React, { useMemo, useRef, useState } from "react";
 import { CurrencyFlow } from "../components/CurrencyFlow";
 import { GroupRow } from "../components/GroupRow";
 import { TransactionForm } from "../components/TransactionForm";
+import type { TransactionFormPayload } from "../components/TransactionForm";
 import type { Transaction } from "../lib/collections";
 import {
   categoriesCollection,
   transactionsCollection,
 } from "../lib/collections";
+import { supabase } from "../lib/supabase";
 import { useHousehold } from "../lib/household";
 
 type GroupRowData = {
@@ -169,6 +171,52 @@ export default function MonthDetail() {
     setNewRows((prev) => [{ publicId: crypto.randomUUID(), type }, ...prev]);
   const removeRow = (publicId: string) =>
     setNewRows((prev) => prev.filter((r) => r.publicId !== publicId));
+
+  const handleSubmit = async (payload: TransactionFormPayload) => {
+    let categoryId = payload.category_id;
+    if (categoryId === -1 && payload.categoryName) {
+      const { data, error } = await supabase
+        .from("categories")
+        .insert({ name: payload.categoryName, type: payload.amount >= 0 ? "income" : "expense", household_id: household.id })
+        .select("id")
+        .single();
+      if (error) throw error;
+      categoryId = data.id;
+      await categoriesCollection.utils.refetch();
+    }
+
+    const tx = transactions.find((t) => t.public_id === payload.public_id);
+    if (tx) {
+      if (tx.recurrent && !payload.recurrent) {
+        await supabase
+          .from("transactions")
+          .update({ recurring_source_id: null })
+          .eq("recurring_source_id", tx.public_id);
+      }
+      transactionsCollection.update(payload.public_id, (draft) => {
+        draft.date = payload.date;
+        draft.amount = payload.amount;
+        draft.category_id = categoryId;
+        draft.description = payload.description;
+        draft.recurrent = payload.recurrent;
+      });
+    } else {
+      transactionsCollection.insert({
+        public_id: payload.public_id,
+        date: payload.date,
+        amount: payload.amount,
+        category_id: categoryId,
+        description: payload.description,
+        recurrent: payload.recurrent,
+        recurring_source_id: payload.recurring_source_id,
+        household_id: household.id,
+      });
+    }
+  };
+
+  const handleDelete = (publicId: string) => {
+    transactionsCollection.delete(publicId);
+  };
 
   return (
     <div>
@@ -474,6 +522,7 @@ export default function MonthDetail() {
                 isLast
                 onSaved={() => removeRow(row.publicId)}
                 onDelete={() => removeRow(row.publicId)}
+                onSubmit={handleSubmit}
               />
             </div>
           ))}
@@ -549,6 +598,8 @@ export default function MonthDetail() {
                 }
                 isFirst={i === 0}
                 isLast={i === rows.length - 1}
+                onSubmit={handleSubmit}
+                onDelete={() => handleDelete(row.public_id)}
               />
             ) : (
               <GroupRow
@@ -562,6 +613,8 @@ export default function MonthDetail() {
                 activeRecurringIds={activeRecurringIds}
                 isFirst={i === 0}
                 isLast={i === rows.length - 1}
+                onSubmit={handleSubmit}
+                onDelete={handleDelete}
               />
             ),
           )}
