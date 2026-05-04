@@ -600,6 +600,7 @@ export default function MonthDetail() {
                 isLast={i === rows.length - 1}
                 onSubmit={handleSubmit}
                 onDelete={() => handleDelete(row.public_id)}
+                hideMonthInDeleteDialog
               />
             ) : (
               <GroupRow

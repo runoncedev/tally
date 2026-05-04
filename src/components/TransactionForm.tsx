@@ -1,5 +1,6 @@
 import { Autocomplete } from "@base-ui/react/autocomplete";
 import { useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { Category, Transaction } from "../lib/collections";
 import { ExpandableRow } from "./ExpandableRow";
 
@@ -33,9 +34,12 @@ type TransactionFormProps = {
   isFirst?: boolean;
   isLast?: boolean;
   nested?: boolean;
+  confirmOnSave?: boolean;
+  childCount?: number;
   onSaved?: () => void;
   onDelete?: () => void;
   onSubmit?: (payload: TransactionFormPayload) => void;
+  hideMonthInDeleteDialog?: boolean;
 };
 
 type FormState = {
@@ -93,9 +97,12 @@ export function TransactionForm({
   isFirst = false,
   isLast = false,
   nested = false,
+  confirmOnSave = false,
+  childCount,
   onSaved,
   onDelete,
   onSubmit,
+  hideMonthInDeleteDialog = false,
 }: TransactionFormProps) {
   const [form, setForm] = useState<FormState>(() =>
     tx
@@ -110,6 +117,7 @@ export function TransactionForm({
   );
   const [isDirty, setIsDirty] = useState(false);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
+  const confirmSaveDialogRef = useRef<HTMLDialogElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
 
   const patch = (p: Partial<FormState>) => {
@@ -126,7 +134,7 @@ export function TransactionForm({
   const filteredCategories = categories.filter((c) => c.type === type);
   const canSave = (isDirty || isRecurringPrefill) && form.amount !== "";
 
-  const handleSave = () => {
+  const commitSave = () => {
     if (!canSave) return;
     const rawAmount = parseInt(form.amount, 10);
     if (isNaN(rawAmount)) return;
@@ -148,6 +156,15 @@ export function TransactionForm({
     } else {
       setIsDirty(false);
     }
+  };
+
+  const handleSave = () => {
+    if (!canSave) return;
+    if (confirmOnSave && isDirty) {
+      confirmSaveDialogRef.current?.showModal();
+      return;
+    }
+    commitSave();
   };
 
   const handleCancel = (close: () => void) => {
@@ -210,18 +227,17 @@ export function TransactionForm({
 
   const formFields = (close: () => void) => (
     <>
-      {!isRecurringTemplate && !isRecurringCategory && !isRecurringPrefill && (
+      {!isRecurringCategory && !isRecurringPrefill && (
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
-              disabled={isRecurringCategory || isRecurringPrefill}
               onClick={() => {
                 const newType = type === "income" ? "expense" : "income";
                 patch({ type: newType, category_id: null });
                 setCategoryInputValue("");
               }}
-              className={`shrink-0 rounded-lg px-2.5 py-1 text-sm font-medium transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 ${isRecurringCategory || isRecurringPrefill ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:opacity-75"} ${type === "income" ? "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"}`}
+              className={`shrink-0 rounded-lg px-2.5 py-1 text-sm font-medium transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-500 cursor-pointer hover:opacity-75 ${type === "income" ? "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"}`}
             >
               {type === "income" ? "Income" : "Expense"}
             </button>
@@ -238,11 +254,10 @@ export function TransactionForm({
                   });
                 }}
                 itemToStringValue={(c: Category) => c.name}
-                disabled={isRecurringCategory || isRecurringPrefill}
               >
                 <Autocomplete.Input
                   placeholder="Category"
-                  className={`w-full min-w-0 appearance-none rounded-lg bg-zinc-100 py-1.5 pr-3 pl-3 text-sm font-medium text-zinc-800 outline-none placeholder:text-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400 ${isRecurringCategory || isRecurringPrefill ? "cursor-not-allowed opacity-60" : ""}`}
+                  className="w-full min-w-0 appearance-none rounded-lg bg-zinc-100 py-1.5 pr-3 pl-3 text-sm font-medium text-zinc-800 outline-none placeholder:text-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400"
                 />
                 <Autocomplete.Portal>
                   <Autocomplete.Positioner sideOffset={6}>
@@ -264,7 +279,6 @@ export function TransactionForm({
               </Autocomplete.Root>
             </div>
           </div>
-          {deleteButton}
         </div>
       )}
 
@@ -438,7 +452,7 @@ export function TransactionForm({
               {form.recurrent ? "Recurring on" : "Recurring off"}
             </button>
           )}
-          {(isRecurringTemplate || isRecurringCategory) && deleteButton}
+          {deleteButton}
         </div>
 
         <div className="ml-auto flex gap-2">
@@ -490,6 +504,11 @@ export function TransactionForm({
           {tx.description}
         </span>
       )}
+      {!nested && childCount != null && (
+        <span className="shrink-0 text-xs text-zinc-400 dark:text-zinc-500">
+          {childCount} {childCount === 1 ? "entry" : "entries"}
+        </span>
+      )}
       <span
         className={`ml-auto shrink-0 text-[15px] font-semibold ${isIncome ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
       >
@@ -520,7 +539,7 @@ export function TransactionForm({
         className="fixed top-1/2 left-1/2 m-0 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
       >
         <p className="mb-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-          Delete transaction?
+          {tx.recurrent ? "Delete recurring transaction?" : "Delete transaction?"}
         </p>
         <div className="mb-4 flex items-center justify-between gap-3 rounded-lg bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
           <div className="flex min-w-0 items-center gap-2">
@@ -543,9 +562,19 @@ export function TransactionForm({
           </span>
         </div>
         <p className="mb-5 text-xs text-zinc-500 dark:text-zinc-400">
-          {tx.recurrent
-            ? "This will only delete this entry, not future ones."
-            : "This action cannot be undone."}
+          {tx.recurrent ? (
+            hideMonthInDeleteDialog ? (
+              <>This will delete the entry for this month.</>
+            ) : (
+              <>This will delete the entry from <Link to="/month/$month" params={{ month: tx.date.slice(0, 7) }} className="underline underline-offset-2 hover:opacity-75">{tx.date.slice(0, 7)}</Link>.</>
+            )
+          ) : (
+            hideMonthInDeleteDialog ? (
+              <>This action cannot be undone.</>
+            ) : (
+              <>This will delete the transaction from <Link to="/month/$month" params={{ month: tx.date.slice(0, 7) }} className="underline underline-offset-2 hover:opacity-75">{tx.date.slice(0, 7)}</Link>. This action cannot be undone.</>
+            )
+          )}
         </p>
         <div className="flex justify-end gap-2">
           <button
@@ -561,6 +590,35 @@ export function TransactionForm({
             className="rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-600"
           >
             Delete
+          </button>
+        </div>
+      </dialog>
+
+      <dialog
+        ref={confirmSaveDialogRef}
+        className="fixed top-1/2 left-1/2 m-0 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+      >
+        <p className="mb-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Save changes?
+        </p>
+        <p className="mb-5 text-xs text-zinc-500 dark:text-zinc-400">
+          This will update the entry from{" "}
+          {tx && <Link to="/month/$month" params={{ month: tx.date.slice(0, 7) }} className="underline underline-offset-2 hover:opacity-75">{tx.date.slice(0, 7)}</Link>}.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => confirmSaveDialogRef.current?.close()}
+            className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => { confirmSaveDialogRef.current?.close(); commitSave(); }}
+            className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900"
+          >
+            Save
           </button>
         </div>
       </dialog>

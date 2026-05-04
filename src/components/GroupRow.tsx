@@ -65,6 +65,7 @@ export function GroupRow({
             nested
             onSubmit={onSubmit}
             onDelete={() => onDelete?.(tx.public_id)}
+            hideMonthInDeleteDialog
           />
         ))}
       </div>

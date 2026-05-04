@@ -102,15 +102,6 @@ export default function Home() {
                 m.month < currentMonth;
               return (
                 <>
-                  {showDivider && (
-                    <div key="divider" className="my-2 flex items-center gap-3">
-                      <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-800/60" />
-                      <span className="text-xs text-zinc-300 dark:text-zinc-700">
-                        History
-                      </span>
-                      <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-800/60" />
-                    </div>
-                  )}
                   <MonthCard
                     key={m.month}
                     {...m}

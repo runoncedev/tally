@@ -1,18 +1,12 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useLiveQuery, eq } from "@tanstack/react-db";
+import { useState } from "react";
 import {
   transactionsCollection,
   categoriesCollection,
 } from "../lib/collections";
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+import { TransactionForm } from "../components/TransactionForm";
+import type { TransactionFormPayload } from "../components/TransactionForm";
+import { supabase } from "../lib/supabase";
 
 export default function RecurringSettings() {
   const { data: allTransactions = [] } = useLiveQuery(
@@ -26,6 +20,10 @@ export default function RecurringSettings() {
     (q) => q.from({ tx: transactionsCollection }),
     [],
   );
+  const childCountByPublicId = allTx.reduce<Record<string, number>>((acc, tx) => {
+    if (tx.recurring_source_id) acc[tx.recurring_source_id] = (acc[tx.recurring_source_id] ?? 0) + 1;
+    return acc;
+  }, {});
   const { data: categories = [] } = useLiveQuery(
     (q) => q.from({ c: categoriesCollection }),
     [],
@@ -71,17 +69,25 @@ export default function RecurringSettings() {
       return sortDir === "asc" ? cmp : -cmp;
     });
 
-  const handleStopRecurring = (publicId: string) => {
-    transactionsCollection.update(publicId, (draft) => {
-      draft.recurrent = false;
+  const handleSubmit = async (payload: TransactionFormPayload) => {
+    const tx = allTx.find((t) => t.public_id === payload.public_id);
+    if (!tx) return;
+    if (tx.recurrent && !payload.recurrent) {
+      await supabase
+        .from("transactions")
+        .update({ recurring_source_id: null })
+        .eq("recurring_source_id", tx.public_id);
+    }
+    transactionsCollection.update(payload.public_id, (draft) => {
+      draft.amount = payload.amount;
+      draft.category_id = payload.category_id;
+      draft.description = payload.description;
+      draft.recurrent = payload.recurrent;
     });
-    allTx
-      .filter((tx) => tx.recurring_source_id === publicId)
-      .forEach((tx) =>
-        transactionsCollection.update(tx.public_id, (draft) => {
-          draft.recurring_source_id = null;
-        }),
-      );
+  };
+
+  const handleDelete = (publicId: string) => {
+    transactionsCollection.delete(publicId);
   };
 
   return (
@@ -141,48 +147,22 @@ export default function RecurringSettings() {
           No recurring transactions.
         </p>
       ) : (
-        <div className="flex flex-col gap-2">
-          {recurring.map((tx) => {
-            const category = categoriesById[tx.category_id];
-            const type = category?.type ?? "expense";
-            return (
-              <div
-                key={tx.public_id}
-                className="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-800"
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-medium ${type === "income" ? "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"}`}
-                  >
-                    {type === "income" ? "Income" : "Expense"}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                      {category?.name ?? "—"}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <p className="hidden text-xs text-zinc-500 sm:block dark:text-zinc-400">
-                        {formatCurrency(tx.amount)}
-                      </p>
-                      <Link
-                        to="/month/$month"
-                        params={{ month: tx.date.slice(0, 7) }}
-                        className="hidden text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-600 sm:inline dark:text-zinc-500 dark:hover:text-zinc-300"
-                      >
-                        {tx.date.slice(0, 7)}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleStopRecurring(tx.public_id)}
-                  className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                >
-                  Stop recurring
-                </button>
-              </div>
-            );
-          })}
+        <div className="flex flex-col">
+          {recurring.map((tx, i) => (
+            <TransactionForm
+              key={tx.public_id}
+              tx={tx}
+              categories={categories}
+              month={tx.date.slice(0, 7)}
+              categoriesById={categoriesById}
+              isFirst={i === 0}
+              isLast={i === recurring.length - 1}
+              confirmOnSave
+              childCount={childCountByPublicId[tx.public_id] ?? 0}
+              onSubmit={handleSubmit}
+              onDelete={() => handleDelete(tx.public_id)}
+            />
+          ))}
         </div>
       )}
     </div>
