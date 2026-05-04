@@ -198,7 +198,6 @@ export function TransactionForm({
     handleSave();
   };
 
-  const isRecurringTemplate = tx?.recurrent === true;
   const deleteButton = tx && (
     <button
       type="button"

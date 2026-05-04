@@ -94,12 +94,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {months.map((m, i) => {
-              const prevMonth = months[i - 1];
-              const showDivider =
-                prevMonth &&
-                prevMonth.month >= currentMonth &&
-                m.month < currentMonth;
+            {months.map((m) => {
               return (
                 <>
                   <MonthCard
