@@ -412,8 +412,12 @@ export function TransactionForm({
               Recurring
             </span>
           )}
-          {isRecurringTemplate && (
-            <span className="flex items-center gap-1 rounded-lg bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+          {!isRecurringPrefill && !isRecurringCategory && (
+            <button
+              type="button"
+              onClick={() => patch({ recurrent: !form.recurrent })}
+              className={`flex w-[108px] cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${form.recurrent ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-800" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500"}`}
+            >
               <svg
                 className="shrink-0"
                 xmlns="http://www.w3.org/2000/svg"
@@ -431,32 +435,10 @@ export function TransactionForm({
                 <polyline points="7 23 3 19 7 15" />
                 <path d="M21 13v2a4 4 0 0 1-4 4H3" />
               </svg>
-              Recurring
-            </span>
+              {form.recurrent ? "Recurring on" : "Recurring off"}
+            </button>
           )}
           {(isRecurringTemplate || isRecurringCategory) && deleteButton}
-          {!isRecurringPrefill && !isRecurringCategory && !isRecurringTemplate && (
-            <label className="flex min-w-0 cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.recurrent}
-                onChange={(e) => patch({ recurrent: e.target.checked })}
-                className="sr-only"
-              />
-              <div
-                className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${form.recurrent ? "bg-zinc-600 dark:bg-zinc-50" : "bg-zinc-200 dark:bg-zinc-700"}`}
-              >
-                <div
-                  className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform dark:bg-zinc-900 ${form.recurrent ? "translate-x-4" : "translate-x-0"}`}
-                />
-              </div>
-              <span
-                className={`truncate text-sm ${form.recurrent ? "text-zinc-700 dark:text-zinc-200" : "text-zinc-400 dark:text-zinc-600"}`}
-              >
-                Recurring {form.recurrent ? "on" : "off"}
-              </span>
-            </label>
-          )}
         </div>
 
         <div className="ml-auto flex gap-2">
