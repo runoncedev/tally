@@ -148,14 +148,14 @@ export default function CategoriesSettings() {
               return (
                 <div
                   key={cat.id}
-                  className="flex items-center gap-3 rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-800"
+                  className="flex min-w-0 items-center gap-2 rounded-xl border border-zinc-200 px-3 py-3 dark:border-zinc-800"
                 >
                   <select
                     value={editType}
                     onChange={(e) =>
                       setEditType(e.target.value as "expense" | "income")
                     }
-                    className="rounded-md border border-zinc-200 bg-white px-2 py-0.5 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                    className="shrink-0 rounded-md border border-zinc-200 bg-white px-1 py-0.5 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
                   >
                     <option value="expense">Expense</option>
                     <option value="income">Income</option>
@@ -170,16 +170,16 @@ export default function CategoriesSettings() {
                     }}
                     className="flex-1 border-b border-zinc-300 bg-transparent py-0.5 text-sm text-zinc-800 outline-none dark:border-zinc-600 dark:text-zinc-200"
                   />
-                  <div className="ml-auto flex items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1">
                     <button
                       onClick={() => saveEdit(cat.id)}
-                      className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white transition-opacity hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900"
+                      className="shrink-0 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white transition-opacity hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900"
                     >
                       Save
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                      className="hidden rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 sm:block dark:text-zinc-400 dark:hover:bg-zinc-800"
                     >
                       Cancel
                     </button>

@@ -152,7 +152,7 @@ export default function RecurringSettings() {
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`rounded-md px-2 py-0.5 text-xs font-medium ${type === "income" ? "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"}`}
+                    className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-medium ${type === "income" ? "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"}`}
                   >
                     {type === "income" ? "Income" : "Expense"}
                   </span>
@@ -161,13 +161,13 @@ export default function RecurringSettings() {
                       {category?.name ?? "—"}
                     </p>
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className="hidden text-xs text-zinc-500 sm:block dark:text-zinc-400">
                         {formatCurrency(tx.amount)}
                       </p>
                       <Link
                         to="/month/$month"
                         params={{ month: tx.date.slice(0, 7) }}
-                        className="text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+                        className="hidden text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-600 sm:inline dark:text-zinc-500 dark:hover:text-zinc-300"
                       >
                         {tx.date.slice(0, 7)}
                       </Link>
