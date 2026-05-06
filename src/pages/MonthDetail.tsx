@@ -442,7 +442,7 @@ export default function MonthDetail() {
             {recurringPrefills.length > 0 && (
               <Select.Root
                 value=""
-                onValueChange={(publicId: string) => {
+                onValueChange={(publicId: string | null) => {
                   if (!publicId) return;
                   if (publicId === "__add_all__") {
                     const now = Date.now();
@@ -490,7 +490,7 @@ export default function MonthDetail() {
                     <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),16rem)] dark:bg-zinc-900 dark:ring-zinc-700">
                       <Select.List>
                         {recurringPrefills.map((tx) => {
-                          const category = categoriesById[tx.category_id];
+                          const category = tx.category_id != null ? categoriesById[tx.category_id] : undefined;
                           const label = [category?.name, tx.description].filter(Boolean).join(" · ");
                           return (
                             <Select.Item
