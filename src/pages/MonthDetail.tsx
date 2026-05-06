@@ -1,5 +1,6 @@
 import { and, eq, gte, lt, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { Select } from "@base-ui/react/select";
 import React, { useMemo, useRef, useState } from "react";
 import { CurrencyFlow } from "../components/CurrencyFlow";
 import { GroupRow } from "../components/GroupRow";
@@ -466,43 +467,55 @@ export default function MonthDetail() {
               </button>
             )}
             {recurringPrefills.length > 0 && (
-              <button
-                onClick={() => {
-                  const now = Date.now();
-                  recurringPrefills.forEach((tx, i) => {
-                    transactionsCollection.insert({
-                      public_id: crypto.randomUUID(),
-                      date: `${month}-01`,
-                      amount: tx.amount,
-                      category_id: tx.category_id,
-                      description: tx.description ?? null,
-                      recurrent: false,
-                      recurring_source_id: tx.public_id,
-                      created_at: new Date(now + i).toISOString(),
-                      household_id: household.id,
-                    });
+              <Select.Root
+                value=""
+                onValueChange={(publicId: string) => {
+                  if (!publicId) return;
+                  const tx = recurringPrefills.find((t) => t.public_id === publicId);
+                  if (!tx) return;
+                  transactionsCollection.insert({
+                    public_id: crypto.randomUUID(),
+                    date: `${month}-01`,
+                    amount: tx.amount,
+                    category_id: tx.category_id,
+                    description: tx.description ?? null,
+                    recurrent: false,
+                    recurring_source_id: tx.public_id,
+                    household_id: household.id,
                   });
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:ml-auto sm:w-auto lg:ml-0 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="17 1 21 5 17 9" />
-                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                  <polyline points="7 23 3 19 7 15" />
-                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                </svg>
-                Add {recurringPrefills.length} recurring
-              </button>
+                <Select.Trigger className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:ml-auto sm:w-auto lg:ml-0 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  Add recurring
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Positioner sideOffset={6}>
+                    <Select.Popup className="z-50 w-(--anchor-width) overflow-hidden rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-700">
+                      <Select.List>
+                        {recurringPrefills.map((tx) => {
+                          const category = categoriesById[tx.category_id];
+                          const label = [category?.name, tx.description].filter(Boolean).join(" · ");
+                          return (
+                            <Select.Item
+                              key={tx.public_id}
+                              value={tx.public_id}
+                              className="flex w-full cursor-default items-center justify-between gap-4 rounded-md px-3 py-2 text-sm text-zinc-700 outline-none select-none data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:data-highlighted:bg-zinc-800"
+                            >
+                              <Select.ItemText>{label}</Select.ItemText>
+                            </Select.Item>
+                          );
+                        })}
+                      </Select.List>
+                    </Select.Popup>
+                  </Select.Positioner>
+                </Select.Portal>
+              </Select.Root>
             )}
           </div>
         </div>
