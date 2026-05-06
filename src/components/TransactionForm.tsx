@@ -29,6 +29,7 @@ type TransactionFormProps = {
   publicId?: string;
   focusOnMount?: boolean;
   isRecurringPrefill?: boolean;
+  initiallyDirty?: boolean;
   isRecurringCategory?: boolean;
   recurringSourceId?: string;
   isFirst?: boolean;
@@ -92,6 +93,7 @@ export function TransactionForm({
   publicId,
   focusOnMount = false,
   isRecurringPrefill = false,
+  initiallyDirty = false,
   isRecurringCategory = false,
   recurringSourceId,
   isFirst = false,
@@ -115,7 +117,7 @@ export function TransactionForm({
         prefillDescription,
       ),
   );
-  const [isDirty, setIsDirty] = useState(false);
+  const [isDirty, setIsDirty] = useState(initiallyDirty);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
   const confirmSaveDialogRef = useRef<HTMLDialogElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);

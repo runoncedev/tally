@@ -83,7 +83,14 @@ export default function MonthDetail() {
 
   const monthPickerRef = useRef<HTMLInputElement>(null);
   const [newRows, setNewRows] = useState<
-    { publicId: string; type: "income" | "expense" }[]
+    {
+      publicId: string;
+      type: "income" | "expense";
+      prefillCategoryId?: number;
+      prefillDescription?: string;
+      prefillAmount?: number;
+      recurringSourceId?: string;
+    }[]
   >([]);
   const prevMonthRef = useRef(month);
   if (prevMonthRef.current !== month) {
@@ -431,6 +438,62 @@ export default function MonthDetail() {
               </svg>
               Add expense
             </button>
+
+            {recurringPrefills.length > 0 && (
+              <Select.Root
+                value=""
+                onValueChange={(publicId: string) => {
+                  if (!publicId) return;
+                  const tx = recurringPrefills.find((t) => t.public_id === publicId);
+                  if (!tx) return;
+                  setNewRows((prev) => [
+                    {
+                      publicId: crypto.randomUUID(),
+                      type: tx.amount >= 0 ? "income" : "expense",
+                      prefillCategoryId: tx.category_id ?? undefined,
+                      prefillDescription: tx.description ?? undefined,
+                      prefillAmount: Math.abs(tx.amount),
+                      recurringSourceId: tx.public_id,
+                    },
+                    ...prev,
+                  ]);
+                }}
+              >
+                <Select.Trigger className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:ml-auto sm:w-auto lg:ml-0 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  Add recurring
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false}>
+                    <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),16rem)] dark:bg-zinc-900 dark:ring-zinc-700">
+                      <Select.List>
+                        {recurringPrefills.map((tx) => {
+                          const category = categoriesById[tx.category_id];
+                          const label = [category?.name, tx.description].filter(Boolean).join(" · ");
+                          return (
+                            <Select.Item
+                              key={tx.public_id}
+                              value={tx.public_id}
+                              className="flex w-full cursor-default items-center justify-between gap-2 rounded-md px-3 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                            >
+                              <Select.ItemText className="text-zinc-900 dark:text-zinc-100">{label}</Select.ItemText>
+                              <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${tx.amount < 0 ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
+                                {tx.amount < 0 ? "expense" : "income"}
+                              </span>
+                            </Select.Item>
+                          );
+                        })}
+                      </Select.List>
+                    </Select.Popup>
+                  </Select.Positioner>
+                </Select.Portal>
+              </Select.Root>
+            )}
             {import.meta.env.DEV && transactions.length > 0 && (
               <button
                 onClick={() => {
@@ -466,57 +529,6 @@ export default function MonthDetail() {
                 Clear month
               </button>
             )}
-            {recurringPrefills.length > 0 && (
-              <Select.Root
-                value=""
-                onValueChange={(publicId: string) => {
-                  if (!publicId) return;
-                  const tx = recurringPrefills.find((t) => t.public_id === publicId);
-                  if (!tx) return;
-                  transactionsCollection.insert({
-                    public_id: crypto.randomUUID(),
-                    date: `${month}-01`,
-                    amount: tx.amount,
-                    category_id: tx.category_id,
-                    description: tx.description ?? null,
-                    recurrent: false,
-                    recurring_source_id: tx.public_id,
-                    household_id: household.id,
-                  });
-                }}
-              >
-                <Select.Trigger className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:ml-auto sm:w-auto lg:ml-0 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="17 1 21 5 17 9" />
-                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                    <polyline points="7 23 3 19 7 15" />
-                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                  </svg>
-                  Add recurring
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false}>
-                    <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),16rem)] dark:bg-zinc-900 dark:ring-zinc-700">
-                      <Select.List>
-                        {recurringPrefills.map((tx) => {
-                          const category = categoriesById[tx.category_id];
-                          const label = [category?.name, tx.description].filter(Boolean).join(" · ");
-                          return (
-                            <Select.Item
-                              key={tx.public_id}
-                              value={tx.public_id}
-                              className="flex w-full cursor-default items-center justify-between gap-4 rounded-md px-3 py-2 text-sm text-zinc-700 outline-none select-none data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:data-highlighted:bg-zinc-800"
-                            >
-                              <Select.ItemText>{label}</Select.ItemText>
-                            </Select.Item>
-                          );
-                        })}
-                      </Select.List>
-                    </Select.Popup>
-                  </Select.Positioner>
-                </Select.Portal>
-              </Select.Root>
-            )}
           </div>
         </div>
 
@@ -530,6 +542,13 @@ export default function MonthDetail() {
                 categoriesById={categoriesById}
                 initialType={row.type}
                 publicId={row.publicId}
+                prefillCategoryId={row.prefillCategoryId}
+                prefillDescription={row.prefillDescription}
+                prefillAmount={row.prefillAmount}
+                prefillCategoryType={row.type}
+                recurringSourceId={row.recurringSourceId}
+                isRecurringPrefill={false}
+                initiallyDirty={!!row.recurringSourceId}
                 focusOnMount
                 isFirst
                 isLast
