@@ -1,18 +1,18 @@
+import { Select } from "@base-ui/react/select";
 import { and, eq, gte, lt, useLiveQuery } from "@tanstack/react-db";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Select } from "@base-ui/react/select";
 import React, { useMemo, useRef, useState } from "react";
 import { CurrencyFlow } from "../components/CurrencyFlow";
 import { GroupRow } from "../components/GroupRow";
-import { TransactionForm } from "../components/TransactionForm";
 import type { TransactionFormPayload } from "../components/TransactionForm";
+import { TransactionForm } from "../components/TransactionForm";
 import type { Transaction } from "../lib/collections";
 import {
   categoriesCollection,
   transactionsCollection,
 } from "../lib/collections";
-import { supabase } from "../lib/supabase";
 import { useHousehold } from "../lib/household";
+import { supabase } from "../lib/supabase";
 
 type GroupRowData = {
   kind: "group";
@@ -495,8 +495,8 @@ export default function MonthDetail() {
                   Add recurring
                 </Select.Trigger>
                 <Select.Portal>
-                  <Select.Positioner sideOffset={6}>
-                    <Select.Popup className="z-50 w-(--anchor-width) overflow-hidden rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-700">
+                  <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false}>
+                    <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),16rem)] dark:bg-zinc-900 dark:ring-zinc-700">
                       <Select.List>
                         {recurringPrefills.map((tx) => {
                           const category = categoriesById[tx.category_id];
