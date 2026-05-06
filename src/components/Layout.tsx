@@ -139,11 +139,19 @@ function LoginScreen() {
   const demoBalance = demoIncome - demoExpenses;
 
 
-  const signInGoogle = () =>
-    supabase.auth.signInWithOAuth({
+  const signInGoogle = () => {
+    return supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: window.location.origin, scopes: 'https://www.googleapis.com/auth/gmail.readonly' },
     });
+  };
+
+  const signInEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setError("Invalid email or password");
+  };
 
   return (
     <div className="bg-white dark:bg-zinc-900">
@@ -358,7 +366,33 @@ export function Layout() {
         <Link to="/" className="text-lg font-bold">
           Tally
         </Link>
-        <div className="flex items-center text-sm text-zinc-400 dark:text-zinc-500">
+        <div className="flex items-center gap-1 text-sm text-zinc-400 dark:text-zinc-500">
+          <button
+            onClick={async () => {
+              const { data: { session } } = await supabase.auth.getSession()
+              const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session?.provider_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  topicName: 'projects/tally-493920/topics/gmail',
+                  labelIds: ['INBOX'],
+                }),
+              })
+              const data = await res.json()
+              console.log('gmail watch:', data)
+            }}
+            className="rounded-lg p-2 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-400"
+            title="Gmail watch"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
           <Menu.Root>
             <Menu.Trigger className="rounded-lg p-2 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-400">
               <svg
