@@ -444,6 +444,23 @@ export default function MonthDetail() {
                 value=""
                 onValueChange={(publicId: string) => {
                   if (!publicId) return;
+                  if (publicId === "__add_all__") {
+                    const now = Date.now();
+                    recurringPrefills.forEach((tx, i) => {
+                      transactionsCollection.insert({
+                        public_id: crypto.randomUUID(),
+                        date: `${month}-01`,
+                        amount: tx.amount,
+                        category_id: tx.category_id,
+                        description: tx.description ?? null,
+                        recurrent: false,
+                        recurring_source_id: tx.public_id,
+                        created_at: new Date(now + i).toISOString(),
+                        household_id: household.id,
+                      });
+                    });
+                    return;
+                  }
                   const tx = recurringPrefills.find((t) => t.public_id === publicId);
                   if (!tx) return;
                   setNewRows((prev) => [
@@ -488,6 +505,12 @@ export default function MonthDetail() {
                             </Select.Item>
                           );
                         })}
+                        <Select.Item
+                          value="__add_all__"
+                          className="flex w-full cursor-default items-center gap-2 rounded-md px-3 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                        >
+                          <Select.ItemText className="text-zinc-400 dark:text-zinc-500">Add all</Select.ItemText>
+                        </Select.Item>
                       </Select.List>
                     </Select.Popup>
                   </Select.Positioner>
