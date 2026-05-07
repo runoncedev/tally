@@ -1,6 +1,6 @@
 import { Menu } from "@base-ui/react/menu";
 import type { User } from "@supabase/supabase-js";
-import { HeadContent, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { HeadContent, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { Household } from "../lib/household";
 import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
@@ -63,28 +63,35 @@ function LoginScreen() {
 
   return (
     <div className="bg-white dark:bg-zinc-900">
-      <div className="mx-auto max-w-5xl px-4 py-8 text-center">
-        <h1 className="mb-8 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-          Tally
-        </h1>
-        <button
-          onClick={signInGoogle}
-          className="rounded-lg bg-zinc-900 px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900"
-        >
-          Sign in with Google
-        </button>
-        {isLocal && (
-          <form onSubmit={signInEmail} className="mt-6 mx-auto flex w-full max-w-sm flex-col gap-2">
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-            <button type="submit" className="rounded-lg border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">Sign in (local)</button>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-          </form>
-        )}
-      </div>
+      <nav className="border-b border-zinc-200 dark:border-zinc-800">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+          <span className="text-lg font-bold">Tally</span>
+          <div className="flex items-center gap-10">
+            {isLocal && (
+              <Link to="/login" className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
+                Local sign in
+              </Link>
+            )}
+            <button
+              onClick={signInGoogle}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-zinc-50 dark:text-zinc-900"
+            >
+              Sign in with Google
+            </button>
+          </div>
+          {/* {isLocal && (
+            <form onSubmit={signInEmail} className="mt-6 mx-auto flex w-full max-w-sm flex-col gap-2">
+              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+              <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+              <button type="submit" className="rounded-lg border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">Sign in (local)</button>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+            </form>
+          )} */}
+        </div>
+      </nav>
 
-      <div className="mx-auto max-w-5xl px-4 pb-16">
-        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">A quick overview of your spending, month by month.</h2>
+      <div className="mx-auto max-w-5xl px-4 pt-12 pb-16">
+        <h2 className="mb-8 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Overview your spendings, month by month</h2>
         <div className="pointer-events-none flex flex-col gap-3 select-none">
           <MonthCard month="2026-05" income={demoIncome} expenses={demoExpenses} balance={demoBalance} isCurrent />
           <MonthCard month="2026-04" income={5_340_000} expenses={3_870_000} balance={1_470_000} isPast />
@@ -202,6 +209,7 @@ export function Layout() {
   const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -221,7 +229,10 @@ export function Layout() {
 
   if (loading) return null;
 
-  if (!user) return <LoginScreen />;
+  if (!user) {
+    if (pathname === "/login") return <><HeadContent /><Outlet /></>;
+    return <LoginScreen />;
+  }
 
   const nav = (
     <nav className="border-b border-zinc-200 dark:border-zinc-800">
