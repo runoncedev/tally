@@ -16,44 +16,37 @@ const DEMO_CATEGORIES = [
   { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null },
 ];
 
-function DemoForm() {
-  const [form, setForm] = useState<TransactionFieldsState>({
-    amount: "",
-    category_id: null,
-    type: "expense",
-    description: "",
-    recurrent: false,
-  });
-  const [categoryInputValue, setCategoryInputValue] = useState("");
+const DEMO_BASE = { income: 5_340_000, expenses: 1_961_443 };
 
-  const patch = (p: Partial<TransactionFieldsState>) =>
-    setForm((prev) => ({ ...prev, ...p }));
-
-  return (
-    <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-zinc-300 dark:border-zinc-700">
-      <form className="flex flex-col gap-3 p-4" onSubmit={(e) => e.preventDefault()}>
-        <TransactionFormFields
-          form={form}
-          onPatch={patch}
-          categories={DEMO_CATEGORIES}
-          categoryInputValue={categoryInputValue}
-          onCategoryInputChange={setCategoryInputValue}
-          canSave={form.amount !== ""}
-          onCancel={() => {
-            setForm({ amount: "", category_id: null, type: "expense", description: "", recurrent: false });
-            setCategoryInputValue("");
-          }}
-        />
-      </form>
-    </div>
-  );
-}
+const EMPTY_FORM: TransactionFieldsState = {
+  amount: "", category_id: null, type: "expense", description: "", recurrent: false,
+};
 
 function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const isLocal = window.location.hostname === "localhost";
+
+  const [demoTxs, setDemoTxs] = useState<{ amount: number }[]>([]);
+  const [form, setForm] = useState<TransactionFieldsState>(EMPTY_FORM);
+  const [categoryInputValue, setCategoryInputValue] = useState("");
+
+  const patch = (p: Partial<TransactionFieldsState>) =>
+    setForm((prev) => ({ ...prev, ...p }));
+
+  const handleDemoAdd = () => {
+    const raw = parseInt(form.amount, 10);
+    if (isNaN(raw) || raw === 0) return;
+    const amount = form.type === "expense" ? -raw : raw;
+    setDemoTxs((prev) => [...prev, { amount }]);
+    setForm(EMPTY_FORM);
+    setCategoryInputValue("");
+  };
+
+  const demoIncome = DEMO_BASE.income + demoTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const demoExpenses = DEMO_BASE.expenses + demoTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const demoBalance = demoIncome - demoExpenses;
 
   const signInGoogle = () =>
     supabase.auth.signInWithOAuth({
@@ -82,47 +75,39 @@ function LoginScreen() {
         </button>
         {isLocal && (
           <form onSubmit={signInEmail} className="mt-6 mx-auto flex w-full max-w-sm flex-col gap-2">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-            />
-            <button
-              type="submit"
-              className="rounded-lg border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
-            >
-              Sign in (local)
-            </button>
+            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+            <button type="submit" className="rounded-lg border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">Sign in (local)</button>
             {error && <p className="text-sm text-red-500">{error}</p>}
           </form>
         )}
       </div>
 
       <div className="mx-auto max-w-5xl px-4 pb-16">
-        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Overview your spendings, month by month</h2>
+        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">A quick overview of your spending, month by month.</h2>
         <div className="pointer-events-none flex flex-col gap-3 select-none">
-          {([
-            { month: "2026-05", income: 5_340_000, expenses: 1_961_443, balance: 3_378_557, isCurrent: true },
-            { month: "2026-04", income: 5_340_000, expenses: 3_870_000, balance: 1_470_000, isPast: true },
-            { month: "2026-03", income: 5_340_000, expenses: 4_620_000, balance: 720_000, isPast: true },
-            { month: "2026-02", income: 5_340_000, expenses: 6_200_000, balance: -860_000, isPast: true },
-          ] as const).map((m) => (
-            <MonthCard key={m.month} {...m} />
-          ))}
+          <MonthCard month="2026-05" income={demoIncome} expenses={demoExpenses} balance={demoBalance} isCurrent />
+          <MonthCard month="2026-04" income={5_340_000} expenses={3_870_000} balance={1_470_000} isPast />
+          <MonthCard month="2026-03" income={5_340_000} expenses={4_620_000} balance={720_000} isPast />
+          <MonthCard month="2026-02" income={5_340_000} expenses={6_200_000} balance={-860_000} isPast />
         </div>
       </div>
+
       <div className="mx-auto max-w-5xl px-4 pb-16">
         <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Quickly track your movements</h2>
-        <DemoForm />
+        <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-zinc-300 dark:border-zinc-700">
+          <form className="flex flex-col gap-3 p-4" onSubmit={(e) => { e.preventDefault(); handleDemoAdd(); }}>
+            <TransactionFormFields
+              form={form}
+              onPatch={patch}
+              categories={DEMO_CATEGORIES}
+              categoryInputValue={categoryInputValue}
+              onCategoryInputChange={setCategoryInputValue}
+              canSave={form.amount !== ""}
+              onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); }}
+            />
+          </form>
+        </div>
       </div>
     </div>
   );
