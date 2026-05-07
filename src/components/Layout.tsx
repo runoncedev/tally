@@ -1,10 +1,53 @@
-import { useEffect, useState } from "react";
-import { Outlet, Link, HeadContent, useNavigate } from "@tanstack/react-router";
 import { Menu } from "@base-ui/react/menu";
-import { supabase } from "../lib/supabase";
-import { HouseholdContext, fetchHousehold, createHousehold, joinHousehold } from "../lib/household";
 import type { User } from "@supabase/supabase-js";
+import { HeadContent, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import type { Household } from "../lib/household";
+import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
+import { supabase } from "../lib/supabase";
+import { MonthCard } from "./MonthCard";
+import type { TransactionFieldsState } from "./TransactionFormFields";
+import { TransactionFormFields } from "./TransactionFormFields";
+
+const DEMO_CATEGORIES = [
+  { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null },
+  { id: 2, name: "Rent", type: "expense" as const, created_at: "", household_id: null },
+  { id: 3, name: "Groceries", type: "expense" as const, created_at: "", household_id: null },
+  { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null },
+];
+
+function DemoForm() {
+  const [form, setForm] = useState<TransactionFieldsState>({
+    amount: "",
+    category_id: null,
+    type: "expense",
+    description: "",
+    recurrent: false,
+  });
+  const [categoryInputValue, setCategoryInputValue] = useState("");
+
+  const patch = (p: Partial<TransactionFieldsState>) =>
+    setForm((prev) => ({ ...prev, ...p }));
+
+  return (
+    <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-zinc-300 dark:border-zinc-700">
+      <form className="flex flex-col gap-3 p-4" onSubmit={(e) => e.preventDefault()}>
+        <TransactionFormFields
+          form={form}
+          onPatch={patch}
+          categories={DEMO_CATEGORIES}
+          categoryInputValue={categoryInputValue}
+          onCategoryInputChange={setCategoryInputValue}
+          canSave={form.amount !== ""}
+          onCancel={() => {
+            setForm({ amount: "", category_id: null, type: "expense", description: "", recurrent: false });
+            setCategoryInputValue("");
+          }}
+        />
+      </form>
+    </div>
+  );
+}
 
 function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -62,6 +105,24 @@ function LoginScreen() {
             {error && <p className="text-sm text-red-500">{error}</p>}
           </form>
         )}
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 pb-16">
+        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Overview your spendings, month by month</h2>
+        <div className="pointer-events-none flex flex-col gap-3 select-none">
+          {([
+            { month: "2026-05", income: 5_340_000, expenses: 1_961_443, balance: 3_378_557, isCurrent: true },
+            { month: "2026-04", income: 5_340_000, expenses: 3_870_000, balance: 1_470_000, isPast: true },
+            { month: "2026-03", income: 5_340_000, expenses: 4_620_000, balance: 720_000, isPast: true },
+            { month: "2026-02", income: 5_340_000, expenses: 6_200_000, balance: -860_000, isPast: true },
+          ] as const).map((m) => (
+            <MonthCard key={m.month} {...m} />
+          ))}
+        </div>
+      </div>
+      <div className="mx-auto max-w-5xl px-4 pb-16">
+        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Quickly track your movements</h2>
+        <DemoForm />
       </div>
     </div>
   );
