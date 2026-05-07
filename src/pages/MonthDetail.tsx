@@ -486,9 +486,9 @@ export default function MonthDetail() {
                   Add recurring
                 </Select.Trigger>
                 <Select.Portal>
-                  <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false}>
-                    <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl bg-white p-1 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),16rem)] dark:bg-zinc-900 dark:ring-zinc-700">
-                      <Select.List>
+                  <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false} collisionPadding={{ top: 56, bottom: 8, left: 8, right: 8 }}>
+                    <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-none rounded-xl bg-white p-1.5 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),12rem)] dark:bg-zinc-900 dark:ring-zinc-700">
+                      <Select.List className="w-full">
                         {recurringPrefills.map((tx) => {
                           const category = tx.category_id != null ? categoriesById[tx.category_id] : undefined;
                           const label = [category?.name, tx.description].filter(Boolean).join(" · ");
@@ -496,7 +496,7 @@ export default function MonthDetail() {
                             <Select.Item
                               key={tx.public_id}
                               value={tx.public_id}
-                              className="flex w-full cursor-default items-center justify-between gap-2 rounded-md px-3 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                              className="flex w-full cursor-default items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
                             >
                               <Select.ItemText className="text-zinc-900 dark:text-zinc-100">{label}</Select.ItemText>
                               <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${tx.amount < 0 ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
@@ -507,7 +507,7 @@ export default function MonthDetail() {
                         })}
                         <Select.Item
                           value="__add_all__"
-                          className="flex w-full cursor-default items-center gap-2 rounded-md px-3 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                          className="flex w-full cursor-default items-center gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
                         >
                           <Select.ItemText className="text-zinc-400 dark:text-zinc-500">Add all</Select.ItemText>
                         </Select.Item>
