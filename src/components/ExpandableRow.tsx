@@ -8,6 +8,7 @@ type ExpandableRowProps = {
   defaultExpanded?: boolean;
   nested?: boolean;
   dimSummaryWhenOpen?: boolean;
+  readOnly?: boolean;
 };
 
 export function ExpandableRow({
@@ -18,6 +19,7 @@ export function ExpandableRow({
   defaultExpanded = false,
   nested = false,
   dimSummaryWhenOpen = false,
+  readOnly = false,
 }: ExpandableRowProps) {
   const [open, setOpen] = useState(defaultExpanded);
 
@@ -29,6 +31,11 @@ export function ExpandableRow({
           : `group relative -mt-px overflow-clip border border-zinc-300 focus-within:z-10 hover:z-10 dark:border-zinc-700 ${isFirst ? "mt-0 rounded-t-xl" : ""} ${isLast ? "rounded-b-xl" : ""}`
       }
     >
+      {readOnly ? (
+        <div className={`flex w-full items-center gap-3 py-3 pr-4 ${nested ? "pl-8" : "pl-4"}`}>
+          <div className="flex min-w-0 flex-1 items-center gap-3">{summary}</div>
+        </div>
+      ) : (
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -38,16 +45,19 @@ export function ExpandableRow({
           {summary}
         </div>
       </button>
-      <div
-        style={{
-          ...(({ interpolateSize: "allow-keywords" } as React.CSSProperties)),
-          height: open ? "auto" : 0,
-        }}
-        className="overflow-hidden transition-[height] duration-300 ease-in-out"
-        inert={!open ? true : undefined}
-      >
-        {typeof children === "function" ? children(() => setOpen(false)) : children}
-      </div>
+      )}
+      {!readOnly && (
+        <div
+          style={{
+            ...(({ interpolateSize: "allow-keywords" } as React.CSSProperties)),
+            height: open ? "auto" : 0,
+          }}
+          className="overflow-hidden transition-[height] duration-300 ease-in-out"
+          inert={!open ? true : undefined}
+        >
+          {typeof children === "function" ? children(() => setOpen(false)) : children}
+        </div>
+      )}
     </div>
   );
 }

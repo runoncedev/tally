@@ -13,6 +13,7 @@ type GroupRowProps = {
   activeRecurringIds: Set<string>;
   isFirst?: boolean;
   isLast?: boolean;
+  readOnly?: boolean;
   onSubmit?: (payload: TransactionFormPayload) => void;
   onDelete?: (publicId: string) => void;
 };
@@ -27,6 +28,7 @@ export function GroupRow({
   activeRecurringIds,
   isFirst = false,
   isLast = false,
+  readOnly = false,
   onSubmit,
   onDelete,
 }: GroupRowProps) {
@@ -47,7 +49,7 @@ export function GroupRow({
   );
 
   return (
-    <ExpandableRow summary={summary} isFirst={isFirst} isLast={isLast}>
+    <ExpandableRow summary={summary} isFirst={isFirst} isLast={isLast} readOnly={readOnly}>
       <div className="border-t border-zinc-200 dark:border-zinc-700">
         {rows.map((tx, i) => (
           <TransactionForm

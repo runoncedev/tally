@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { Household } from "../lib/household";
 import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
 import { supabase } from "../lib/supabase";
+import { GroupRow } from "./GroupRow";
 import { MonthCard } from "./MonthCard";
 import type { TransactionFieldsState } from "./TransactionFormFields";
 import { TransactionFormFields } from "./TransactionFormFields";
@@ -18,14 +19,28 @@ const DEMO_CATEGORIES = [
 
 const DEMO_BASE = { income: 5_340_000, expenses: 1_961_443 };
 
+const DEMO_CATEGORIES_BY_ID = Object.fromEntries(
+  [
+    { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null },
+    { id: 2, name: "Rent", type: "expense" as const, created_at: "", household_id: null },
+    { id: 3, name: "Groceries", type: "expense" as const, created_at: "", household_id: null },
+    { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null },
+    { id: 5, name: "Health", type: "expense" as const, created_at: "", household_id: null },
+  ].map((c) => [c.id, c])
+);
+
+const DEMO_GROUPS: { categoryId: number; total: number; rows: { public_id: string; amount: number; description: string | null; date: string; category_id: number; household_id: null; recurring_source_id: null }[] }[] = [
+  { categoryId: 2, total: -1_527_605, rows: [{ public_id: "d1", amount: -1_527_605, description: null, date: "2026-05-01", category_id: 2, household_id: null, recurring_source_id: null }] },
+  { categoryId: 3, total: -220_000, rows: [{ public_id: "d2", amount: -220_000, description: null, date: "2026-05-03", category_id: 3, household_id: null, recurring_source_id: null }] },
+  { categoryId: 4, total: -44_480, rows: [{ public_id: "d3", amount: -44_480, description: "Dinner", date: "2026-05-05", category_id: 4, household_id: null, recurring_source_id: null }] },
+  { categoryId: 5, total: -190_000, rows: [{ public_id: "d4", amount: -190_000, description: "Checkup", date: "2026-05-07", category_id: 5, household_id: null, recurring_source_id: null }] },
+];
+
 const EMPTY_FORM: TransactionFieldsState = {
   amount: "", category_id: null, type: "expense", description: "", recurrent: false,
 };
 
 function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const isLocal = window.location.hostname === "localhost";
 
   const [demoTxs, setDemoTxs] = useState<{ amount: number }[]>([]);
@@ -53,13 +68,6 @@ function LoginScreen() {
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-
-  const signInEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError("Invalid email or password");
-  };
 
   return (
     <div className="bg-white dark:bg-zinc-900">
@@ -100,7 +108,7 @@ function LoginScreen() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 pb-16">
+      <div className="mx-auto max-w-5xl px-4 pb-8">
         <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Quickly track your movements</h2>
         <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-zinc-300 dark:border-zinc-700">
           <form className="flex flex-col gap-3 p-4" onSubmit={(e) => { e.preventDefault(); handleDemoAdd(); }}>
@@ -114,6 +122,26 @@ function LoginScreen() {
               onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); }}
             />
           </form>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 pb-16">
+        <div className="mx-auto max-w-xl">
+          {DEMO_GROUPS.map((g, i) => (
+            <GroupRow
+              key={g.categoryId}
+              categoryId={g.categoryId}
+              total={g.total}
+              rows={g.rows as any}
+              categories={[]}
+              categoriesById={DEMO_CATEGORIES_BY_ID}
+              month="2026-05"
+              activeRecurringIds={new Set()}
+              isFirst={i === 0}
+              isLast={i === DEMO_GROUPS.length - 1}
+              readOnly
+            />
+          ))}
         </div>
       </div>
     </div>
