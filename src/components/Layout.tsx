@@ -29,12 +29,7 @@ const DEMO_CATEGORIES_BY_ID = Object.fromEntries(
   ].map((c) => [c.id, c])
 );
 
-const DEMO_GROUPS: { categoryId: number; total: number; rows: { public_id: string; amount: number; description: string | null; date: string; category_id: number; household_id: null; recurring_source_id: null }[] }[] = [
-  { categoryId: 2, total: -1_527_605, rows: [{ public_id: "d1", amount: -1_527_605, description: null, date: "2026-05-01", category_id: 2, household_id: null, recurring_source_id: null }] },
-  { categoryId: 3, total: -220_000, rows: [{ public_id: "d2", amount: -220_000, description: null, date: "2026-05-03", category_id: 3, household_id: null, recurring_source_id: null }] },
-  { categoryId: 4, total: -44_480, rows: [{ public_id: "d3", amount: -44_480, description: "Dinner", date: "2026-05-05", category_id: 4, household_id: null, recurring_source_id: null }] },
-  { categoryId: 5, total: -190_000, rows: [{ public_id: "d4", amount: -190_000, description: "Checkup", date: "2026-05-07", category_id: 5, household_id: null, recurring_source_id: null }] },
-];
+type DemoTx = { public_id: string; amount: number; category_id: number | null; description: string | null; date: string; household_id: null; recurring_source_id: null };
 
 const EMPTY_FORM: TransactionFieldsState = {
   amount: "", category_id: null, type: "expense", description: "", recurrent: false,
@@ -43,7 +38,7 @@ const EMPTY_FORM: TransactionFieldsState = {
 function LoginScreen() {
   const isLocal = window.location.hostname === "localhost";
 
-  const [demoTxs, setDemoTxs] = useState<{ amount: number }[]>([]);
+  const [demoTxs, setDemoTxs] = useState<DemoTx[]>([]);
   const [form, setForm] = useState<TransactionFieldsState>(EMPTY_FORM);
   const [categoryInputValue, setCategoryInputValue] = useState("");
 
@@ -54,7 +49,16 @@ function LoginScreen() {
     const raw = parseInt(form.amount, 10);
     if (isNaN(raw) || raw === 0) return;
     const amount = form.type === "expense" ? -raw : raw;
-    setDemoTxs((prev) => [...prev, { amount }]);
+    const tx: DemoTx = {
+      public_id: crypto.randomUUID(),
+      amount,
+      category_id: form.category_id,
+      description: form.description || null,
+      date: new Date().toISOString().slice(0, 10),
+      household_id: null,
+      recurring_source_id: null,
+    };
+    setDemoTxs((prev) => [...prev, tx]);
     setForm(EMPTY_FORM);
     setCategoryInputValue("");
   };
@@ -62,6 +66,16 @@ function LoginScreen() {
   const demoIncome = DEMO_BASE.income + demoTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
   const demoExpenses = DEMO_BASE.expenses + demoTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
   const demoBalance = demoIncome - demoExpenses;
+
+  const demoGroups = Object.values(
+    demoTxs.reduce<Record<string, { categoryId: number | null; total: number; rows: DemoTx[] }>>((acc, tx) => {
+      const key = String(tx.category_id ?? "null");
+      if (!acc[key]) acc[key] = { categoryId: tx.category_id, total: 0, rows: [] };
+      acc[key].total += tx.amount;
+      acc[key].rows.push(tx);
+      return acc;
+    }, {})
+  );
 
   const signInGoogle = () =>
     supabase.auth.signInWithOAuth({
@@ -125,25 +139,27 @@ function LoginScreen() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 pb-16">
-        <div className="mx-auto max-w-xl">
-          {DEMO_GROUPS.map((g, i) => (
-            <GroupRow
-              key={g.categoryId}
-              categoryId={g.categoryId}
-              total={g.total}
-              rows={g.rows as any}
-              categories={[]}
-              categoriesById={DEMO_CATEGORIES_BY_ID}
-              month="2026-05"
-              activeRecurringIds={new Set()}
-              isFirst={i === 0}
-              isLast={i === DEMO_GROUPS.length - 1}
-              readOnly
-            />
-          ))}
+      {demoGroups.length > 0 && (
+        <div className="mx-auto max-w-5xl px-4 pb-16 pointer-events-none select-none">
+          <div className="mx-auto max-w-xl">
+            {demoGroups.map((g, i) => (
+              <GroupRow
+                key={String(g.categoryId)}
+                categoryId={g.categoryId}
+                total={g.total}
+                rows={g.rows as any}
+                categories={[]}
+                categoriesById={DEMO_CATEGORIES_BY_ID}
+                month="2026-05"
+                activeRecurringIds={new Set()}
+                isFirst={i === 0}
+                isLast={i === demoGroups.length - 1}
+                readOnly
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
