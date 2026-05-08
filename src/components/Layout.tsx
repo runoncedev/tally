@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import type { Household } from "../lib/household";
 import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
 import { supabase } from "../lib/supabase";
-import { GroupRow } from "./GroupRow";
+import { ExpandableRow } from "./ExpandableRow";
 import { MonthCard } from "./MonthCard";
 import type { TransactionFieldsState } from "./TransactionFormFields";
 import { TransactionFormFields } from "./TransactionFormFields";
@@ -35,10 +35,80 @@ const EMPTY_FORM: TransactionFieldsState = {
   amount: "", category_id: null, type: "expense", description: "", recurrent: false,
 };
 
+function txToForm(tx: DemoTx): TransactionFieldsState {
+  return {
+    amount: String(Math.abs(tx.amount)),
+    category_id: tx.category_id,
+    type: tx.amount >= 0 ? "income" : "expense",
+    description: tx.description ?? "",
+    recurrent: false,
+  };
+}
+
+function DemoTxRow({ tx, isFirst, isLast, onUpdate, onDelete }: {
+  tx: DemoTx;
+  isFirst: boolean;
+  isLast: boolean;
+  onUpdate: (tx: DemoTx) => void;
+  onDelete: () => void;
+}) {
+  const [form, setForm] = useState<TransactionFieldsState>(() => txToForm(tx));
+  const [categoryInputValue, setCategoryInputValue] = useState(
+    DEMO_CATEGORIES_BY_ID[tx.category_id ?? -1]?.name ?? ""
+  );
+  const patch = (p: Partial<TransactionFieldsState>) => setForm((prev) => ({ ...prev, ...p }));
+  const isIncome = tx.amount >= 0;
+  const catName = DEMO_CATEGORIES_BY_ID[tx.category_id ?? -1]?.name ?? null;
+
+  const summary = (
+    <>
+      <span className="shrink-0 text-[15px] font-medium text-zinc-600 dark:text-zinc-300">
+        {catName}
+        {tx.description && <span className={`${catName ? "ml-2 " : ""}text-zinc-400 dark:text-zinc-500`}>{tx.description}</span>}
+      </span>
+      <span className={`ml-auto shrink-0 text-[15px] font-semibold ${isIncome ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+        {isIncome ? "+" : "-"}${Math.abs(tx.amount).toLocaleString("en-US")}
+      </span>
+    </>
+  );
+
+  return (
+    <ExpandableRow summary={summary} isFirst={isFirst} isLast={isLast} dimSummaryWhenOpen>
+      {(close) => (
+        <div>
+          <form className="group/form flex flex-col gap-3 p-4" onSubmit={(e) => {
+            e.preventDefault();
+            const raw = parseInt(form.amount, 10);
+            if (isNaN(raw) || raw === 0) return;
+            const amount = form.type === "expense" ? -raw : raw;
+            onUpdate({ ...tx, amount, category_id: form.category_id, description: form.description || null });
+            close();
+          }}>
+            <TransactionFormFields
+              form={form}
+              onPatch={patch}
+              categories={DEMO_CATEGORIES}
+              categoryInputValue={categoryInputValue}
+              onCategoryInputChange={setCategoryInputValue}
+              canSave={form.amount !== ""}
+              hideRecurring
+              isEditing
+              showDelete
+              onDelete={onDelete}
+              onCancel={close}
+            />
+          </form>
+        </div>
+      )}
+    </ExpandableRow>
+  );
+}
+
 function LoginScreen() {
   const isLocal = window.location.hostname === "localhost";
 
   const [demoTxs, setDemoTxs] = useState<DemoTx[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<TransactionFieldsState>(EMPTY_FORM);
   const [categoryInputValue, setCategoryInputValue] = useState("");
 
@@ -61,6 +131,7 @@ function LoginScreen() {
     setDemoTxs((prev) => [...prev, tx]);
     setForm(EMPTY_FORM);
     setCategoryInputValue("");
+    setShowAddForm(false);
   };
 
   const demoIncome = DEMO_BASE.income + demoTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
@@ -116,45 +187,57 @@ function LoginScreen() {
         <h2 className="mb-8 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Overview your spendings, month by month</h2>
         <div className="pointer-events-none flex flex-col gap-3 select-none">
           <MonthCard month="2026-05" income={demoIncome} expenses={demoExpenses} balance={demoBalance} isCurrent />
-          <MonthCard month="2026-04" income={5_340_000} expenses={3_870_000} balance={1_470_000} isPast />
-          <MonthCard month="2026-03" income={5_340_000} expenses={4_620_000} balance={720_000} isPast />
-          <MonthCard month="2026-02" income={5_340_000} expenses={6_200_000} balance={-860_000} isPast />
+          <div className="opacity-75">
+            <MonthCard month="2026-04" income={5_340_000} expenses={4_620_000} balance={1_220_000} isPast />
+          </div>
+          <div className="opacity-50">
+            <MonthCard month="2026-03" income={5_340_000} expenses={3_870_000} balance={1_470_000} isPast />
+          </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-5xl px-4 pb-8">
         <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Quickly track your movements</h2>
-        <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-zinc-300 dark:border-zinc-700">
-          <form className="flex flex-col gap-3 p-4" onSubmit={(e) => { e.preventDefault(); handleDemoAdd(); }}>
-            <TransactionFormFields
-              form={form}
-              onPatch={patch}
-              categories={DEMO_CATEGORIES}
-              categoryInputValue={categoryInputValue}
-              onCategoryInputChange={setCategoryInputValue}
-              canSave={form.amount !== ""}
-              onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); }}
-            />
-          </form>
+        <div className="mx-auto max-w-xl flex flex-col gap-3">
+          <div className="rounded-xl border border-zinc-300 dark:border-zinc-700">
+            <button
+              type="button"
+              onClick={() => setShowAddForm(true)}
+              className="flex w-full items-center justify-center gap-2 px-4 py-3 text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200"
+            >
+              + Add transaction
+            </button>
+          </div>
+          {showAddForm && (
+            <div className="rounded-xl border border-zinc-300 dark:border-zinc-700">
+              <form className="flex flex-col gap-3 p-4" onSubmit={(e) => { e.preventDefault(); handleDemoAdd(); }}>
+                <TransactionFormFields
+                  form={form}
+                  onPatch={patch}
+                  categories={DEMO_CATEGORIES}
+                  categoryInputValue={categoryInputValue}
+                  onCategoryInputChange={setCategoryInputValue}
+                  canSave={form.amount !== ""}
+                  hideRecurring
+                  onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); setShowAddForm(false); }}
+                />
+              </form>
+            </div>
+          )}
         </div>
       </div>
 
-      {demoGroups.length > 0 && (
-        <div className="mx-auto max-w-5xl px-4 pb-16 pointer-events-none select-none">
+      {demoTxs.length > 0 && (
+        <div className="mx-auto max-w-5xl px-4 pb-16">
           <div className="mx-auto max-w-xl">
-            {demoGroups.map((g, i) => (
-              <GroupRow
-                key={String(g.categoryId)}
-                categoryId={g.categoryId}
-                total={g.total}
-                rows={g.rows as any}
-                categories={[]}
-                categoriesById={DEMO_CATEGORIES_BY_ID}
-                month="2026-05"
-                activeRecurringIds={new Set()}
+            {demoTxs.map((tx, i) => (
+              <DemoTxRow
+                key={tx.public_id}
+                tx={tx}
                 isFirst={i === 0}
-                isLast={i === demoGroups.length - 1}
-                readOnly
+                isLast={i === demoTxs.length - 1}
+                onUpdate={(updated) => setDemoTxs((prev) => prev.map((t) => t.public_id === tx.public_id ? updated : t))}
+                onDelete={() => setDemoTxs((prev) => prev.filter((t) => t.public_id !== tx.public_id))}
               />
             ))}
           </div>

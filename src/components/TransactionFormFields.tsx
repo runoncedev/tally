@@ -22,6 +22,7 @@ type Props = {
   isEditing?: boolean;
   focusOnMount?: boolean;
   showDelete?: boolean;
+  hideRecurring?: boolean;
   onDelete?: () => void;
   onCancel: () => void;
 };
@@ -38,6 +39,7 @@ export function TransactionFormFields({
   isEditing = false,
   focusOnMount = false,
   showDelete = false,
+  hideRecurring = false,
   onDelete,
   onCancel,
 }: Props) {
@@ -139,7 +141,7 @@ export function TransactionFormFields({
               Recurring
             </span>
           )}
-          {!isRecurringPrefill && !isRecurringCategory && (
+          {!isRecurringPrefill && !isRecurringCategory && !hideRecurring && (
             <button
               type="button"
               onClick={() => onPatch({ recurrent: !form.recurrent })}
