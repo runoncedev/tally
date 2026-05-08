@@ -1,16 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "../lib/supabase";
 
 export default function LoginLocal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const signInEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError("Invalid email or password");
+    else navigate({ to: "/" });
   };
 
   return (
