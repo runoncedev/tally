@@ -138,15 +138,6 @@ function LoginScreen() {
   const demoExpenses = DEMO_BASE.expenses + demoTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
   const demoBalance = demoIncome - demoExpenses;
 
-  const demoGroups = Object.values(
-    demoTxs.reduce<Record<string, { categoryId: number | null; total: number; rows: DemoTx[] }>>((acc, tx) => {
-      const key = String(tx.category_id ?? "null");
-      if (!acc[key]) acc[key] = { categoryId: tx.category_id, total: 0, rows: [] };
-      acc[key].total += tx.amount;
-      acc[key].rows.push(tx);
-      return acc;
-    }, {})
-  );
 
   const signInGoogle = () =>
     supabase.auth.signInWithOAuth({
