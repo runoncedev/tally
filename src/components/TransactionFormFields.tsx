@@ -7,7 +7,6 @@ export type TransactionFieldsState = {
   category_id: number | null;
   type: "income" | "expense";
   description: string;
-  recurrent: boolean;
 };
 
 type Props = {
@@ -22,7 +21,6 @@ type Props = {
   isEditing?: boolean;
   focusOnMount?: boolean;
   showDelete?: boolean;
-  hideRecurring?: boolean;
   onDelete?: () => void;
   onCancel: () => void;
 };
@@ -39,7 +37,6 @@ export function TransactionFormFields({
   isEditing = false,
   focusOnMount = false,
   showDelete = false,
-  hideRecurring = false,
   onDelete,
   onCancel,
 }: Props) {
@@ -140,21 +137,6 @@ export function TransactionFormFields({
               </svg>
               Recurring
             </span>
-          )}
-          {!isRecurringPrefill && !isRecurringCategory && !hideRecurring && (
-            <button
-              type="button"
-              onClick={() => onPatch({ recurrent: !form.recurrent })}
-              className={`flex w-[108px] cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${form.recurrent ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-800" : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500"}`}
-            >
-              <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="17 1 21 5 17 9" />
-                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                <polyline points="7 23 3 19 7 15" />
-                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-              </svg>
-              {form.recurrent ? "Recurring on" : "Recurring off"}
-            </button>
           )}
           {showDelete && (
             <button

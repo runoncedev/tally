@@ -11,9 +11,7 @@ export type TransactionFormPayload = {
   category_id: number | null;
   categoryName: string | null;
   description: string | null;
-  recurrent: boolean;
   public_id: string;
-  recurring_source_id: string | null;
 };
 
 type TransactionFormProps = {
@@ -31,7 +29,6 @@ type TransactionFormProps = {
   isRecurringPrefill?: boolean;
   initiallyDirty?: boolean;
   isRecurringCategory?: boolean;
-  recurringSourceId?: string;
   isFirst?: boolean;
   isLast?: boolean;
   nested?: boolean;
@@ -49,7 +46,6 @@ type FormState = {
   category_id: number | null;
   type: "income" | "expense";
   description: string;
-  recurrent: boolean;
 };
 
 function txToForm(tx: Transaction): FormState {
@@ -59,7 +55,6 @@ function txToForm(tx: Transaction): FormState {
     category_id: tx.category_id,
     type: tx.amount >= 0 ? "income" : "expense",
     description: tx.description ?? "",
-    recurrent: tx.recurrent,
   };
 }
 
@@ -76,7 +71,6 @@ function emptyForm(
     category_id: prefillCategoryId ?? null,
     type: prefillCategoryType ?? "expense",
     description: prefillDescription ?? "",
-    recurrent: false,
   };
 }
 
@@ -95,7 +89,6 @@ export function TransactionForm({
   isRecurringPrefill = false,
   initiallyDirty = false,
   isRecurringCategory = false,
-  recurringSourceId,
   isFirst = false,
   isLast = false,
   nested = false,
@@ -144,9 +137,7 @@ export function TransactionForm({
       category_id: form.category_id,
       categoryName: form.category_id === -1 ? categoryInputValue.trim() : null,
       description: form.description || null,
-      recurrent: form.recurrent,
       public_id: tx?.public_id ?? publicId ?? crypto.randomUUID(),
-      recurring_source_id: recurringSourceId ?? null,
     });
 
     if (!tx) {
@@ -278,7 +269,7 @@ export function TransactionForm({
         className="fixed top-1/2 left-1/2 m-0 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
       >
         <p className="mb-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-          {tx.recurrent ? "Delete recurring transaction?" : "Delete transaction?"}
+          Delete transaction?
         </p>
         <div className="mb-4 flex items-center justify-between gap-3 rounded-lg bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
           <div className="flex min-w-0 items-center gap-2">
@@ -301,18 +292,10 @@ export function TransactionForm({
           </span>
         </div>
         <p className="mb-5 text-xs text-zinc-500 dark:text-zinc-400">
-          {tx.recurrent ? (
-            hideMonthInDeleteDialog ? (
-              <>This will delete the entry for this month.</>
-            ) : (
-              <>This will delete the entry from <Link to="/month/$month" params={{ month: tx.date.slice(0, 7) }} className="underline underline-offset-2 hover:opacity-75">{tx.date.slice(0, 7)}</Link>.</>
-            )
+          {hideMonthInDeleteDialog ? (
+            <>This action cannot be undone.</>
           ) : (
-            hideMonthInDeleteDialog ? (
-              <>This action cannot be undone.</>
-            ) : (
-              <>This will delete the transaction from <Link to="/month/$month" params={{ month: tx.date.slice(0, 7) }} className="underline underline-offset-2 hover:opacity-75">{tx.date.slice(0, 7)}</Link>. This action cannot be undone.</>
-            )
+            <>This will delete the transaction from <Link to="/month/$month" params={{ month: tx.date.slice(0, 7) }} className="underline underline-offset-2 hover:opacity-75">{tx.date.slice(0, 7)}</Link>. This action cannot be undone.</>
           )}
         </p>
         <div className="flex justify-end gap-2">

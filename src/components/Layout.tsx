@@ -11,28 +11,28 @@ import type { TransactionFieldsState } from "./TransactionFormFields";
 import { TransactionFormFields } from "./TransactionFormFields";
 
 const DEMO_CATEGORIES = [
-  { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null },
-  { id: 2, name: "Rent", type: "expense" as const, created_at: "", household_id: null },
-  { id: 3, name: "Groceries", type: "expense" as const, created_at: "", household_id: null },
-  { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null },
+  { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+  { id: 2, name: "Rent", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+  { id: 3, name: "Groceries", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+  { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
 ];
 
 const DEMO_BASE = { income: 5_340_000, expenses: 1_961_443 };
 
 const DEMO_CATEGORIES_BY_ID = Object.fromEntries(
   [
-    { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null },
-    { id: 2, name: "Rent", type: "expense" as const, created_at: "", household_id: null },
-    { id: 3, name: "Groceries", type: "expense" as const, created_at: "", household_id: null },
-    { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null },
-    { id: 5, name: "Health", type: "expense" as const, created_at: "", household_id: null },
+    { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+    { id: 2, name: "Rent", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+    { id: 3, name: "Groceries", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+    { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
+    { id: 5, name: "Health", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
   ].map((c) => [c.id, c])
 );
 
-type DemoTx = { public_id: string; amount: number; category_id: number | null; description: string | null; date: string; household_id: null; recurring_source_id: null };
+type DemoTx = { public_id: string; amount: number; category_id: number | null; description: string | null; date: string; household_id: null };
 
 const EMPTY_FORM: TransactionFieldsState = {
-  amount: "", category_id: null, type: "expense", description: "", recurrent: false,
+  amount: "", category_id: null, type: "expense", description: "",
 };
 
 function txToForm(tx: DemoTx): TransactionFieldsState {
@@ -41,7 +41,6 @@ function txToForm(tx: DemoTx): TransactionFieldsState {
     category_id: tx.category_id,
     type: tx.amount >= 0 ? "income" : "expense",
     description: tx.description ?? "",
-    recurrent: false,
   };
 }
 
@@ -91,7 +90,6 @@ function DemoTxRow({ tx, isFirst, isLast, onUpdate, onDelete }: {
               categoryInputValue={categoryInputValue}
               onCategoryInputChange={setCategoryInputValue}
               canSave={form.amount !== ""}
-              hideRecurring
               isEditing
               showDelete
               onDelete={onDelete}
@@ -126,7 +124,6 @@ function LoginScreen() {
       description: form.description || null,
       date: new Date().toISOString().slice(0, 10),
       household_id: null,
-      recurring_source_id: null,
     };
     setDemoTxs((prev) => [...prev, tx]);
     setForm(EMPTY_FORM);
@@ -209,8 +206,7 @@ function LoginScreen() {
                   categoryInputValue={categoryInputValue}
                   onCategoryInputChange={setCategoryInputValue}
                   canSave={form.amount !== ""}
-                  hideRecurring
-                  onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); setShowAddForm(false); }}
+                      onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); setShowAddForm(false); }}
                 />
               </form>
             </div>

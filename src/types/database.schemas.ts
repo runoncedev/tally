@@ -21,25 +21,31 @@ export const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
 
 export const publicCategoriesRowSchema = z.object({
   created_at: z.string().nullable(),
+  default_amount: z.number().nullable(),
   household_id: z.string().nullable(),
   id: z.number(),
   name: z.string(),
+  recurring: z.boolean(),
   type: z.string(),
 });
 
 export const publicCategoriesInsertSchema = z.object({
   created_at: z.string().optional().nullable(),
+  default_amount: z.number().optional().nullable(),
   household_id: z.string().optional().nullable(),
   id: z.number().optional(),
   name: z.string(),
+  recurring: z.boolean().optional(),
   type: z.string(),
 });
 
 export const publicCategoriesUpdateSchema = z.object({
   created_at: z.string().optional().nullable(),
+  default_amount: z.number().optional().nullable(),
   household_id: z.string().optional().nullable(),
   id: z.number().optional(),
   name: z.string().optional(),
+  recurring: z.boolean().optional(),
   type: z.string().optional(),
 });
 
@@ -108,8 +114,6 @@ export const publicTransactionsRowSchema = z.object({
   household_id: z.string().nullable(),
   id: z.number(),
   public_id: z.string(),
-  recurrent: z.boolean(),
-  recurring_source_id: z.string().nullable(),
 });
 
 export const publicTransactionsInsertSchema = z.object({
@@ -121,8 +125,6 @@ export const publicTransactionsInsertSchema = z.object({
   household_id: z.string().optional().nullable(),
   id: z.number().optional(),
   public_id: z.string().optional(),
-  recurrent: z.boolean().optional(),
-  recurring_source_id: z.string().optional().nullable(),
 });
 
 export const publicTransactionsUpdateSchema = z.object({
@@ -134,8 +136,6 @@ export const publicTransactionsUpdateSchema = z.object({
   household_id: z.string().optional().nullable(),
   id: z.number().optional(),
   public_id: z.string().optional(),
-  recurrent: z.boolean().optional(),
-  recurring_source_id: z.string().optional().nullable(),
 });
 
 export const publicTransactionsRelationshipsSchema = z.tuple([
@@ -152,13 +152,6 @@ export const publicTransactionsRelationshipsSchema = z.tuple([
     isOneToOne: z.literal(false),
     referencedRelation: z.literal("households"),
     referencedColumns: z.tuple([z.literal("id")]),
-  }),
-  z.object({
-    foreignKeyName: z.literal("transactions_recurring_source_id_fkey"),
-    columns: z.tuple([z.literal("recurring_source_id")]),
-    isOneToOne: z.literal(false),
-    referencedRelation: z.literal("transactions"),
-    referencedColumns: z.tuple([z.literal("public_id")]),
   }),
 ]);
 

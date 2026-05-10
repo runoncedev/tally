@@ -12,23 +12,29 @@ export type Database = {
       categories: {
         Row: {
           created_at: string | null
+          default_amount: number | null
           household_id: string | null
           id: number
           name: string
+          recurring: boolean
           type: string
         }
         Insert: {
           created_at?: string | null
+          default_amount?: number | null
           household_id?: string | null
           id?: number
           name: string
+          recurring?: boolean
           type: string
         }
         Update: {
           created_at?: string | null
+          default_amount?: number | null
           household_id?: string | null
           id?: number
           name?: string
+          recurring?: boolean
           type?: string
         }
         Relationships: [
@@ -95,8 +101,6 @@ export type Database = {
           household_id: string | null
           id: number
           public_id: string
-          recurrent: boolean
-          recurring_source_id: string | null
         }
         Insert: {
           amount: number
@@ -107,8 +111,6 @@ export type Database = {
           household_id?: string | null
           id?: number
           public_id?: string
-          recurrent?: boolean
-          recurring_source_id?: string | null
         }
         Update: {
           amount?: number
@@ -119,8 +121,6 @@ export type Database = {
           household_id?: string | null
           id?: number
           public_id?: string
-          recurrent?: boolean
-          recurring_source_id?: string | null
         }
         Relationships: [
           {
@@ -136,13 +136,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "households"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_recurring_source_id_fkey"
-            columns: ["recurring_source_id"]
-            isOneToOne: false
-            referencedRelation: "transactions"
-            referencedColumns: ["public_id"]
           },
         ]
       }

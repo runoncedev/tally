@@ -5,8 +5,8 @@ import { TransactionForm } from "../components/TransactionForm";
 import type { Category } from "../lib/collections";
 
 const categories: Category[] = [
-  { id: 1, name: "Salary", type: "income", created_at: "", household_id: null },
-  { id: 2, name: "Food", type: "expense", created_at: "", household_id: null },
+  { id: 1, name: "Salary", type: "income", created_at: "", household_id: null, recurring: false, default_amount: null },
+  { id: 2, name: "Food", type: "expense", created_at: "", household_id: null, recurring: false, default_amount: null },
 ];
 
 const categoriesById = Object.fromEntries(categories.map((c) => [c.id, c]));

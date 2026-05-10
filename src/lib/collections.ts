@@ -62,8 +62,6 @@ export const transactionsCollection = createCollection(
           amount: m.amount,
           category_id: m.category_id,
           description: m.description ?? null,
-          recurrent: m.recurrent ?? false,
-          recurring_source_id: m.recurring_source_id ?? null,
           created_at: m.created_at ?? new Date().toISOString(),
           household_id: m.household_id,
         }

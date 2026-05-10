@@ -89,7 +89,6 @@ export default function MonthDetail() {
       prefillCategoryId?: number;
       prefillDescription?: string;
       prefillAmount?: number;
-      recurringSourceId?: string;
     }[]
   >([]);
   const prevMonthRef = useRef(month);
@@ -109,12 +108,11 @@ export default function MonthDetail() {
     [start, end],
   );
 
-  const { data: allRecurring = [] } = useLiveQuery(
+  const { data: allRecurringCategories = [] } = useLiveQuery(
     (q) =>
       q
-        .from({ tx: transactionsCollection })
-        .where(({ tx }) => eq(tx.recurrent, true))
-        .orderBy(({ tx }) => tx.created_at, "desc"),
+        .from({ c: categoriesCollection })
+        .where(({ c }) => eq(c.recurring, true)),
     [],
   );
 
@@ -131,9 +129,9 @@ export default function MonthDetail() {
     [categories],
   );
   const summary = useMemo(() => computeSummary(transactions), [transactions]);
-  const activeRecurringIds = useMemo(
-    () => new Set(allRecurring.map((tx) => tx.public_id)),
-    [allRecurring],
+  const recurringCategoryIds = useMemo(
+    () => new Set(allRecurringCategories.map((c) => c.id)),
+    [allRecurringCategories],
   );
 
   const rows = useMemo<Row[]>(() => {
@@ -160,20 +158,9 @@ export default function MonthDetail() {
   }, [transactions]);
 
   const recurringPrefills = useMemo(() => {
-    const completedRecurringIds = new Set(
-      transactions.map((tx) => tx.recurring_source_id).filter(Boolean),
-    );
-    const existingPublicIds = new Set(transactions.map((tx) => tx.public_id));
-    const seen = new Set<string>();
-    return allRecurring.filter((tx) => {
-      if (tx.date.slice(0, 7) > month) return false;
-      if (completedRecurringIds.has(tx.public_id)) return false;
-      if (existingPublicIds.has(tx.public_id)) return false;
-      if (seen.has(tx.public_id)) return false;
-      seen.add(tx.public_id);
-      return true;
-    });
-  }, [transactions, allRecurring, month]);
+    const usedCategoryIds = new Set(transactions.map((tx) => tx.category_id).filter((id) => id != null));
+    return allRecurringCategories.filter((c) => !usedCategoryIds.has(c.id));
+  }, [transactions, allRecurringCategories]);
 
   const addRow = (type: "income" | "expense") =>
     setNewRows((prev) => [{ publicId: crypto.randomUUID(), type }, ...prev]);
@@ -195,18 +182,11 @@ export default function MonthDetail() {
 
     const tx = transactions.find((t) => t.public_id === payload.public_id);
     if (tx) {
-      if (tx.recurrent && !payload.recurrent) {
-        await supabase
-          .from("transactions")
-          .update({ recurring_source_id: null })
-          .eq("recurring_source_id", tx.public_id);
-      }
       transactionsCollection.update(payload.public_id, (draft) => {
         draft.date = payload.date;
         draft.amount = payload.amount;
         draft.category_id = categoryId;
         draft.description = payload.description;
-        draft.recurrent = payload.recurrent;
       });
     } else {
       transactionsCollection.insert({
@@ -215,8 +195,6 @@ export default function MonthDetail() {
         amount: payload.amount,
         category_id: categoryId,
         description: payload.description,
-        recurrent: payload.recurrent,
-        recurring_source_id: payload.recurring_source_id,
         household_id: household.id,
       });
     }
@@ -442,41 +420,37 @@ export default function MonthDetail() {
             {recurringPrefills.length > 0 && (
               <Select.Root
                 value=""
-                onValueChange={(publicId: string | null) => {
-                  if (!publicId) return;
-                  if (publicId === "__add_all__") {
+                onValueChange={(categoryIdStr: string | null) => {
+                  if (!categoryIdStr) return;
+                  if (categoryIdStr === "__add_all__") {
                     const now = Date.now();
-                    recurringPrefills.forEach((tx, i) => {
+                    recurringPrefills.forEach((cat, i) => {
                       transactionsCollection.insert({
                         public_id: crypto.randomUUID(),
                         date: `${month}-01`,
-                        amount: tx.amount,
-                        category_id: tx.category_id,
-                        description: tx.description ?? null,
-                        recurrent: false,
-                        recurring_source_id: tx.public_id,
+                        amount: cat.type === "expense" ? -(cat.default_amount ?? 0) : (cat.default_amount ?? 0),
+                        category_id: cat.id,
+                        description: null,
                         created_at: new Date(now + i).toISOString(),
                         household_id: household.id,
                       });
                     });
                     return;
                   }
-                  const tx = recurringPrefills.find((t) => t.public_id === publicId);
-                  if (!tx) return;
+                  const cat = recurringPrefills.find((c) => String(c.id) === categoryIdStr);
+                  if (!cat) return;
                   setNewRows((prev) => [
                     {
                       publicId: crypto.randomUUID(),
-                      type: tx.amount >= 0 ? "income" : "expense",
-                      prefillCategoryId: tx.category_id ?? undefined,
-                      prefillDescription: tx.description ?? undefined,
-                      prefillAmount: Math.abs(tx.amount),
-                      recurringSourceId: tx.public_id,
+                      type: cat.type as "income" | "expense",
+                      prefillCategoryId: cat.id,
+                      prefillAmount: cat.default_amount ?? undefined,
                     },
                     ...prev,
                   ]);
                 }}
               >
-                <Select.Trigger className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:ml-auto sm:w-auto lg:ml-0 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
+                <Select.Trigger className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:w-36 sm:flex-none lg:w-full dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="17 1 21 5 17 9" />
                     <path d="M3 11V9a4 4 0 0 1 4-4h14" />
@@ -489,22 +463,18 @@ export default function MonthDetail() {
                   <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false} collisionPadding={{ top: 56, bottom: 8, left: 8, right: 8 }}>
                     <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-none rounded-xl bg-white p-1.5 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),12rem)] dark:bg-zinc-900 dark:ring-zinc-700">
                       <Select.List className="w-full">
-                        {recurringPrefills.map((tx) => {
-                          const category = tx.category_id != null ? categoriesById[tx.category_id] : undefined;
-                          const label = [category?.name, tx.description].filter(Boolean).join(" · ");
-                          return (
-                            <Select.Item
-                              key={tx.public_id}
-                              value={tx.public_id}
-                              className="flex w-full cursor-default items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
-                            >
-                              <Select.ItemText className="text-zinc-900 dark:text-zinc-100">{label}</Select.ItemText>
-                              <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${tx.amount < 0 ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
-                                {tx.amount < 0 ? "expense" : "income"}
-                              </span>
-                            </Select.Item>
-                          );
-                        })}
+                        {recurringPrefills.map((cat) => (
+                          <Select.Item
+                            key={cat.id}
+                            value={String(cat.id)}
+                            className="flex w-full cursor-default items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                          >
+                            <Select.ItemText className="text-zinc-900 dark:text-zinc-100">{cat.name}</Select.ItemText>
+                            <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
+                              {cat.type}
+                            </span>
+                          </Select.Item>
+                        ))}
                         <Select.Item
                           value="__add_all__"
                           className="flex w-full cursor-default items-center gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
@@ -569,9 +539,8 @@ export default function MonthDetail() {
                 prefillDescription={row.prefillDescription}
                 prefillAmount={row.prefillAmount}
                 prefillCategoryType={row.type}
-                recurringSourceId={row.recurringSourceId}
                 isRecurringPrefill={false}
-                initiallyDirty={!!row.recurringSourceId}
+                initiallyDirty={!!row.prefillCategoryId}
                 focusOnMount
                 isFirst
                 isLast
@@ -648,8 +617,8 @@ export default function MonthDetail() {
                 month={month}
                 categoriesById={categoriesById}
                 isRecurringCategory={
-                  row.recurring_source_id != null &&
-                  activeRecurringIds.has(row.recurring_source_id)
+                  row.category_id != null &&
+                  recurringCategoryIds.has(row.category_id)
                 }
                 isFirst={i === 0}
                 isLast={i === rows.length - 1}
@@ -666,7 +635,7 @@ export default function MonthDetail() {
                 categories={categories}
                 categoriesById={categoriesById}
                 month={month}
-                activeRecurringIds={activeRecurringIds}
+                activeRecurringIds={recurringCategoryIds}
                 isFirst={i === 0}
                 isLast={i === rows.length - 1}
                 onSubmit={handleSubmit}

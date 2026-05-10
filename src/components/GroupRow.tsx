@@ -10,7 +10,7 @@ type GroupRowProps = {
   categories: Category[];
   categoriesById: Record<number, Category>;
   month: string;
-  activeRecurringIds: Set<string>;
+  activeRecurringIds: Set<number>;
   isFirst?: boolean;
   isLast?: boolean;
   readOnly?: boolean;
@@ -59,8 +59,8 @@ export function GroupRow({
             month={month}
             categoriesById={categoriesById}
             isRecurringCategory={
-              tx.recurring_source_id != null &&
-              activeRecurringIds.has(tx.recurring_source_id)
+              tx.category_id != null &&
+              activeRecurringIds.has(tx.category_id)
             }
             isFirst={i === 0}
             isLast={i === rows.length - 1}

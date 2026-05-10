@@ -28,20 +28,14 @@ export async function fetchCategories() {
   return data
 }
 
-export async function fetchRecurringTransactions(): Promise<Transaction[]> {
+export async function fetchRecurringCategories() {
   const { data, error } = await supabase
-    .from('transactions')
+    .from('categories')
     .select('*')
-    .eq('recurrent', true)
-    .order('date', { ascending: false })
+    .eq('recurring', true)
+    .order('name')
   if (error) throw error
-  const seen = new Set<number>()
-  return data.filter(tx => {
-    if (tx.category_id == null) return false
-    if (seen.has(tx.category_id)) return false
-    seen.add(tx.category_id)
-    return true
-  })
+  return data
 }
 
 export async function insertTransaction(row: TablesInsert<'transactions'>): Promise<Transaction> {

@@ -1,40 +1,16 @@
-import { useLiveQuery, eq } from "@tanstack/react-db";
+import { useLiveQuery } from "@tanstack/react-db";
 import { useState } from "react";
-import {
-  transactionsCollection,
-  categoriesCollection,
-} from "../lib/collections";
-import { TransactionForm } from "../components/TransactionForm";
-import type { TransactionFormPayload } from "../components/TransactionForm";
-import { supabase } from "../lib/supabase";
+import { categoriesCollection } from "../lib/collections";
 
 export default function RecurringSettings() {
-  const { data: allTransactions = [] } = useLiveQuery(
-    (q) =>
-      q
-        .from({ tx: transactionsCollection })
-        .where(({ tx }) => eq(tx.recurrent, true)),
-    [],
-  );
-  const { data: allTx = [] } = useLiveQuery(
-    (q) => q.from({ tx: transactionsCollection }),
-    [],
-  );
-  const childCountByPublicId = allTx.reduce<Record<string, number>>((acc, tx) => {
-    if (tx.recurring_source_id) acc[tx.recurring_source_id] = (acc[tx.recurring_source_id] ?? 0) + 1;
-    return acc;
-  }, {});
   const { data: categories = [] } = useLiveQuery(
     (q) => q.from({ c: categoriesCollection }),
     [],
   );
-  const categoriesById = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   const [sortBy, setSortBy] = useState<"type" | "name" | "amount">("type");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [filterType, setFilterType] = useState<"all" | "expense" | "income">(
-    "all",
-  );
+  const [filterType, setFilterType] = useState<"all" | "expense" | "income">("all");
 
   const toggleSort = (field: "name" | "amount" | "type") => {
     if (sortBy === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -44,50 +20,21 @@ export default function RecurringSettings() {
     }
   };
 
-  const seen = new Set<number>();
-  const recurring = allTransactions
-    .filter((tx): tx is typeof tx & { category_id: number } => {
-      if (tx.category_id == null) return false;
-      if (seen.has(tx.category_id)) return false;
-      seen.add(tx.category_id);
-      return true;
-    })
-    .filter((tx) => {
-      if (filterType === "all") return true;
-      return (categoriesById[tx.category_id]?.type ?? "expense") === filterType;
-    })
+  const recurring = categories
+    .filter((c) => c.recurring)
+    .filter((c) => filterType === "all" || c.type === filterType)
     .sort((a, b) => {
-      const catA = categoriesById[a.category_id];
-      const catB = categoriesById[b.category_id];
       let cmp = 0;
-      if (sortBy === "name")
-        cmp = (catA?.name ?? "").localeCompare(catB?.name ?? "");
-      else if (sortBy === "amount")
-        cmp = Math.abs(a.amount) - Math.abs(b.amount);
-      else if (sortBy === "type")
-        cmp = (catA?.type ?? "").localeCompare(catB?.type ?? "");
+      if (sortBy === "name") cmp = a.name.localeCompare(b.name);
+      else if (sortBy === "amount") cmp = (a.default_amount ?? 0) - (b.default_amount ?? 0);
+      else if (sortBy === "type") cmp = a.type.localeCompare(b.type);
       return sortDir === "asc" ? cmp : -cmp;
     });
 
-  const handleSubmit = async (payload: TransactionFormPayload) => {
-    const tx = allTx.find((t) => t.public_id === payload.public_id);
-    if (!tx) return;
-    if (tx.recurrent && !payload.recurrent) {
-      await supabase
-        .from("transactions")
-        .update({ recurring_source_id: null })
-        .eq("recurring_source_id", tx.public_id);
-    }
-    transactionsCollection.update(payload.public_id, (draft) => {
-      draft.amount = payload.amount;
-      draft.category_id = payload.category_id;
-      draft.description = payload.description;
-      draft.recurrent = payload.recurrent;
+  const handleToggleRecurring = async (categoryId: number, value: boolean) => {
+    categoriesCollection.update(categoryId, (draft) => {
+      draft.recurring = value;
     });
-  };
-
-  const handleDelete = (publicId: string) => {
-    transactionsCollection.delete(publicId);
   };
 
   return (
@@ -113,28 +60,10 @@ export default function RecurringSettings() {
               onClick={() => toggleSort(field)}
               className={`flex items-center gap-1 px-3 py-1.5 transition-colors ${sortBy === field ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "text-zinc-500 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}
             >
-              {field === "name"
-                ? "Category"
-                : field === "amount"
-                  ? "Amount"
-                  : "Type"}
+              {field === "name" ? "Category" : field === "amount" ? "Amount" : "Type"}
               {sortBy === field && (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {sortDir === "asc" ? (
-                    <path d="M12 19V5M5 12l7-7 7 7" />
-                  ) : (
-                    <path d="M12 5v14M5 12l7 7 7-7" />
-                  )}
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  {sortDir === "asc" ? <path d="M12 19V5M5 12l7-7 7 7" /> : <path d="M12 5v14M5 12l7 7 7-7" />}
                 </svg>
               )}
             </button>
@@ -143,25 +72,32 @@ export default function RecurringSettings() {
       </div>
 
       {recurring.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          No recurring transactions.
-        </p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No recurring categories.</p>
       ) : (
-        <div className="flex flex-col">
-          {recurring.map((tx, i) => (
-            <TransactionForm
-              key={tx.public_id}
-              tx={tx}
-              categories={categories}
-              month={tx.date.slice(0, 7)}
-              categoriesById={categoriesById}
-              isFirst={i === 0}
-              isLast={i === recurring.length - 1}
-              confirmOnSave
-              childCount={childCountByPublicId[tx.public_id] ?? 0}
-              onSubmit={handleSubmit}
-              onDelete={() => handleDelete(tx.public_id)}
-            />
+        <div className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-700">
+          {recurring.map((cat) => (
+            <div key={cat.id} className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
+                  {cat.type}
+                </span>
+                <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{cat.name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                {cat.default_amount != null && (
+                  <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                    ${cat.default_amount.toLocaleString("en-US")}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleToggleRecurring(cat.id, false)}
+                  className="rounded-lg px-2 py-1 text-xs text-zinc-400 transition-colors hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
