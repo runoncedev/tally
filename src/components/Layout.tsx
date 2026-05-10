@@ -388,12 +388,6 @@ export function Layout() {
                       >
                         Categories
                       </Menu.Item>
-                      <Menu.Item
-                        className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none hover:bg-zinc-100 data-highlighted:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:data-highlighted:bg-zinc-800"
-                        onClick={() => navigate({ to: "/settings/recurring" })}
-                      >
-                        Recurring transactions
-                      </Menu.Item>
                       <Menu.Separator className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
                     </>
                   )}

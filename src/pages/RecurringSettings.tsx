@@ -38,7 +38,7 @@ export default function RecurringSettings() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">Recurring transactions</h1>
+      <h1 className="mb-4 text-xl font-semibold">Categories</h1>
 
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="flex self-start overflow-hidden rounded-lg border border-zinc-200 text-xs dark:border-zinc-700">
@@ -90,9 +90,9 @@ export default function RecurringSettings() {
               <button
                 type="button"
                 onClick={() => handleToggleRecurring(cat.id, !cat.recurring)}
-                className={`rounded-lg px-2 py-1 text-xs transition-colors ${cat.recurring ? "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"}`}
+                className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${cat.recurring ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700" : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"}`}
               >
-                {cat.recurring ? "Remove" : "Add"}
+                {cat.recurring ? "Recurring on" : "Recurring off"}
               </button>
             </div>
           </div>

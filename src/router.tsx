@@ -6,8 +6,7 @@ import {
 import { Layout } from "./components/Layout";
 import Home from "./pages/Home";
 import MonthDetail from "./pages/MonthDetail";
-import RecurringSettings from "./pages/RecurringSettings";
-import CategoriesSettings from "./pages/CategoriesSettings";
+import CategoriesSettings from "./pages/RecurringSettings";
 import LoginLocal from "./pages/LoginLocal";
 
 function formatMonthTitle(month: string) {
@@ -33,12 +32,6 @@ const monthRoute = createRoute({
     meta: [{ title: `${formatMonthTitle(params.month)} — Tally` }],
   }),
 });
-const recurringRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/settings/recurring",
-  component: RecurringSettings,
-  head: () => ({ meta: [{ title: "Recurring — Tally" }] }),
-});
 const categoriesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/settings/categories",
@@ -55,7 +48,6 @@ const loginLocalRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   homeRoute,
   monthRoute,
-  recurringRoute,
   categoriesRoute,
   loginLocalRoute,
 ]);
