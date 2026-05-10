@@ -373,134 +373,12 @@ export default function MonthDetail() {
             </div>
           </div>
 
-          <div className="mb-6 flex flex-wrap gap-2 lg:flex-col">
-            <button
-              onClick={() => addRow("income")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:w-36 sm:flex-none lg:w-full dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-green-500 dark:text-green-400"
-              >
-                <line x1="12" y1="19" x2="12" y2="5" />
-                <polyline points="5 12 12 19 19 12" />
-              </svg>
-              Add income
-            </button>
-            <button
-              onClick={() => addRow("expense")}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:w-36 sm:flex-none lg:w-full dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-red-500 dark:text-red-400"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <polyline points="19 12 12 5 5 12" />
-              </svg>
-              Add expense
-            </button>
-
-            {recurringPrefills.length > 0 && (
-              <Select.Root
-                value=""
-                onValueChange={(categoryIdStr: string | null) => {
-                  if (!categoryIdStr) return;
-                  if (categoryIdStr === "__add_all__") {
-                    const now = Date.now();
-                    recurringPrefills.forEach((cat, i) => {
-                      transactionsCollection.insert({
-                        public_id: crypto.randomUUID(),
-                        date: `${month}-01`,
-                        amount: cat.type === "expense" ? -(cat.default_amount ?? 0) : (cat.default_amount ?? 0),
-                        category_id: cat.id,
-                        description: null,
-                        created_at: new Date(now + i).toISOString(),
-                        household_id: household.id,
-                      });
-                    });
-                    return;
-                  }
-                  const cat = recurringPrefills.find((c) => String(c.id) === categoryIdStr);
-                  if (!cat) return;
-                  setNewRows((prev) => [
-                    {
-                      publicId: crypto.randomUUID(),
-                      type: cat.type as "income" | "expense",
-                      prefillCategoryId: cat.id,
-                      prefillAmount: cat.default_amount ?? undefined,
-                    },
-                    ...prev,
-                  ]);
-                }}
-              >
-                <Select.Trigger className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:w-36 sm:flex-none lg:w-full dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="17 1 21 5 17 9" />
-                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                    <polyline points="7 23 3 19 7 15" />
-                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                  </svg>
-                  Add recurring
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false} collisionPadding={{ top: 56, bottom: 8, left: 8, right: 8 }}>
-                    <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-none rounded-xl bg-white p-1.5 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),12rem)] dark:bg-zinc-900 dark:ring-zinc-700">
-                      <Select.List className="w-full">
-                        {recurringPrefills.map((cat) => (
-                          <Select.Item
-                            key={cat.id}
-                            value={String(cat.id)}
-                            className="flex w-full cursor-default items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
-                          >
-                            <Select.ItemText className="text-zinc-900 dark:text-zinc-100">{cat.name}</Select.ItemText>
-                            <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
-                              {cat.type}
-                            </span>
-                          </Select.Item>
-                        ))}
-                        <Select.Item
-                          value="__add_all__"
-                          className="flex w-full cursor-default items-center gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
-                        >
-                          <Select.ItemText className="text-zinc-400 dark:text-zinc-500">Add all</Select.ItemText>
-                        </Select.Item>
-                      </Select.List>
-                    </Select.Popup>
-                  </Select.Positioner>
-                </Select.Portal>
-              </Select.Root>
-            )}
-            {import.meta.env.DEV && transactions.length > 0 && (
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center lg:flex-col lg:items-stretch">
+            {/* left group: Add income + Add expense */}
+            <div className="flex gap-2 lg:w-full">
               <button
-                onClick={() => {
-                  if (
-                    !confirm(
-                      `Delete all ${transactions.length} transactions in ${formatMonthLabel(month)}?`,
-                    )
-                  )
-                    return;
-                  transactions.forEach((tx) =>
-                    transactionsCollection.delete(tx.public_id),
-                  );
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-300 px-4 py-2 text-sm text-red-500 transition-colors hover:border-red-400 sm:ml-auto sm:w-auto lg:ml-0 dark:border-red-800 dark:text-red-400 dark:hover:border-red-600"
+                onClick={() => addRow("income")}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:flex-none sm:px-4 lg:flex-1 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -512,15 +390,145 @@ export default function MonthDetail() {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  className="text-green-500 dark:text-green-400"
                 >
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                  <path d="M10 11v6" />
-                  <path d="M14 11v6" />
-                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="5 12 12 19 19 12" />
                 </svg>
-                Clear month
+                Add income
               </button>
+              <button
+                onClick={() => addRow("expense")}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:flex-none sm:px-4 lg:flex-1 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-red-500 dark:text-red-400"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 5 5 12" />
+                </svg>
+                Add expense
+              </button>
+            </div>
+
+            {/* right group: Add recurring + Clear month (ml-auto pushes to right on sm+) */}
+            {(recurringPrefills.length > 0 || (import.meta.env.DEV && transactions.length > 0)) && (
+              <div className="flex flex-col gap-2 sm:flex-1 sm:flex-row lg:flex-col">
+                {recurringPrefills.length > 0 && (
+                  <Select.Root
+                    value=""
+                    onValueChange={(categoryIdStr: string | null) => {
+                      if (!categoryIdStr) return;
+                      if (categoryIdStr === "__add_all__") {
+                        const now = Date.now();
+                        recurringPrefills.forEach((cat, i) => {
+                          transactionsCollection.insert({
+                            public_id: crypto.randomUUID(),
+                            date: `${month}-01`,
+                            amount: cat.type === "expense" ? -(cat.default_amount ?? 0) : (cat.default_amount ?? 0),
+                            category_id: cat.id,
+                            description: null,
+                            created_at: new Date(now + i).toISOString(),
+                            household_id: household.id,
+                          });
+                        });
+                        return;
+                      }
+                      const cat = recurringPrefills.find((c) => String(c.id) === categoryIdStr);
+                      if (!cat) return;
+                      setNewRows((prev) => [
+                        {
+                          publicId: crypto.randomUUID(),
+                          type: cat.type as "income" | "expense",
+                          prefillCategoryId: cat.id,
+                          prefillAmount: cat.default_amount ?? undefined,
+                        },
+                        ...prev,
+                      ]);
+                    }}
+                  >
+                    <Select.Trigger className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 py-2 text-sm text-zinc-600 transition-colors hover:border-zinc-400 sm:w-auto sm:px-4 lg:w-full dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="17 1 21 5 17 9" />
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                        <polyline points="7 23 3 19 7 15" />
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                      </svg>
+                      Add recurring
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Positioner sideOffset={6} side="bottom" align="center" alignItemWithTrigger={false} collisionPadding={{ top: 56, bottom: 8, left: 8, right: 8 }}>
+                        <Select.Popup className="z-50 w-[calc(var(--anchor-width)+1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-none rounded-xl bg-white p-1.5 shadow-md ring-1 ring-zinc-200 [max-height:min(var(--available-height),12rem)] dark:bg-zinc-900 dark:ring-zinc-700">
+                          <Select.List className="w-full">
+                            {recurringPrefills.map((cat) => (
+                              <Select.Item
+                                key={cat.id}
+                                value={String(cat.id)}
+                                className="flex w-full cursor-default items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                              >
+                                <Select.ItemText className="text-zinc-900 dark:text-zinc-100">{cat.name}</Select.ItemText>
+                                <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
+                                  {cat.type}
+                                </span>
+                              </Select.Item>
+                            ))}
+                            <Select.Item
+                              value="__add_all__"
+                              className="flex w-full cursor-default items-center gap-2 rounded-lg px-2 py-2 text-sm outline-none select-none data-highlighted:bg-zinc-100 dark:data-highlighted:bg-zinc-800"
+                            >
+                              <Select.ItemText className="text-zinc-400 dark:text-zinc-500">Add all</Select.ItemText>
+                            </Select.Item>
+                          </Select.List>
+                        </Select.Popup>
+                      </Select.Positioner>
+                    </Select.Portal>
+                  </Select.Root>
+                )}
+                {import.meta.env.DEV && transactions.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (
+                        !confirm(
+                          `Delete all ${transactions.length} transactions in ${formatMonthLabel(month)}?`,
+                        )
+                      )
+                        return;
+                      transactions.forEach((tx) =>
+                        transactionsCollection.delete(tx.public_id),
+                      );
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-300 px-4 py-2 text-sm text-red-500 transition-colors hover:border-red-400 sm:ml-auto sm:w-auto lg:ml-0 lg:w-full dark:border-red-800 dark:text-red-400 dark:hover:border-red-600"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                    Clear month
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

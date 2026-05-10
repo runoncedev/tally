@@ -20,8 +20,7 @@ export default function RecurringSettings() {
     }
   };
 
-  const recurring = categories
-    .filter((c) => c.recurring)
+  const filtered = categories
     .filter((c) => filterType === "all" || c.type === filterType)
     .sort((a, b) => {
       let cmp = 0;
@@ -31,7 +30,7 @@ export default function RecurringSettings() {
       return sortDir === "asc" ? cmp : -cmp;
     });
 
-  const handleToggleRecurring = async (categoryId: number, value: boolean) => {
+  const handleToggleRecurring = (categoryId: number, value: boolean) => {
     categoriesCollection.update(categoryId, (draft) => {
       draft.recurring = value;
     });
@@ -71,36 +70,34 @@ export default function RecurringSettings() {
         </div>
       </div>
 
-      {recurring.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No recurring categories.</p>
-      ) : (
-        <div className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-700">
-          {recurring.map((cat) => (
-            <div key={cat.id} className="flex items-center justify-between gap-4 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
-                  {cat.type}
-                </span>
-                <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{cat.name}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                {cat.default_amount != null && (
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                    ${cat.default_amount.toLocaleString("en-US")}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => handleToggleRecurring(cat.id, false)}
-                  className="rounded-lg px-2 py-1 text-xs text-zinc-400 transition-colors hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"
-                >
-                  Remove
-                </button>
-              </div>
+      <div className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-700">
+        {filtered.map((cat) => (
+          <div key={cat.id} className="flex items-center justify-between gap-4 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
+                {cat.type}
+              </span>
+              <span className={`text-sm font-medium ${cat.recurring ? "text-zinc-800 dark:text-zinc-100" : "text-zinc-400 dark:text-zinc-500"}`}>
+                {cat.name}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="flex items-center gap-3">
+              {cat.recurring && cat.default_amount != null && (
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  ${cat.default_amount.toLocaleString("en-US")}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => handleToggleRecurring(cat.id, !cat.recurring)}
+                className={`rounded-lg px-2 py-1 text-xs transition-colors ${cat.recurring ? "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"}`}
+              >
+                {cat.recurring ? "Remove" : "Add"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
