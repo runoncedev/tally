@@ -1,6 +1,102 @@
 import { useLiveQuery } from "@tanstack/react-db";
 import { useState } from "react";
 import { categoriesCollection } from "../lib/collections";
+import { ExpandableRow } from "../components/ExpandableRow";
+import { useAmountInput } from "../hooks/useAmountInput";
+
+function CategoryForm({
+  categoryId,
+  initialType,
+  initialName,
+  initialRecurring,
+  initialAmount,
+  onClose,
+}: {
+  categoryId: number;
+  initialType: "income" | "expense";
+  initialName: string;
+  initialRecurring: boolean;
+  initialAmount: number | null;
+  onClose: () => void;
+}) {
+  const [type, setType] = useState(initialType);
+  const [name, setName] = useState(initialName);
+  const [recurring, setRecurring] = useState(initialRecurring);
+  const [amountRaw, setAmountRaw] = useState(
+    initialAmount != null ? String(initialAmount) : "",
+  );
+  const amount = useAmountInput(amountRaw, setAmountRaw);
+
+  const handleSave = () => {
+    categoriesCollection.update(categoryId, (draft) => {
+      draft.type = type;
+      draft.name = name.trim() || initialName;
+      draft.recurring = recurring;
+      draft.default_amount = amountRaw !== "" ? Number(amountRaw) : null;
+    });
+    onClose();
+  };
+
+  return (
+    <div className="flex flex-col gap-3 px-4 pb-4 pt-2">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setType((t) => (t === "income" ? "expense" : "income"))}
+          className={`shrink-0 rounded-lg px-2.5 py-1 text-sm font-medium transition-opacity hover:opacity-75 ${type === "income" ? "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400" : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"}`}
+        >
+          {type === "income" ? "Income" : "Expense"}
+        </button>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="min-w-0 flex-1 rounded-lg bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-800 outline-none dark:bg-zinc-800 dark:text-zinc-100"
+        />
+      </div>
+
+      <div className="flex items-center gap-1 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700">
+        <span className="text-sm font-medium text-zinc-400 dark:text-zinc-500">$</span>
+        <input
+          ref={amount.ref}
+          type="text"
+          inputMode="numeric"
+          value={amount.displayValue}
+          placeholder="0"
+          onKeyDown={amount.onKeyDown}
+          onChange={amount.onChange}
+          className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+        />
+      </div>
+
+      <div className="flex items-center justify-between pt-1">
+        <button
+          type="button"
+          onClick={() => setRecurring((r) => !r)}
+          className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${recurring ? "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300" : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"}`}
+        >
+          {recurring ? "Recurring on" : "Recurring off"}
+        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-zinc-50 dark:text-zinc-900"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function RecurringSettings() {
   const { data: categories = [] } = useLiveQuery(
@@ -29,12 +125,6 @@ export default function RecurringSettings() {
       else if (sortBy === "type") cmp = a.type.localeCompare(b.type);
       return sortDir === "asc" ? cmp : -cmp;
     });
-
-  const handleToggleRecurring = (categoryId: number, value: boolean) => {
-    categoriesCollection.update(categoryId, (draft) => {
-      draft.recurring = value;
-    });
-  };
 
   return (
     <div>
@@ -70,32 +160,45 @@ export default function RecurringSettings() {
         </div>
       </div>
 
-      <div className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-700">
-        {filtered.map((cat) => (
-          <div key={cat.id} className="flex items-center justify-between gap-4 px-4 py-3">
-            <div className="flex items-center gap-3">
-              <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
-                {cat.type}
-              </span>
-              <span className={`text-sm font-medium ${cat.recurring ? "text-zinc-800 dark:text-zinc-100" : "text-zinc-400 dark:text-zinc-500"}`}>
-                {cat.name}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              {cat.recurring && cat.default_amount != null && (
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                  ${cat.default_amount.toLocaleString("en-US")}
+      <div className="flex flex-col">
+        {filtered.map((cat, i) => (
+          <ExpandableRow
+            key={cat.id}
+            isFirst={i === 0}
+            isLast={i === filtered.length - 1}
+            dimSummaryWhenOpen
+            summary={
+              <>
+                <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
+                  {cat.type}
                 </span>
-              )}
-              <button
-                type="button"
-                onClick={() => handleToggleRecurring(cat.id, !cat.recurring)}
-                className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${cat.recurring ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700" : "text-zinc-400 hover:bg-zinc-100 dark:text-zinc-500 dark:hover:bg-zinc-800"}`}
-              >
-                {cat.recurring ? "Recurring on" : "Recurring off"}
-              </button>
-            </div>
-          </div>
+                <span className={`text-sm font-medium ${cat.recurring ? "text-zinc-800 dark:text-zinc-100" : "text-zinc-400 dark:text-zinc-500"}`}>
+                  {cat.name}
+                </span>
+                <div className="ml-auto flex items-center gap-3">
+                  {cat.recurring && cat.default_amount != null && (
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                      ${cat.default_amount.toLocaleString("en-US")}
+                    </span>
+                  )}
+                  <span className={`text-xs font-medium ${cat.recurring ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-300 dark:text-zinc-600"}`}>
+                    {cat.recurring ? "Recurring on" : "Recurring off"}
+                  </span>
+                </div>
+              </>
+            }
+          >
+            {(close) => (
+              <CategoryForm
+                categoryId={cat.id}
+                initialType={cat.type as "income" | "expense"}
+                initialName={cat.name}
+                initialRecurring={cat.recurring}
+                initialAmount={cat.default_amount ?? null}
+                onClose={close}
+              />
+            )}
+          </ExpandableRow>
         ))}
       </div>
     </div>
