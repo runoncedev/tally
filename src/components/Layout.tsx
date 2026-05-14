@@ -17,7 +17,7 @@ const DEMO_CATEGORIES = [
   { id: 4, name: "Dining", type: "expense" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
 ];
 
-const DEMO_BASE = { income: 5_340_000, expenses: 1_961_443 };
+const DEMO_BASE = { income: 0, expenses: 0 };
 
 const DEMO_CATEGORIES_BY_ID = Object.fromEntries(
   [
@@ -105,7 +105,10 @@ function DemoTxRow({ tx, isFirst, isLast, onUpdate, onDelete }: {
 function LoginScreen() {
   const isLocal = window.location.hostname === "localhost";
 
-  const [demoTxs, setDemoTxs] = useState<DemoTx[]>([]);
+  const [demoTxs, setDemoTxs] = useState<DemoTx[]>([
+    { public_id: "demo-1", amount: 6_000, category_id: 1, description: null, date: "2026-05-01", household_id: null },
+    { public_id: "demo-2", amount: -1_500, category_id: 2, description: null, date: "2026-05-01", household_id: null },
+  ]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState<TransactionFieldsState>(EMPTY_FORM);
   const [categoryInputValue, setCategoryInputValue] = useState("");
@@ -171,29 +174,30 @@ function LoginScreen() {
         </div>
       </nav>
 
-      <div className="mx-auto max-w-5xl px-4 pt-12 pb-16">
+      <div className="mx-auto max-w-5xl px-4 pt-12 pb-8">
         <h2 className="mb-8 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Overview your spendings, month by month</h2>
         <div className="pointer-events-none flex flex-col gap-3 select-none">
           <MonthCard month="2026-05" income={demoIncome} expenses={demoExpenses} balance={demoBalance} isCurrent />
-          <div className="opacity-75">
-            <MonthCard month="2026-04" income={5_340_000} expenses={4_620_000} balance={1_220_000} isPast />
-          </div>
-          <div className="opacity-50">
-            <MonthCard month="2026-03" income={5_340_000} expenses={3_870_000} balance={1_470_000} isPast />
-          </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-5xl px-4 pb-8">
-        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Quickly track your movements</h2>
+        {/* <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">Quickly track your movements</h2> */}
         <div className="mx-auto max-w-xl flex flex-col gap-3">
-          <div className="rounded-xl border border-zinc-300 dark:border-zinc-700">
+          <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setShowAddForm(true)}
-              className="flex w-full items-center justify-center gap-2 px-4 py-3 text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200"
+              onClick={() => { setForm({ ...EMPTY_FORM, type: "income" }); setCategoryInputValue(""); setShowAddForm(true); }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-3 text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200"
             >
-              + Add transaction
+              <span className="text-green-500">↓</span> Add income
+            </button>
+            <button
+              type="button"
+              onClick={() => { setForm({ ...EMPTY_FORM, type: "expense" }); setCategoryInputValue(""); setShowAddForm(true); }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 px-4 py-3 text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200"
+            >
+              <span className="text-red-400">↑</span> Add expense
             </button>
           </div>
           {showAddForm && (
@@ -206,7 +210,7 @@ function LoginScreen() {
                   categoryInputValue={categoryInputValue}
                   onCategoryInputChange={setCategoryInputValue}
                   canSave={form.amount !== ""}
-                      onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); setShowAddForm(false); }}
+                  onCancel={() => { setForm(EMPTY_FORM); setCategoryInputValue(""); setShowAddForm(false); }}
                 />
               </form>
             </div>
