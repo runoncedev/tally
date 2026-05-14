@@ -14,6 +14,7 @@ type MonthCardProps = {
   isCurrent?: boolean;
   isPast?: boolean;
   isLoading?: boolean;
+  nonInteractive?: boolean;
 };
 
 function formatMonthLabel(month: string) {
@@ -33,6 +34,7 @@ export function MonthCard({
   isCurrent,
   isPast,
   isLoading,
+  nonInteractive,
 }: MonthCardProps) {
   const savingsPct =
     income > 0 ? Math.max(0, Math.min(balance / income, 1)) * 100 : 0;
@@ -52,40 +54,36 @@ export function MonthCard({
 
   useMotionValueEvent(wSpring, "change", (v) => setWVal(v));
 
-  return (
-    <Link
-      to="/month/$month"
-      params={{ month }}
-      className={`group relative block overflow-hidden rounded-xl border p-4 transition-colors ${isPast ? "border-zinc-100 hover:bg-zinc-50/50 dark:border-zinc-800/50 dark:hover:bg-zinc-800/30" : "border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"}`}
-    >
-      {(() => {
-        const opacity = !isLoading && savingsPct > 0 ? 1 : 0;
-        const fill1 =
-          savingsPct > 66
-            ? "rgb(34 197 94 / 0.05)"
-            : savingsPct > 33
-              ? "rgb(234 179 8 / 0.07)"
-              : "rgb(239 68 68 / 0.05)";
-        const fill2 =
-          savingsPct > 66
-            ? "rgb(34 197 94 / 0.09)"
-            : savingsPct > 33
-              ? "rgb(234 179 8 / 0.13)"
-              : "rgb(239 68 68 / 0.09)";
-        const w = wVal;
-        return (
-          <>
-            {/* back wave: slightly wider, more transparent, slower */}
-            <svg
-              className="pointer-events-none absolute top-0 left-0 w-full"
-              viewBox="0 0 100 200"
-              preserveAspectRatio="none"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                height: "200%",
-                opacity,
-                animation: "wave-slide 6s linear infinite",
-              }}
+  const cardClassName = `group relative block overflow-hidden rounded-xl border p-4 transition-colors ${isPast ? "border-zinc-100 hover:bg-zinc-50/50 dark:border-zinc-800/50 dark:hover:bg-zinc-800/30" : "border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"}`;
+
+  const opacity = !isLoading && savingsPct > 0 ? 1 : 0;
+  const fill1 =
+    savingsPct > 66
+      ? "rgb(34 197 94 / 0.05)"
+      : savingsPct > 33
+        ? "rgb(234 179 8 / 0.07)"
+        : "rgb(239 68 68 / 0.05)";
+  const fill2 =
+    savingsPct > 66
+      ? "rgb(34 197 94 / 0.09)"
+      : savingsPct > 33
+        ? "rgb(234 179 8 / 0.13)"
+        : "rgb(239 68 68 / 0.09)";
+  const w = wVal;
+
+  const inner = (
+    <>
+      {/* back wave: slightly wider, more transparent, slower */}
+      <svg
+        className="pointer-events-none absolute top-0 left-0 w-full"
+        viewBox="0 0 100 200"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          height: "200%",
+          opacity,
+          animation: "wave-slide 6s linear infinite",
+        }}
             >
               <path
                 d={`M 0,0 L ${w + 0.7},0 C ${w + 1.5},25 ${w - 0.5},75 ${w + 0.7},100 L 0,100 Z`}
@@ -118,9 +116,6 @@ export function MonthCard({
               />
             </svg>
             <style>{`@keyframes wave-slide { from { transform: translateY(-50%); } to { transform: translateY(0); } }`}</style>
-          </>
-        );
-      })()}
       {/* mobile: two rows */}
       <div className="flex items-center justify-between sm:hidden">
         <div className="flex items-center gap-2">
@@ -193,6 +188,12 @@ export function MonthCard({
           />
         </div>
       </div>
-    </Link>
+    </>
+  );
+
+  return nonInteractive ? (
+    <div className={cardClassName}>{inner}</div>
+  ) : (
+    <Link to="/month/$month" params={{ month }} className={cardClassName}>{inner}</Link>
   );
 }
