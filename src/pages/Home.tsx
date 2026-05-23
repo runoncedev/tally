@@ -36,11 +36,6 @@ export default function Home() {
 
   const today = new Date();
   const currentMonth = today.toISOString().slice(0, 7);
-  const isAfterMidMonth = today.getDate() > 15;
-  const nextMonth = (() => {
-    const d = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    return d.toISOString().slice(0, 7);
-  })();
 
   const months = useMemo(() => {
     const summaries = buildMonthSummaries(transactions);
@@ -52,11 +47,8 @@ export default function Home() {
         balance: 0,
       });
     }
-    if (isAfterMidMonth && !summaries.find((m) => m.month === nextMonth)) {
-      summaries.push({ month: nextMonth, income: 0, expenses: 0, balance: 0 });
-    }
     return summaries.sort((a, b) => b.month.localeCompare(a.month));
-  }, [transactions, currentMonth, isAfterMidMonth, nextMonth]);
+  }, [transactions, currentMonth]);
 
   const totalBalance = useMemo(
     () => months.reduce((sum, m) => sum + m.balance, 0),
