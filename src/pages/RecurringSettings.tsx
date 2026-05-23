@@ -106,7 +106,7 @@ export default function RecurringSettings() {
 
   const [sortBy, setSortBy] = useState<"type" | "name" | "amount">("type");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [filterType, setFilterType] = useState<"all" | "expense" | "income">("all");
+  const [filterType, setFilterType] = useState<"all" | "expense" | "income" | "recurring">("all");
 
   const toggleSort = (field: "name" | "amount" | "type") => {
     if (sortBy === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -117,7 +117,10 @@ export default function RecurringSettings() {
   };
 
   const filtered = categories
-    .filter((c) => filterType === "all" || c.type === filterType)
+    .filter((c) => {
+      if (filterType === "recurring") return c.recurring;
+      return filterType === "all" || c.type === filterType;
+    })
     .sort((a, b) => {
       let cmp = 0;
       if (sortBy === "name") cmp = a.name.localeCompare(b.name);
@@ -132,13 +135,13 @@ export default function RecurringSettings() {
 
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="flex self-start overflow-hidden rounded-lg border border-zinc-200 text-xs dark:border-zinc-700">
-          {(["all", "expense", "income"] as const).map((t) => (
+          {(["all", "expense", "income", "recurring"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
               className={`px-3 py-1.5 transition-colors ${filterType === t ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "text-zinc-500 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}
             >
-              {t === "all" ? "All" : t === "expense" ? "Expenses" : "Income"}
+              {t === "all" ? "All" : t === "expense" ? "Expenses" : t === "income" ? "Income" : "Recurring"}
             </button>
           ))}
         </div>
@@ -172,7 +175,7 @@ export default function RecurringSettings() {
                 <span className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium ${cat.type === "expense" ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"}`}>
                   {cat.type}
                 </span>
-                <span className={`text-sm font-medium ${cat.recurring ? "text-zinc-800 dark:text-zinc-100" : "text-zinc-400 dark:text-zinc-500"}`}>
+                <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   {cat.name}
                 </span>
                 <div className="ml-auto flex items-center gap-3">
@@ -181,9 +184,6 @@ export default function RecurringSettings() {
                       ${cat.default_amount.toLocaleString("en-US")}
                     </span>
                   )}
-                  <span className={`text-xs font-medium ${cat.recurring ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-300 dark:text-zinc-600"}`}>
-                    {cat.recurring ? "Recurring on" : "Recurring off"}
-                  </span>
                 </div>
               </>
             }
