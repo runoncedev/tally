@@ -37,6 +37,14 @@ function CategoryForm({
     onClose();
   };
 
+  const handleCancel = () => {
+    setType(initialType);
+    setName(initialName);
+    setRecurring(initialRecurring);
+    setAmountRaw(initialAmount != null ? String(initialAmount) : "");
+    onClose();
+  };
+
   return (
     <div className="flex flex-col gap-3 px-4 pb-4 pt-2">
       <div className="flex items-center gap-2">
@@ -81,7 +89,7 @@ function CategoryForm({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCancel}
             className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
             Cancel
