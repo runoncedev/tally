@@ -47,27 +47,28 @@ function CategoryForm({
         >
           {type === "income" ? "Income" : "Expense"}
         </button>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="min-w-0 flex-1 rounded-lg bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-800 outline-none dark:bg-zinc-800 dark:text-zinc-100"
-        />
+        <div className="flex flex-1 items-baseline gap-1 rounded-lg bg-zinc-100 px-3 py-1.5 dark:bg-zinc-800">
+          <span className="text-sm font-medium text-zinc-400 dark:text-zinc-500">$</span>
+          <input
+            ref={amount.ref}
+            type="text"
+            inputMode="numeric"
+            value={amount.displayValue}
+            placeholder="0"
+            onKeyDown={amount.onKeyDown}
+            onChange={amount.onChange}
+            className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-1 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700">
-        <span className="text-sm font-medium text-zinc-400 dark:text-zinc-500">$</span>
-        <input
-          ref={amount.ref}
-          type="text"
-          inputMode="numeric"
-          value={amount.displayValue}
-          placeholder="0"
-          onKeyDown={amount.onKeyDown}
-          onChange={amount.onChange}
-          className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
-        />
-      </div>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Category name"
+        className="w-full rounded-lg border border-zinc-200 bg-transparent px-3 py-2 text-lg text-zinc-800 outline-none placeholder:text-zinc-400 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+      />
 
       <div className="flex items-center justify-between pt-1">
         <button
