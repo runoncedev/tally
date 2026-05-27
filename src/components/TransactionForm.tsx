@@ -62,7 +62,10 @@ function emptyForm(
   prefillDescription?: string,
 ): FormState {
   return {
-    date: `${month}-01`,
+    date: (() => {
+      const today = new Date().toISOString().slice(0, 10);
+      return today.startsWith(month) ? today : `${month}-01`;
+    })(),
     amount: prefillAmount != null ? String(prefillAmount) : "",
     category_id: prefillCategoryId ?? null,
     type: prefillCategoryType ?? "expense",
