@@ -32,11 +32,12 @@ const DEMO_CATEGORIES_BY_ID = Object.fromEntries(
 type DemoTx = { public_id: string; amount: number; category_id: number | null; description: string | null; date: string; household_id: null };
 
 const EMPTY_FORM: TransactionFieldsState = {
-  amount: "", category_id: null, type: "expense", description: "",
+  date: new Date().toISOString().slice(0, 10), amount: "", category_id: null, type: "expense", description: "",
 };
 
 function txToForm(tx: DemoTx): TransactionFieldsState {
   return {
+    date: tx.date,
     amount: String(Math.abs(tx.amount)),
     category_id: tx.category_id,
     type: tx.amount >= 0 ? "income" : "expense",

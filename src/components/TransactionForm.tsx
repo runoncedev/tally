@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Category, Transaction } from "../lib/collections";
 import { ExpandableRow } from "./ExpandableRow";
-import { TransactionFormFields } from "./TransactionFormFields";
+import { TransactionFormFields, type TransactionFieldsState } from "./TransactionFormFields";
 
 
 export type TransactionFormPayload = {
@@ -42,13 +42,7 @@ type TransactionFormProps = {
   hideMonthInDeleteDialog?: boolean;
 };
 
-type FormState = {
-  date: string;
-  amount: string;
-  category_id: number | null;
-  type: "income" | "expense";
-  description: string;
-};
+type FormState = TransactionFieldsState;
 
 function txToForm(tx: Transaction): FormState {
   return {
