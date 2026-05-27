@@ -33,6 +33,8 @@ type TransactionFormProps = {
   isLast?: boolean;
   nested?: boolean;
   confirmOnSave?: boolean;
+  cancelLabel?: string;
+  bare?: boolean;
   childCount?: number;
   onSaved?: () => void;
   onDelete?: () => void;
@@ -93,6 +95,8 @@ export function TransactionForm({
   isLast = false,
   nested = false,
   confirmOnSave = false,
+  cancelLabel,
+  bare = false,
   childCount,
   onSaved,
   onDelete,
@@ -200,6 +204,7 @@ export function TransactionForm({
       isEditing={!!tx}
       focusOnMount={focusOnMount}
       showDelete={!!tx}
+      cancelLabel={cancelLabel}
       onDelete={handleDelete}
       onCancel={() => handleCancel(close)}
     />
@@ -208,7 +213,7 @@ export function TransactionForm({
   if (!tx) {
     return (
       <div
-        className={`group relative -mt-px overflow-hidden border border-zinc-300 hover:z-10 dark:border-zinc-700 ${isFirst ? "mt-0 rounded-t-xl" : ""} ${isLast ? "rounded-b-xl" : ""}`}
+        className={bare ? "" : `group relative -mt-px overflow-hidden border border-zinc-300 hover:z-10 dark:border-zinc-700 ${isFirst ? "mt-0 rounded-t-xl" : ""} ${isLast ? "rounded-b-xl" : ""}`}
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
           {formFields(() => onDelete?.())}

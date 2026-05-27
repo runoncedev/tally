@@ -2,10 +2,11 @@ import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { QueryClient } from '@tanstack/query-core'
 import { supabase } from './supabase'
-import { publicTransactionsRowSchema, publicCategoriesRowSchema } from '../types/database.schemas'
+import { publicTransactionsRowSchema, publicCategoriesRowSchema, publicEmailTransactionsRowSchema } from '../types/database.schemas'
 import type { z } from 'zod'
 
 export type Category = z.infer<typeof publicCategoriesRowSchema>
+export type EmailTransaction = z.infer<typeof publicEmailTransactionsRowSchema>
 
 const transactionSchema = publicTransactionsRowSchema.extend({
   id: publicTransactionsRowSchema.shape.id.optional(),
@@ -38,6 +39,31 @@ export const categoriesCollection = createCollection(
       const { error } = await supabase.from('categories').delete().eq('id', mutation.key as number)
       if (error) throw error
       await categoriesCollection.utils.refetch()
+    },
+  }),
+)
+
+export const emailTransactionsCollection = createCollection(
+  queryCollectionOptions({
+    schema: publicEmailTransactionsRowSchema,
+    queryKey: ['email_transactions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_transactions')
+        .select('*')
+        .is('deleted_at', null)
+        .order('transacted_at', { ascending: false })
+      if (error) throw error
+      return data
+    },
+    queryClient,
+    getKey: (item) => item.id,
+    onUpdate: async ({ transaction }) => {
+      const mutation = transaction.mutations[0]
+      const patch = mutation.changes
+      const { error } = await supabase.from('email_transactions').update(patch).eq('id', mutation.key as string)
+      if (error) throw error
+      await emailTransactionsCollection.utils.refetch()
     },
   }),
 )

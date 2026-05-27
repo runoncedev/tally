@@ -7,15 +7,15 @@ Se ha realizado una compra por $ 45.544 en CENTRO MEDICO CPM PUERTO MONTT CL aso
 
 describe('extractEmailData', () => {
   it('extrae el monto', () => {
-    expect(extractEmailData(SAMPLE_EMAIL).amount).toBe('45.544')
+    expect(extractEmailData(SAMPLE_EMAIL)!.amount).toBe('45.544')
   })
 
   it('extrae el merchant', () => {
-    expect(extractEmailData(SAMPLE_EMAIL).merchant).toBe('CENTRO MEDICO CPM PUERTO MONTT CL')
+    expect(extractEmailData(SAMPLE_EMAIL)!.merchant).toBe('CENTRO MEDICO CPM PUERTO MONTT CL')
   })
 
   it('extrae el datetime', () => {
-    expect(extractEmailData(SAMPLE_EMAIL).datetime).toBe('05/05/2016 19:49')
+    expect(extractEmailData(SAMPLE_EMAIL)!.datetime).toBe('05/05/2016 19:49')
   })
 
   it('retorna null si no encuentra datos', () => {

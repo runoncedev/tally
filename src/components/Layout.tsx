@@ -146,12 +146,6 @@ function LoginScreen() {
     });
   };
 
-  const signInEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError("Invalid email or password");
-  };
 
   return (
     <div className="bg-white dark:bg-zinc-900">
@@ -370,16 +364,12 @@ export function Layout() {
           <button
             onClick={async () => {
               const { data: { session } } = await supabase.auth.getSession()
+              const token = session?.provider_token
+              if (!token) { console.error('no provider_token'); return }
               const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
                 method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${session?.provider_token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  topicName: 'projects/tally-493920/topics/gmail',
-                  labelIds: ['INBOX'],
-                }),
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topicName: 'projects/tally-493920/topics/gmail', labelIds: ['INBOX'] }),
               })
               const data = await res.json()
               console.log('gmail watch:', data)

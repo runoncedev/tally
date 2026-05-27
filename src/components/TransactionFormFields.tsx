@@ -21,6 +21,7 @@ type Props = {
   isEditing?: boolean;
   focusOnMount?: boolean;
   showDelete?: boolean;
+  cancelLabel?: string;
   onDelete?: () => void;
   onCancel: () => void;
 };
@@ -37,6 +38,7 @@ export function TransactionFormFields({
   isEditing = false,
   focusOnMount = false,
   showDelete = false,
+  cancelLabel = "Cancel",
   onDelete,
   onCancel,
 }: Props) {
@@ -161,7 +163,7 @@ export function TransactionFormFields({
             onClick={onCancel}
             className="rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
-            Cancel
+            {cancelLabel}
           </button>
           <button
             type="submit"

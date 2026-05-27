@@ -7,7 +7,8 @@ import { Layout } from "./components/Layout";
 import Home from "./pages/Home";
 import MonthDetail from "./pages/MonthDetail";
 import CategoriesSettings from "./pages/RecurringSettings";
-import LoginLocal from "./pages/LoginLocal";
+import LoginLocal from "./pages/LoginLocal"
+import Inbox from "./pages/Inbox";
 
 function formatMonthTitle(month: string) {
   const [year, mon] = month.split("-").map(Number);
@@ -38,6 +39,12 @@ const categoriesRoute = createRoute({
   component: CategoriesSettings,
   head: () => ({ meta: [{ title: "Categories — Tally" }] }),
 });
+const inboxRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/inbox",
+  component: Inbox,
+  head: () => ({ meta: [{ title: "Inbox — Tally" }] }),
+});
 const loginLocalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
@@ -49,6 +56,7 @@ export const routeTree = rootRoute.addChildren([
   homeRoute,
   monthRoute,
   categoriesRoute,
+  inboxRoute,
   loginLocalRoute,
 ]);
 

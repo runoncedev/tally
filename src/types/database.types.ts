@@ -47,6 +47,79 @@ export type Database = {
           },
         ]
       }
+      email_transactions: {
+        Row: {
+          amount: number | null
+          deleted_at: string | null
+          from: string | null
+          gmail_message_id: string | null
+          household_id: string
+          id: string
+          merchant: string | null
+          received_at: string
+          transacted_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          deleted_at?: string | null
+          from?: string | null
+          gmail_message_id?: string | null
+          household_id: string
+          id?: string
+          merchant?: string | null
+          received_at?: string
+          transacted_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          deleted_at?: string | null
+          from?: string | null
+          gmail_message_id?: string | null
+          household_id?: string
+          id?: string
+          merchant?: string | null
+          received_at?: string
+          transacted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_transactions_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gmail_history_queue: {
+        Row: {
+          history_id: string
+          household_id: string
+          id: string
+          received_at: string
+        }
+        Insert: {
+          history_id: string
+          household_id: string
+          id?: string
+          received_at?: string
+        }
+        Update: {
+          history_id?: string
+          household_id?: string
+          id?: string
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmail_history_queue_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_members: {
         Row: {
           household_id: string
