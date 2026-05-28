@@ -29,9 +29,23 @@ export function EmailTransactionRow({
     ? emailTx.transacted_at.slice(0, 7)
     : new Date().toISOString().slice(0, 7);
 
+  const dateLabel = emailTx.transacted_at
+    ? (() => {
+        const d = new Date(emailTx.transacted_at);
+        const day = d.getDate();
+        const time = d.toLocaleTimeString("default", { hour: "numeric", minute: "2-digit" });
+        return `${day} · ${time}`;
+      })()
+    : null;
+
   const summary = (
     <>
-      <span className="shrink-0 text-[15px] font-medium text-zinc-800 dark:text-zinc-100">
+      {dateLabel && (
+        <span className="shrink-0 text-[15px] text-zinc-500 dark:text-zinc-400">
+          {dateLabel}
+        </span>
+      )}
+      <span className="min-w-0 truncate text-[15px] font-medium text-zinc-800 dark:text-zinc-100">
         {emailTx.merchant ?? "Unknown"}
       </span>
       {amount != null && (
@@ -53,6 +67,8 @@ export function EmailTransactionRow({
               categoriesById={categoriesById}
               prefillAmount={amount}
               prefillDescription={emailTx.merchant ?? undefined}
+              prefillDate={emailTx.transacted_at ? emailTx.transacted_at.slice(0, 10) : undefined}
+              dateDisabled
               prefillCategoryType="expense"
               initiallyDirty
               nested
