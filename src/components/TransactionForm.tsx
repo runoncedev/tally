@@ -23,6 +23,8 @@ type TransactionFormProps = {
   prefillCategoryType?: "income" | "expense";
   prefillAmount?: number;
   prefillDescription?: string;
+  prefillDate?: string;
+  dateDisabled?: boolean;
   initialType?: "income" | "expense";
   publicId?: string;
   focusOnMount?: boolean;
@@ -60,9 +62,10 @@ function emptyForm(
   prefillCategoryType?: "income" | "expense",
   prefillAmount?: number,
   prefillDescription?: string,
+  prefillDate?: string,
 ): FormState {
   return {
-    date: (() => {
+    date: prefillDate ?? (() => {
       const today = new Date().toISOString().slice(0, 10);
       return today.startsWith(month) ? today : `${month}-01`;
     })(),
@@ -82,6 +85,8 @@ export function TransactionForm({
   prefillCategoryType,
   prefillAmount,
   prefillDescription,
+  prefillDate,
+  dateDisabled = false,
   initialType,
   publicId,
   focusOnMount = false,
@@ -109,6 +114,7 @@ export function TransactionForm({
         prefillCategoryType ?? initialType,
         prefillAmount,
         prefillDescription,
+        prefillDate,
       ),
   );
   const [isDirty, setIsDirty] = useState(initiallyDirty);
@@ -198,6 +204,7 @@ export function TransactionForm({
       canSave={canSave}
       isRecurringPrefill={isRecurringPrefill}
       isRecurringCategory={isRecurringCategory}
+      dateDisabled={dateDisabled}
       isEditing={!!tx}
       focusOnMount={focusOnMount}
       showDelete={!!tx}
