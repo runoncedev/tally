@@ -20,6 +20,7 @@ type Props = {
   canSave: boolean;
   isRecurringPrefill?: boolean;
   isRecurringCategory?: boolean;
+  dateDisabled?: boolean;
   isEditing?: boolean;
   focusOnMount?: boolean;
   showDelete?: boolean;
@@ -37,6 +38,7 @@ export function TransactionFormFields({
   canSave,
   isRecurringPrefill = false,
   isRecurringCategory = false,
+  dateDisabled = false,
   isEditing = false,
   focusOnMount = false,
   showDelete = false,
@@ -110,8 +112,9 @@ export function TransactionFormFields({
         <div className="relative ml-auto shrink-0">
           <button
             type="button"
-            onClick={() => datePickerRef.current?.showPicker()}
-            className="flex items-center gap-2.5 rounded-lg p-2.5 text-sm font-medium leading-none text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            disabled={dateDisabled}
+            onClick={() => !dateDisabled && datePickerRef.current?.showPicker()}
+            className={`flex items-center gap-2.5 rounded-lg p-2.5 text-sm font-medium leading-none text-zinc-400 transition-colors dark:text-zinc-500 ${dateDisabled ? "cursor-default" : "hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"}`}
           >
             {dayShort}
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hidden sm:block">
