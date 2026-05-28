@@ -1,7 +1,12 @@
-type ExtractedEmailData = {
+export type ExtractedEmailData = {
   amount: string
   merchant: string
   datetime: string
+}
+
+/** Map sender address → extractor. Add banks as needed. */
+export const emailExtractors: Record<string, (text: string) => ExtractedEmailData | null> = {
+  "alertas@banco.cl": extractEmailData,
 }
 
 export function extractEmailData(text: string): ExtractedEmailData | null {

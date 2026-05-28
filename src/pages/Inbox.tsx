@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLiveQuery } from "@tanstack/react-db";
 import { EmailTransactionRow } from "../components/EmailTransactionRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
@@ -8,15 +9,25 @@ import {
   transactionsCollection,
 } from "../lib/collections";
 import { useHousehold } from "../lib/household";
+import { syncGmailQueue } from "../lib/sync-gmail-queue";
 import { supabase } from "../lib/supabase";
 
 export default function Inbox() {
   const household = useHousehold();
 
-  const { data: emailTxs = [] } = useLiveQuery(
-    (q) => q.from({ e: emailTransactionsCollection }),
+  const { data: emailTxs = [], isLoading: txLoading } = useLiveQuery(
+    (q) => q.from({ e: emailTransactionsCollection }).orderBy(({ e }) => e.transacted_at, "desc"),
     [],
   );
+
+  useQuery({
+    queryKey: ["gmail-sync", household.id],
+    enabled: !txLoading,
+    queryFn: () => syncGmailQueue(household.id),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
 
   const { data: categories = [] } = useLiveQuery(
     (q) => q.from({ c: categoriesCollection }),

@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   }
 
   const { error } = await supabase
-    .from("email_transactions")
+    .from("gmail_history_queue")
     .insert({ household_id: member.household_id, history_id: String(historyId) })
 
   if (error) console.error("insert error:", error)
