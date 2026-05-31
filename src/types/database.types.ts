@@ -164,6 +164,48 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_category_mappings: {
+        Row: {
+          category_id: number
+          created_at: string
+          household_id: string
+          id: number
+          merchant: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: number
+          created_at?: string
+          household_id: string
+          id?: number
+          merchant: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: number
+          created_at?: string
+          household_id?: string
+          id?: number
+          merchant?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_category_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_category_mappings_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number

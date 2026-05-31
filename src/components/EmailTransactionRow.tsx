@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import type { Category, EmailTransaction } from "../lib/collections";
 import { ExpandableRow } from "./ExpandableRow";
-import { TransactionForm } from "./TransactionForm";
 import type { TransactionFormPayload } from "./TransactionForm";
+import { TransactionForm } from "./TransactionForm";
 
 type EmailTransactionRowProps = {
   emailTx: EmailTransaction;
@@ -10,6 +10,7 @@ type EmailTransactionRowProps = {
   categoriesById: Record<number, Category>;
   isFirst?: boolean;
   isLast?: boolean;
+  prefillCategoryId?: number;
   onSave: (payload: TransactionFormPayload) => void;
   onDiscard: () => void;
 };
@@ -20,6 +21,7 @@ export function EmailTransactionRow({
   categoriesById,
   isFirst = false,
   isLast = false,
+  prefillCategoryId,
   onSave,
   onDiscard,
 }: EmailTransactionRowProps) {
@@ -65,6 +67,7 @@ export function EmailTransactionRow({
               categories={categories}
               month={month}
               categoriesById={categoriesById}
+              prefillCategoryId={prefillCategoryId}
               prefillAmount={amount}
               prefillDescription={emailTx.merchant ?? undefined}
               prefillDate={emailTx.transacted_at ? emailTx.transacted_at.slice(0, 10) : undefined}

@@ -143,7 +143,14 @@ function LoginScreen() {
   const signInGoogle = () => {
     return supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin, scopes: 'https://www.googleapis.com/auth/gmail.readonly' },
+      options: {
+        redirectTo: window.location.origin,
+        scopes: 'https://www.googleapis.com/auth/gmail.readonly',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
     });
   };
 
@@ -335,6 +342,22 @@ export function Layout() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === "SIGNED_IN" && session?.provider_refresh_token) {
+        console.log("provider_refresh_token:", session.provider_refresh_token);
+        fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: session.provider_refresh_token,
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            client_secret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data) => console.log("token exchange:", data))
+          .catch((err) => console.error("token exchange failed:", err));
+      }
       if (event === "SIGNED_OUT") setHousehold(null);
     });
     return () => subscription.unsubscribe();

@@ -1,36 +1,31 @@
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useLiveQuery } from "@tanstack/react-db";
+import { useMemo } from "react";
 import { EmailTransactionRow } from "../components/EmailTransactionRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
 import {
-  categoriesCollection,
-  emailTransactionsCollection,
-  transactionsCollection,
+    categoriesCollection,
+    emailTransactionsCollection,
+    merchantMappingsCollection,
+    transactionsCollection,
 } from "../lib/collections";
 import { useHousehold } from "../lib/household";
-import { syncGmailQueue } from "../lib/sync-gmail-queue";
 import { supabase } from "../lib/supabase";
 
 export default function Inbox() {
   const household = useHousehold();
 
-  const { data: emailTxs = [], isLoading: txLoading } = useLiveQuery(
+  const { data: emailTxs = [] } = useLiveQuery(
     (q) => q.from({ e: emailTransactionsCollection }).orderBy(({ e }) => e.transacted_at, "desc"),
     [],
   );
 
-  useQuery({
-    queryKey: ["gmail-sync", household.id],
-    enabled: !txLoading,
-    queryFn: () => syncGmailQueue(household.id),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    retry: false,
-  });
-
   const { data: categories = [] } = useLiveQuery(
     (q) => q.from({ c: categoriesCollection }),
+    [],
+  );
+
+  const { data: merchantMappings = [] } = useLiveQuery(
+    (q) => q.from({ m: merchantMappingsCollection }),
     [],
   );
 
@@ -49,6 +44,15 @@ export default function Inbox() {
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [emailTxs]);
 
+  const merchantToCategory = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const m of merchantMappings) {
+      if (!m.merchant) continue;
+      map[m.merchant.toLowerCase()] = m.category_id;
+    }
+    return map;
+  }, [merchantMappings]);
+
   function formatMonthLabel(month: string) {
     if (month === "unknown") return "Unknown";
     const [year, mon] = month.split("-").map(Number);
@@ -66,6 +70,25 @@ export default function Inbox() {
       if (error) throw error;
       categoryId = data.id;
       await categoriesCollection.utils.refetch();
+    }
+
+    // Persist merchant -> category mapping if we have a merchant and resolved category
+    const emailTx = emailTxs.find((e) => e.id === emailTxId);
+    const merchantName = emailTx?.merchant ?? null;
+    if (merchantName && categoryId != null) {
+      const merchantTrim = merchantName.trim();
+      const { data: existing } = await supabase
+        .from('merchant_category_mappings')
+        .select('id')
+        .eq('household_id', household.id)
+        .ilike('merchant', merchantTrim)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from('merchant_category_mappings').update({ category_id: categoryId }).eq('id', existing.id);
+      } else {
+        await supabase.from('merchant_category_mappings').insert({ merchant: merchantTrim, category_id: categoryId, household_id: household.id });
+      }
+      await merchantMappingsCollection.utils.refetch();
     }
 
     transactionsCollection.insert({
@@ -107,6 +130,7 @@ export default function Inbox() {
                     emailTx={emailTx}
                     categories={categories}
                     categoriesById={categoriesById}
+                    prefillCategoryId={merchantToCategory[emailTx.merchant?.toLowerCase() ?? '']}
                     isFirst={i === 0}
                     isLast={i === txs.length - 1}
                     onSave={(payload) => handleSave(emailTx.id, payload)}

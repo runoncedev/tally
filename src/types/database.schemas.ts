@@ -182,6 +182,50 @@ export const publicHouseholdsUpdateSchema = z.object({
   name: z.string().optional(),
 });
 
+export const publicMerchantCategoryMappingsRowSchema = z.object({
+  category_id: z.number(),
+  created_at: z.string(),
+  household_id: z.string(),
+  id: z.number(),
+  merchant: z.string(),
+  updated_at: z.string(),
+});
+
+export const publicMerchantCategoryMappingsInsertSchema = z.object({
+  category_id: z.number(),
+  created_at: z.string().optional(),
+  household_id: z.string(),
+  id: z.number().optional(),
+  merchant: z.string(),
+  updated_at: z.string().optional(),
+});
+
+export const publicMerchantCategoryMappingsUpdateSchema = z.object({
+  category_id: z.number().optional(),
+  created_at: z.string().optional(),
+  household_id: z.string().optional(),
+  id: z.number().optional(),
+  merchant: z.string().optional(),
+  updated_at: z.string().optional(),
+});
+
+export const publicMerchantCategoryMappingsRelationshipsSchema = z.tuple([
+  z.object({
+    foreignKeyName: z.literal("merchant_category_mappings_category_id_fkey"),
+    columns: z.tuple([z.literal("category_id")]),
+    isOneToOne: z.literal(false),
+    referencedRelation: z.literal("categories"),
+    referencedColumns: z.tuple([z.literal("id")]),
+  }),
+  z.object({
+    foreignKeyName: z.literal("merchant_category_mappings_household_id_fkey"),
+    columns: z.tuple([z.literal("household_id")]),
+    isOneToOne: z.literal(false),
+    referencedRelation: z.literal("households"),
+    referencedColumns: z.tuple([z.literal("id")]),
+  }),
+]);
+
 export const publicTransactionsRowSchema = z.object({
   amount: z.number(),
   category_id: z.number().nullable(),
