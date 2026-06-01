@@ -105,37 +105,6 @@ export const publicEmailTransactionsRelationshipsSchema = z.tuple([
   }),
 ]);
 
-export const publicGmailHistoryQueueRowSchema = z.object({
-  history_id: z.string(),
-  household_id: z.string(),
-  id: z.string(),
-  received_at: z.string(),
-});
-
-export const publicGmailHistoryQueueInsertSchema = z.object({
-  history_id: z.string(),
-  household_id: z.string(),
-  id: z.string().optional(),
-  received_at: z.string().optional(),
-});
-
-export const publicGmailHistoryQueueUpdateSchema = z.object({
-  history_id: z.string().optional(),
-  household_id: z.string().optional(),
-  id: z.string().optional(),
-  received_at: z.string().optional(),
-});
-
-export const publicGmailHistoryQueueRelationshipsSchema = z.tuple([
-  z.object({
-    foreignKeyName: z.literal("gmail_history_queue_household_id_fkey"),
-    columns: z.tuple([z.literal("household_id")]),
-    isOneToOne: z.literal(false),
-    referencedRelation: z.literal("households"),
-    referencedColumns: z.tuple([z.literal("id")]),
-  }),
-]);
-
 export const publicHouseholdMembersRowSchema = z.object({
   household_id: z.string(),
   joined_at: z.string(),

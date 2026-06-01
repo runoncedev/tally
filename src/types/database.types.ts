@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       categories: {
@@ -89,35 +84,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "email_transactions_household_id_fkey"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gmail_history_queue: {
-        Row: {
-          history_id: string
-          household_id: string
-          id: string
-          received_at: string
-        }
-        Insert: {
-          history_id: string
-          household_id: string
-          id?: string
-          received_at?: string
-        }
-        Update: {
-          history_id?: string
-          household_id?: string
-          id?: string
-          received_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gmail_history_queue_household_id_fkey"
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
@@ -423,3 +389,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
