@@ -114,7 +114,11 @@ function parseTransactedAt(datetime: string): string {
   const [datePart, timePart] = datetime.split(" ")
   const [dd, mm, yyyy] = datePart.split("/").map(Number)
   const [hours, minutes] = timePart.split(":").map(Number)
-  return new Date(yyyy, mm - 1, dd, hours, minutes).toISOString()
+  return Temporal.ZonedDateTime.from({
+    timeZone: "America/Santiago",
+    year: yyyy, month: mm, day: dd,
+    hour: hours, minute: minutes, second: 0,
+  }).toInstant().toString()
 }
 
 // --- Handler ---
