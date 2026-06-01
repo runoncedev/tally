@@ -41,6 +41,9 @@ async function gmailFetch<T>(path: string, token: string): Promise<T> {
 async function listHistoryMessageIds(startHistoryId: string, token: string): Promise<string[]> {
   const ids = new Set<string>()
   let pageToken: string | undefined
+  let page = 0
+
+  console.log("history.list startHistoryId:", startHistoryId)
 
   do {
     const params = new URLSearchParams({
@@ -62,9 +65,12 @@ async function listHistoryMessageIds(startHistoryId: string, token: string): Pro
       }
     }
 
+    page++
+    console.log(`history.list page ${page}: ${ids.size} ids so far, nextPageToken: ${data.nextPageToken ?? "none"}`)
     pageToken = data.nextPageToken
   } while (pageToken)
 
+  console.log(`history.list total: ${ids.size} message ids found`)
   return [...ids]
 }
 
@@ -221,7 +227,7 @@ Deno.serve(async (req) => {
     const from = getMessageFrom(message)
     const extractor = emailExtractors[from]
     if (!extractor) {
-      console.log(`no extractor for from: ${from}`)
+      console.log(`no extractor for message ${messageId}`)
       continue
     }
 
