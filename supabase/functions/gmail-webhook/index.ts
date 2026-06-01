@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "jsr:@supabase/supabase-js@2"
+import { emailExtractors } from "./extractor.ts"
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -97,27 +98,6 @@ function getMessageBodyText(message: GmailMessage): string {
   return message.payload ? getMessageText(message.payload) : ""
 }
 
-// --- Extractors ---
-
-type ExtractedEmailData = { amount: string; merchant: string; datetime: string }
-
-function extractBancoChile(text: string): ExtractedEmailData | null {
-  const normalized = text.replace(/\s+/g, " ")
-  const amountMatch = normalized.match(/\$\s*([\d.,]+)/)
-  const merchantMatch = normalized.match(/\$\s*[\d.,]+\s+en\s+(.+?)\s+asociado/)
-  const datetimeMatch = normalized.match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+las\s+(\d{2}:\d{2})/)
-  if (!amountMatch || !merchantMatch || !datetimeMatch) return null
-  return {
-    amount: amountMatch[1],
-    merchant: merchantMatch[1].trim(),
-    datetime: `${datetimeMatch[1]} ${datetimeMatch[2]}`,
-  }
-}
-
-const emailExtractors: Record<string, (text: string) => ExtractedEmailData | null> = {
-  "crivera5328@gmail.com": extractBancoChile,
-}
-
 // --- Parsers ---
 
 function parseChileanAmount(amount: string): number {
@@ -165,15 +145,25 @@ Deno.serve(async (req) => {
     return new Response("ok", { status: 200 })
   }
 
-  // read refresh token from DB
+  // read refresh token and last_history_id from DB
   const { data: tokenRow, error: tokenError } = await supabase
     .from("user_oauth_tokens")
-    .select("refresh_token")
+    .select("refresh_token, last_history_id")
     .eq("user_id", user.id)
     .single()
 
   if (tokenError || !tokenRow) {
     console.log("no refresh token found for", emailAddress)
+    return new Response("ok", { status: 200 })
+  }
+
+  // no baseline yet — store current historyId and wait for next notification
+  if (!tokenRow.last_history_id) {
+    await supabase
+      .from("user_oauth_tokens")
+      .update({ last_history_id: String(historyId) })
+      .eq("user_id", user.id)
+    console.log("no last_history_id, stored baseline:", historyId)
     return new Response("ok", { status: 200 })
   }
 
@@ -198,11 +188,17 @@ Deno.serve(async (req) => {
   // list new message ids from history
   let messageIds: string[]
   try {
-    messageIds = await listHistoryMessageIds("20357000", access_token)
+    messageIds = await listHistoryMessageIds(tokenRow.last_history_id, access_token)
   } catch (err) {
     console.error("history.list failed:", err)
     return new Response("ok", { status: 200 })
   }
+
+  // update last_history_id regardless of whether there were new messages
+  await supabase
+    .from("user_oauth_tokens")
+    .update({ last_history_id: String(historyId) })
+    .eq("user_id", user.id)
 
   if (messageIds.length === 0) return new Response("ok", { status: 200 })
 

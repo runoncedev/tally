@@ -276,6 +276,27 @@ export const publicTransactionsRelationshipsSchema = z.tuple([
   }),
 ]);
 
+export const publicUserOauthTokensRowSchema = z.object({
+  last_history_id: z.string().nullable(),
+  refresh_token: z.string(),
+  updated_at: z.string(),
+  user_id: z.string(),
+});
+
+export const publicUserOauthTokensInsertSchema = z.object({
+  last_history_id: z.string().optional().nullable(),
+  refresh_token: z.string(),
+  updated_at: z.string().optional(),
+  user_id: z.string(),
+});
+
+export const publicUserOauthTokensUpdateSchema = z.object({
+  last_history_id: z.string().optional().nullable(),
+  refresh_token: z.string().optional(),
+  updated_at: z.string().optional(),
+  user_id: z.string().optional(),
+});
+
 export const publicCreateHouseholdArgsSchema = z.object({
   household_name: z.string(),
 });

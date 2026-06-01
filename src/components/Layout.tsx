@@ -343,20 +343,10 @@ export function Layout() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === "SIGNED_IN" && session?.provider_refresh_token) {
-        console.log("provider_refresh_token:", session.provider_refresh_token);
-        fetch("https://oauth2.googleapis.com/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            grant_type: "refresh_token",
-            refresh_token: session.provider_refresh_token,
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            client_secret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
-          }),
-        })
-          .then((r) => r.json())
-          .then((data) => console.log("token exchange:", data))
-          .catch((err) => console.error("token exchange failed:", err));
+        supabase.from("user_oauth_tokens").upsert(
+          { user_id: session.user.id, refresh_token: session.provider_refresh_token },
+          { onConflict: "user_id" }
+        );
       }
       if (event === "SIGNED_OUT") setHousehold(null);
     });
@@ -408,6 +398,16 @@ export function Layout() {
               })
               const data = await res.json()
               console.log('gmail watch:', data)
+              if (data.historyId) {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                  await supabase
+                    .from('user_oauth_tokens')
+                    .update({ last_history_id: String(data.historyId) })
+                    .eq('user_id', user.id)
+                    .is('last_history_id', null)
+                }
+              }
             }}
             className="rounded-lg p-2 transition-colors hover:bg-zinc-100 hover:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-400"
             title="Gmail watch"
