@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "../components/Button";
+import { Button, ButtonLink } from "../components/Button";
 import { CurrencyFlow } from "../components/CurrencyFlow";
 import { ExpandableRow } from "../components/ExpandableRow";
 import { MonthCard } from "../components/MonthCard";
@@ -143,7 +143,7 @@ function EmailTransactionRowDemo() {
 const GROUPS = [
   {
     label: "Primitives",
-    items: ["Button", "CurrencyFlow", "ExpandableRow"],
+    items: ["Button", "ButtonLink", "CurrencyFlow", "ExpandableRow"],
   },
   {
     label: "Domain",
@@ -327,6 +327,16 @@ const BUTTON_SOURCE = `
 <Button variant="ghost" shape="square">
   <CalendarIcon />
 </Button>
+`;
+
+const BUTTON_LINK_SOURCE = `
+<ButtonLink to="/month/$month" params={{ month: "2026-06" }} variant="outlined">
+  Jun 2026
+</ButtonLink>
+
+<ButtonLink to="/" variant="ghost" shape="square">
+  <HomeIcon />
+</ButtonLink>
 `;
 
 const CURRENCY_FLOW_SOURCE = `
@@ -530,6 +540,28 @@ export default function ComponentShowcase() {
           </div>
         </div>
         <CodeBlock code={BUTTON_SOURCE} />
+      </Section>
+
+      {/* ── ButtonLink ───────────────────────────────────────────────────── */}
+      <Section title="ButtonLink">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Same variants as <code className="text-xs">Button</code> but renders a TanStack Router <code className="text-xs">Link</code>. Accepts all <code className="text-xs">LinkProps</code> (<code className="text-xs">to</code>, <code className="text-xs">params</code>, <code className="text-xs">search</code>, …) plus native anchor handlers like <code className="text-xs">onClick</code>.
+        </p>
+        <PropTable rows={[
+          { prop: "to", type: "string", description: "Route path (TanStack Router)." },
+          { prop: "params", type: "object", default: "—", description: "Route params." },
+          { prop: "variant", type: '"outlined" | "filled" | "ghost"', default: '"ghost"', description: "Visual style." },
+          { prop: "color", type: '"default" | "danger"', default: '"default"', description: "Color intent." },
+          { prop: "shape", type: '"default" | "square"', default: '"default"', description: "Square for icon-only links." },
+        ]} />
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+          <ButtonLink to="/showcase" variant="outlined">Showcase</ButtonLink>
+          <ButtonLink to="/" variant="ghost">Home</ButtonLink>
+          <ButtonLink to="/showcase" variant="ghost" shape="square" title="Showcase">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </ButtonLink>
+        </div>
+        <CodeBlock code={BUTTON_LINK_SOURCE} />
       </Section>
 
       {/* ── CurrencyFlow ─────────────────────────────────────────────────── */}

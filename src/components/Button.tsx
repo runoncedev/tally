@@ -1,4 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
+import { Link } from "@tanstack/react-router";
+import type { AnchorHTMLAttributes } from "react";
+import type { LinkProps } from "@tanstack/react-router";
 
 type ButtonVariant = "outlined" | "filled" | "ghost";
 type ButtonColor = "default" | "danger";
@@ -31,6 +34,11 @@ const styles: Record<ButtonVariant, Record<ButtonColor, string>> = {
   },
 };
 
+function buttonClass(variant: ButtonVariant, color: ButtonColor, shape: ButtonShape, className: string) {
+  const padding = shape === "square" ? "p-2 aspect-square" : "px-3 py-1.5";
+  return `inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:pointer-events-none dark:focus-visible:ring-zinc-500 ${padding} ${styles[variant][color]} ${className}`;
+}
+
 export function Button({
   variant = "ghost",
   color = "default",
@@ -39,14 +47,34 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const padding = shape === "square" ? "p-2 aspect-square" : "px-3 py-1.5";
   return (
     <button
       type="button"
       {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:pointer-events-none dark:focus-visible:ring-zinc-500 ${padding} ${styles[variant][color]} ${className}`}
+      className={buttonClass(variant, color, shape, className)}
     >
       {children}
     </button>
+  );
+}
+
+type ButtonLinkProps = LinkProps & AnchorHTMLAttributes<HTMLAnchorElement> & {
+  variant?: ButtonVariant;
+  color?: ButtonColor;
+  shape?: ButtonShape;
+};
+
+export function ButtonLink({
+  variant = "ghost",
+  color = "default",
+  shape = "default",
+  className = "",
+  children,
+  ...props
+}: ButtonLinkProps) {
+  return (
+    <Link {...props} className={buttonClass(variant, color, shape, className)}>
+      {children}
+    </Link>
   );
 }
