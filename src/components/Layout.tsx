@@ -7,8 +7,8 @@ import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from
 import { supabase } from "../lib/supabase";
 import { ExpandableRow } from "./ExpandableRow";
 import { MonthCard } from "./MonthCard";
-import type { TransactionFieldsState } from "./TransactionFormFields";
-import { TransactionFormFields } from "./TransactionFormFields";
+import { TransactionForm } from "./TransactionForm";
+import type { TransactionFieldsState } from "./TransactionForm";
 
 const DEMO_CATEGORIES = [
   { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
@@ -84,7 +84,7 @@ function DemoTxRow({ tx, isFirst, isLast, onUpdate, onDelete }: {
             onUpdate({ ...tx, amount, category_id: form.category_id, description: form.description || null });
             close();
           }}>
-            <TransactionFormFields
+            <TransactionForm.Fields
               form={form}
               onPatch={patch}
               categories={DEMO_CATEGORIES}
@@ -213,7 +213,7 @@ function LoginScreen() {
           {showAddForm && (
             <div className="rounded-xl border border-zinc-300 dark:border-zinc-700">
               <form className="flex flex-col gap-3 p-4" onSubmit={(e) => { e.preventDefault(); handleDemoAdd(); }}>
-                <TransactionFormFields
+                <TransactionForm.Fields
                   form={form}
                   onPatch={patch}
                   categories={DEMO_CATEGORIES}

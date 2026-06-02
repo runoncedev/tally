@@ -1,7 +1,7 @@
 import type { Category, Transaction } from "../lib/collections";
 import { ExpandableRow } from "./ExpandableRow";
-import { TransactionForm } from "./TransactionForm";
 import type { TransactionFormPayload } from "./TransactionForm";
+import { TransactionRow } from "./TransactionRow";
 
 type GroupRowProps = {
   categoryId: number | null;
@@ -52,15 +52,14 @@ export function GroupRow({
     <ExpandableRow summary={summary} isFirst={isFirst} isLast={isLast} readOnly={readOnly}>
       <div className="border-t border-zinc-200 dark:border-zinc-700">
         {rows.map((tx, i) => (
-          <TransactionForm
+          <TransactionRow
             key={tx.public_id}
             tx={tx}
             categories={categories}
             month={month}
             categoriesById={categoriesById}
             isRecurringCategory={
-              tx.category_id != null &&
-              activeRecurringIds.has(tx.category_id)
+              tx.category_id != null && activeRecurringIds.has(tx.category_id)
             }
             isFirst={i === 0}
             isLast={i === rows.length - 1}

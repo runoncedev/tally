@@ -74,7 +74,6 @@ export function EmailTransactionRow({
               dateDisabled
               prefillCategoryType="expense"
               initiallyDirty
-              nested
               bare
               cancelLabel="Discard"
               onSubmit={(payload) => { onSave(payload); close(); }}

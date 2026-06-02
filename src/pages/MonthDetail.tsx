@@ -6,6 +6,7 @@ import { CurrencyFlow } from "../components/CurrencyFlow";
 import { GroupRow } from "../components/GroupRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
 import { TransactionForm } from "../components/TransactionForm";
+import { TransactionRow } from "../components/TransactionRow";
 import type { Transaction } from "../lib/collections";
 import {
   categoriesCollection,
@@ -618,7 +619,7 @@ export default function MonthDetail() {
             )}
           {rows.map((row, i) =>
             row.kind === "tx" ? (
-              <TransactionForm
+              <TransactionRow
                 key={row.public_id}
                 tx={row}
                 categories={categories}
