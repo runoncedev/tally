@@ -378,7 +378,7 @@ export function Layout() {
         <div className="flex items-center gap-1 text-sm text-zinc-400 dark:text-zinc-500">
           <ButtonLink
             to="/inbox"
-            shape="square"
+            size="icon"
             title="Inbox"
             className={pathname === "/inbox" ? "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" : ""}
           >
@@ -388,7 +388,7 @@ export function Layout() {
             </svg>
           </ButtonLink>
           <Button
-            shape="square"
+            size="icon"
             title="Gmail watch"
             onClick={async () => {
               const { data: { session } } = await supabase.auth.getSession()

@@ -230,7 +230,7 @@ export default function MonthDetail() {
             </ButtonLink>
           )}
           <ButtonLink
-            shape="square"
+            size="icon"
             to="/month/$month"
             params={{ month: adjacentMonth(month, -1) }}
             onClick={(e) => navigateMonth(e, adjacentMonth(month, -1), "back")}
@@ -241,7 +241,7 @@ export default function MonthDetail() {
             </svg>
           </ButtonLink>
           <ButtonLink
-            shape="square"
+            size="icon"
             to="/month/$month"
             params={{ month: adjacentMonth(month, 1) }}
             onClick={(e) => navigateMonth(e, adjacentMonth(month, 1), "forward")}
@@ -253,7 +253,7 @@ export default function MonthDetail() {
           </ButtonLink>
           <div className="relative ml-1.5">
             <Button
-              shape="square"
+              size="icon"
               onClick={() => monthPickerRef.current?.showPicker()}
               title="Pick a month"
             >

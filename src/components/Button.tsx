@@ -1,16 +1,15 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 import { Link } from "@tanstack/react-router";
-import type { AnchorHTMLAttributes } from "react";
 import type { LinkProps } from "@tanstack/react-router";
 
 type ButtonVariant = "outlined" | "filled" | "ghost";
 type ButtonColor = "default" | "danger";
-type ButtonShape = "default" | "square";
+type ButtonSize = "default" | "icon";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   color?: ButtonColor;
-  shape?: ButtonShape;
+  size?: ButtonSize;
 };
 
 const styles: Record<ButtonVariant, Record<ButtonColor, string>> = {
@@ -34,15 +33,15 @@ const styles: Record<ButtonVariant, Record<ButtonColor, string>> = {
   },
 };
 
-function buttonClass(variant: ButtonVariant, color: ButtonColor, shape: ButtonShape, className: string) {
-  const padding = shape === "square" ? "p-2 aspect-square" : "px-3 py-1.5";
+function buttonClass(variant: ButtonVariant, color: ButtonColor, size: ButtonSize, className: string) {
+  const padding = size === "icon" ? "p-2 aspect-square" : "px-3 py-1.5";
   return `inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:pointer-events-none dark:focus-visible:ring-zinc-500 ${padding} ${styles[variant][color]} ${className}`;
 }
 
 export function Button({
   variant = "ghost",
   color = "default",
-  shape = "default",
+  size = "default",
   className = "",
   children,
   ...props
@@ -51,7 +50,7 @@ export function Button({
     <button
       type="button"
       {...props}
-      className={buttonClass(variant, color, shape, className)}
+      className={buttonClass(variant, color, size, className)}
     >
       {children}
     </button>
@@ -61,19 +60,19 @@ export function Button({
 type ButtonLinkProps = LinkProps & AnchorHTMLAttributes<HTMLAnchorElement> & {
   variant?: ButtonVariant;
   color?: ButtonColor;
-  shape?: ButtonShape;
+  size?: ButtonSize;
 };
 
 export function ButtonLink({
   variant = "ghost",
   color = "default",
-  shape = "default",
+  size = "default",
   className = "",
   children,
   ...props
 }: ButtonLinkProps) {
   return (
-    <Link {...props} className={buttonClass(variant, color, shape, className)}>
+    <Link {...props} className={buttonClass(variant, color, size, className)}>
       {children}
     </Link>
   );
