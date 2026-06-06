@@ -3,6 +3,8 @@ import type { User } from "@supabase/supabase-js";
 import { HeadContent, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Button, ButtonLink } from "./Button";
 import { useEffect, useState } from "react";
+import { useLiveQuery } from "@tanstack/react-db";
+import { emailTransactionsCollection } from "../lib/collections";
 import type { Household } from "../lib/household";
 import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
 import { supabase } from "../lib/supabase";
@@ -339,6 +341,11 @@ export function Layout() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: inboxItems = [] } = useLiveQuery(
+    (q) => q.from({ e: emailTransactionsCollection }),
+    [],
+  );
+  const inboxCount = inboxItems.length;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -376,17 +383,24 @@ export function Layout() {
           Tally
         </Link>
         <div className="flex items-center gap-1 text-sm text-zinc-400 dark:text-zinc-500">
-          <ButtonLink
-            to="/inbox"
-            size="icon"
-            title="Inbox"
-            className={pathname === "/inbox" ? "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" : ""}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-              <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-            </svg>
-          </ButtonLink>
+          <div className="relative">
+            <ButtonLink
+              to="/inbox"
+              size="icon"
+              title="Inbox"
+              className={pathname === "/inbox" ? "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" : ""}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+              </svg>
+            </ButtonLink>
+            {inboxCount > 0 && (
+              <span className="pointer-events-none absolute right-0.5 bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold leading-none text-white">
+                {inboxCount > 99 ? "99+" : inboxCount}
+              </span>
+            )}
+          </div>
           <Button
             size="icon"
             title="Gmail watch"
