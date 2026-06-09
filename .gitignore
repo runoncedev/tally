@@ -25,3 +25,12 @@ dist-ssr
 
 supabase/.temp
 supabase/.branches
+
+.playwright-cli
+.claude
+
+remotion
+scripts
+docs
+out
+backup_prod_*.sql
