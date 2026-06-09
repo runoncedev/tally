@@ -20,9 +20,9 @@ const DEMO_CATEGORIES = [
 const DEMO_CATEGORIES_BY_ID = Object.fromEntries(DEMO_CATEGORIES.map((c) => [c.id, c]));
 
 const DEMO_TRANSACTIONS = [
-  { public_id: "demo-tx-1", amount: -85, category_id: 3, description: "Whole Foods", date: "2026-06-01", household_id: null },
-  { public_id: "demo-tx-2", amount: -42, category_id: 3, description: "Trader Joe's", date: "2026-06-03", household_id: null },
-  { public_id: "demo-tx-3", amount: -1500, category_id: 2, description: null, date: "2026-06-01", household_id: null },
+  { public_id: "demo-tx-1", amount: -85, category_id: 3, description: "Whole Foods", date: "2026-06-01", household_id: null, via: null },
+  { public_id: "demo-tx-2", amount: -42, category_id: 3, description: "Trader Joe's", date: "2026-06-03", household_id: null, via: null },
+  { public_id: "demo-tx-3", amount: -1500, category_id: 2, description: null, date: "2026-06-01", household_id: null, via: null },
 ];
 
 
