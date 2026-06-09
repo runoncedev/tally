@@ -134,6 +134,7 @@ export const transactionsCollection = createCollection(
           description: m.description ?? null,
           created_at: m.created_at ?? new Date().toISOString(),
           household_id: m.household_id,
+          via: m.via ?? null,
         }
       })
       const { error } = await supabase.from('transactions').insert(rows)

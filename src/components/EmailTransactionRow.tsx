@@ -33,11 +33,11 @@ export function EmailTransactionRow({
 
   const dateLabel = emailTx.transacted_at
     ? (() => {
-        const d = new Date(emailTx.transacted_at);
-        const day = d.getDate();
-        const time = d.toLocaleTimeString("default", { hour: "numeric", minute: "2-digit" });
-        return `${day} · ${time}`;
-      })()
+      const d = new Date(emailTx.transacted_at);
+      const day = d.getDate();
+      const time = d.toLocaleTimeString("default", { hour: "numeric", minute: "2-digit" });
+      return `${day} · ${time}`;
+    })()
     : null;
 
   const summary = (
@@ -79,6 +79,11 @@ export function EmailTransactionRow({
               onSubmit={(payload) => { onSave(payload); close(); }}
               onDelete={() => dialogRef.current?.showModal()}
             />
+            {emailTx.from && (
+              <p className="px-4 pt-1 pb-3 text-zinc-400 dark:text-zinc-500">
+                Via {emailTx.from}
+              </p>
+            )}
           </div>
         )}
       </ExpandableRow>

@@ -73,19 +73,26 @@ export function TransactionRow({
       dimSummaryWhenOpen
     >
       {(close) => (
-        <TransactionForm
-          tx={tx}
-          categories={categories}
-          month={month}
-          categoriesById={categoriesById}
-          isRecurringCategory={isRecurringCategory}
-          confirmOnSave={confirmOnSave}
-          cancelLabel={cancelLabel}
-          hideMonthInDeleteDialog={hideMonthInDeleteDialog}
-          onSubmit={onSubmit}
-          onDelete={onDelete}
-          onClose={close}
-        />
+        <div>
+          <TransactionForm
+            tx={tx}
+            categories={categories}
+            month={month}
+            categoriesById={categoriesById}
+            isRecurringCategory={isRecurringCategory}
+            confirmOnSave={confirmOnSave}
+            cancelLabel={cancelLabel}
+            hideMonthInDeleteDialog={hideMonthInDeleteDialog}
+            onSubmit={onSubmit}
+            onDelete={onDelete}
+            onClose={close}
+          />
+          {tx.via && (
+            <p className="px-4 pt-1 pb-3 text-sm text-zinc-400 dark:text-zinc-500">
+              Via {tx.via}
+            </p>
+          )}
+        </div>
       )}
     </ExpandableRow>
   );

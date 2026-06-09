@@ -204,6 +204,7 @@ export const publicTransactionsRowSchema = z.object({
   household_id: z.string().nullable(),
   id: z.number(),
   public_id: z.string(),
+  via: z.string().nullable(),
 });
 
 export const publicTransactionsInsertSchema = z.object({
@@ -215,6 +216,7 @@ export const publicTransactionsInsertSchema = z.object({
   household_id: z.string().optional().nullable(),
   id: z.number().optional(),
   public_id: z.string().optional(),
+  via: z.string().optional().nullable(),
 });
 
 export const publicTransactionsUpdateSchema = z.object({
@@ -226,6 +228,7 @@ export const publicTransactionsUpdateSchema = z.object({
   household_id: z.string().optional().nullable(),
   id: z.number().optional(),
   public_id: z.string().optional(),
+  via: z.string().optional().nullable(),
 });
 
 export const publicTransactionsRelationshipsSchema = z.tuple([

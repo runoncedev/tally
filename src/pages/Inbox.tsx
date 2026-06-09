@@ -98,6 +98,7 @@ export default function Inbox() {
       category_id: categoryId,
       description: payload.description,
       household_id: household.id,
+      via: emailTx?.from ?? null,
     });
 
     emailTransactionsCollection.update(emailTxId, (draft) => {

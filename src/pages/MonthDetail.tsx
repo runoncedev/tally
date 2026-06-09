@@ -198,6 +198,7 @@ export default function MonthDetail() {
         category_id: categoryId,
         description: payload.description,
         household_id: household.id,
+        via: null,
       });
     }
   };
@@ -378,6 +379,7 @@ export default function MonthDetail() {
                             description: null,
                             created_at: new Date(now + i).toISOString(),
                             household_id: household.id,
+                            via: null,
                           });
                         });
                         return;
