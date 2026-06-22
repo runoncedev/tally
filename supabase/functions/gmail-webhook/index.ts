@@ -189,9 +189,14 @@ Deno.serve(async (req) => {
     }),
   })
 
-  const { access_token } = await tokenRes.json()
+  const tokenData = await tokenRes.json()
+  const { access_token } = tokenData
   if (!access_token) {
-    console.error("failed to obtain access_token")
+    console.error("failed to obtain access_token", JSON.stringify(tokenData))
+    await supabase
+      .from("user_oauth_tokens")
+      .update({ is_invalid: true })
+      .eq("user_id", user.id)
     return new Response("ok", { status: 200 })
   }
 

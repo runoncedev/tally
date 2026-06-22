@@ -1,5 +1,5 @@
 import { useLiveQuery } from "@tanstack/react-db";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EmailTransactionRow } from "../components/EmailTransactionRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
 import {
@@ -13,6 +13,19 @@ import { supabase } from "../lib/supabase";
 
 export default function Inbox() {
   const household = useHousehold();
+  const [gmailInvalid, setGmailInvalid] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("user_oauth_tokens")
+        .select("is_invalid")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => setGmailInvalid(data?.is_invalid ?? false));
+    });
+  }, []);
 
   const { data: emailTxs = [] } = useLiveQuery(
     (q) => q.from({ e: emailTransactionsCollection }).orderBy(({ e }) => e.transacted_at, "desc"),
@@ -115,6 +128,24 @@ export default function Inbox() {
   return (
     <div>
       <h1 className="mb-6 text-xl font-semibold">Inbox</h1>
+      {gmailInvalid && (
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm dark:border-red-900 dark:bg-red-950/40">
+          <span className="text-red-700 dark:text-red-400">Gmail connection expired. Sign in again to keep syncing.</span>
+          <button
+            onClick={() => supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: window.location.origin,
+                scopes: "https://www.googleapis.com/auth/gmail.readonly",
+                queryParams: { access_type: "offline", prompt: "consent" },
+              },
+            })}
+            className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+          >
+            Reconnect
+          </button>
+        </div>
+      )}
       {groupedByMonth.length === 0 ? (
         <p className="text-sm text-zinc-400 dark:text-zinc-500">No pending transactions.</p>
       ) : (
