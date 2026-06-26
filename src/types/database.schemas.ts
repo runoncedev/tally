@@ -249,6 +249,7 @@ export const publicTransactionsRelationshipsSchema = z.tuple([
 ]);
 
 export const publicUserOauthTokensRowSchema = z.object({
+  is_invalid: z.boolean(),
   last_history_id: z.string().nullable(),
   refresh_token: z.string(),
   updated_at: z.string(),
@@ -256,6 +257,7 @@ export const publicUserOauthTokensRowSchema = z.object({
 });
 
 export const publicUserOauthTokensInsertSchema = z.object({
+  is_invalid: z.boolean().optional(),
   last_history_id: z.string().optional().nullable(),
   refresh_token: z.string(),
   updated_at: z.string().optional(),
@@ -263,6 +265,7 @@ export const publicUserOauthTokensInsertSchema = z.object({
 });
 
 export const publicUserOauthTokensUpdateSchema = z.object({
+  is_invalid: z.boolean().optional(),
   last_history_id: z.string().optional().nullable(),
   refresh_token: z.string().optional(),
   updated_at: z.string().optional(),

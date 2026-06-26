@@ -235,18 +235,21 @@ export type Database = {
       }
       user_oauth_tokens: {
         Row: {
+          is_invalid: boolean
           last_history_id: string | null
           refresh_token: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          is_invalid?: boolean
           last_history_id?: string | null
           refresh_token: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          is_invalid?: boolean
           last_history_id?: string | null
           refresh_token?: string
           updated_at?: string

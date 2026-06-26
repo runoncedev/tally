@@ -1,5 +1,5 @@
 import { useLiveQuery } from "@tanstack/react-db";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { EmailTransactionRow } from "../components/EmailTransactionRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
 import {
@@ -8,24 +8,13 @@ import {
     merchantMappingsCollection,
     transactionsCollection,
 } from "../lib/collections";
+import { useGmailStatus } from "../lib/gmailStatus";
 import { useHousehold } from "../lib/household";
 import { supabase } from "../lib/supabase";
 
 export default function Inbox() {
   const household = useHousehold();
-  const [gmailInvalid, setGmailInvalid] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from("user_oauth_tokens")
-        .select("is_invalid")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data }) => setGmailInvalid(data?.is_invalid ?? false));
-    });
-  }, []);
+  const { gmailInvalid } = useGmailStatus();
 
   const { data: emailTxs = [] } = useLiveQuery(
     (q) => q.from({ e: emailTransactionsCollection }).orderBy(({ e }) => e.transacted_at, "desc"),

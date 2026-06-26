@@ -1,17 +1,19 @@
 import { Menu } from "@base-ui/react/menu";
 import type { User } from "@supabase/supabase-js";
-import { HeadContent, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Button, ButtonLink } from "./Button";
-import { useEffect, useState } from "react";
 import { useLiveQuery } from "@tanstack/react-db";
+import { HeadContent, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { emailTransactionsCollection } from "../lib/collections";
 import type { Household } from "../lib/household";
 import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
+import { GmailStatusProvider, useGmailStatus } from "../lib/gmailStatus";
 import { supabase } from "../lib/supabase";
+import { ButtonLink } from "./Button";
+import { GmailWatchButton } from "./GmailWatchButton";
 import { ExpandableRow } from "./ExpandableRow";
 import { MonthCard } from "./MonthCard";
-import { TransactionForm } from "./TransactionForm";
 import type { TransactionFieldsState } from "./TransactionForm";
+import { TransactionForm } from "./TransactionForm";
 
 const DEMO_CATEGORIES = [
   { id: 1, name: "Salary", type: "income" as const, created_at: "", household_id: null, recurring: false, default_amount: null },
@@ -335,8 +337,8 @@ function HouseholdSetup({ onDone }: { onDone: (h: Household) => void }) {
   );
 }
 
-export function Layout() {
-  const [user, setUser] = useState<User | null>(null);
+function AuthenticatedLayout({ user }: { user: User }) {
+  const { gmailInvalid, setGmailInvalid } = useGmailStatus();
   const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -346,35 +348,41 @@ export function Layout() {
     [],
   );
   const inboxCount = inboxItems.length;
+  const [hasProviderToken, setHasProviderToken] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === "SIGNED_IN" && session?.provider_refresh_token) {
-        supabase.from("user_oauth_tokens").upsert(
-          { user_id: session.user.id, refresh_token: session.provider_refresh_token },
-          { onConflict: "user_id" }
-        );
-      }
-      if (event === "SIGNED_OUT") setHousehold(null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasProviderToken(!!session?.provider_token);
     });
-    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (user === null && !loading) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        if (session?.provider_refresh_token) {
+          supabase.from("user_oauth_tokens").upsert(
+            { user_id: session.user.id, refresh_token: session.provider_refresh_token, is_invalid: false },
+            { onConflict: "user_id" }
+          );
+        } else if (session) {
+          supabase.from("user_oauth_tokens")
+            .update({ is_invalid: false })
+            .eq("user_id", session.user.id);
+        }
+        setGmailInvalid(false);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [setGmailInvalid]);
+
+  useEffect(() => {
     fetchHousehold()
       .then(setHousehold)
       .catch((err) => console.error("fetchHousehold failed:", err))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, []);
 
   if (loading) return null;
-
-  if (!user) {
-    if (pathname === "/login") return <><HeadContent /><Outlet /></>;
-    return <LoginScreen />;
-  }
 
   const nav = (
     <nav className="border-b border-zinc-200 dark:border-zinc-800">
@@ -395,44 +403,13 @@ export function Layout() {
                 <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
               </svg>
             </ButtonLink>
-            {inboxCount > 0 && (
-              <span className="pointer-events-none absolute right-0.5 bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold leading-none text-white">
-                {inboxCount > 99 ? "99+" : inboxCount}
+            {(gmailInvalid || inboxCount > 0) && (
+              <span className={`pointer-events-none absolute right-0.5 bottom-0.5 rounded-full bg-red-500 ${gmailInvalid ? "h-3.5 w-3.5" : "flex h-3.5 w-3.5 items-center justify-center text-[9px] font-bold leading-none text-white"}`}>
+                {!gmailInvalid && (inboxCount > 99 ? "99+" : inboxCount)}
               </span>
             )}
           </div>
-          <Button
-            size="icon"
-            title="Gmail watch"
-            onClick={async () => {
-              const { data: { session } } = await supabase.auth.getSession()
-              const token = session?.provider_token
-              if (!token) { console.error('no provider_token'); return }
-              const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topicName: 'projects/tally-493920/topics/gmail', labelIds: ['INBOX'] }),
-              })
-              const data = await res.json()
-              console.log('gmail watch:', data)
-              if (data.historyId) {
-                const { data: { user } } = await supabase.auth.getUser()
-                if (user) {
-                  await supabase
-                    .from('user_oauth_tokens')
-                    .update({ last_history_id: String(data.historyId) })
-                    .eq('user_id', user.id)
-                    .is('last_history_id', null)
-                }
-              }
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="23 4 23 10 17 10" />
-              <polyline points="1 20 1 14 7 14" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-          </Button>
+          {hasProviderToken && <GmailWatchButton onInvalid={() => setGmailInvalid(true)} />}
           <Menu.Root>
             <Menu.Trigger className="inline-flex aspect-square items-center justify-center rounded-xl p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
               <svg
@@ -502,5 +479,36 @@ export function Layout() {
         <Outlet />
       </main>
     </HouseholdContext.Provider>
+  );
+}
+
+export function Layout() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === "SIGNED_OUT") setLoading(false);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) return null;
+
+  if (!user) {
+    if (pathname === "/login") return <><HeadContent /><Outlet /></>;
+    return <LoginScreen />;
+  }
+
+  return (
+    <GmailStatusProvider userId={user.id}>
+      <AuthenticatedLayout user={user} />
+    </GmailStatusProvider>
   );
 }
