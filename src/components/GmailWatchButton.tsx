@@ -19,8 +19,6 @@ export function GmailWatchButton({ onInvalid }: { onInvalid: () => void }) {
         body: JSON.stringify({ topicName: "projects/tally-493920/topics/gmail", labelIds: ["INBOX"] }),
       });
       if (res.status === 401) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) await supabase.from("user_oauth_tokens").update({ is_invalid: true }).eq("user_id", user.id);
         onInvalid();
         setStatus("error");
       } else {
