@@ -3,6 +3,7 @@ import { emailExtractors } from '../../supabase/functions/gmail-webhook/extracto
 
 const FROM = "notificaciones@correo.bancoestado.cl"
 const FROM_BCH = "enviodigital@bancochile.cl"
+const FROM_TENPO = "no-reply@tenpo.cl"
 
 const REAL_EMAIL = `JOHN
 DOE
@@ -53,6 +54,34 @@ describe('extractBancoChile', () => {
 
   it('extrae el datetime', () => {
     expect(extract(REAL_EMAIL)!.datetime).toBe('01/01/2025 10:00')
+  })
+
+  it('retorna null si no encuentra datos', () => {
+    expect(extract('hola mundo')).toBeNull()
+  })
+})
+
+describe('extractTenpo', () => {
+  const extract = emailExtractors[FROM_TENPO]
+
+  const REAL_EMAIL = `Comprobante de pago exitoso El pago por $78.650 desde tu tarjeta Tenpo
+Prepago fue exitoso
+Monto transacción: $78.650
+Comercio: Mercado Libre
+Fecha: 28-06-2026
+Hora: 20:22:11
+Código de transacción: P20260629002211736`
+
+  it('extrae el monto', () => {
+    expect(extract(REAL_EMAIL)!.amount).toBe('78.650')
+  })
+
+  it('extrae el merchant', () => {
+    expect(extract(REAL_EMAIL)!.merchant).toBe('Mercado Libre')
+  })
+
+  it('extrae el datetime', () => {
+    expect(extract(REAL_EMAIL)!.datetime).toBe('28/06/2026 20:22')
   })
 
   it('retorna null si no encuentra datos', () => {

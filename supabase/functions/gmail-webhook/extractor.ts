@@ -27,7 +27,23 @@ function extractBancoChile(text: string): ExtractedEmailData | null {
   }
 }
 
+function extractTenpo(text: string): ExtractedEmailData | null {
+  const normalized = text.replace(/\s+/g, " ")
+  // "Monto transacción: $78.650" ... "Comercio: Mercado Libre" ... "Fecha: 28-06-2026" ... "Hora: 20:22:11"
+  const amountMatch = normalized.match(/Monto transacci[oó]n:\s*\$\s*([\d.,]+)/)
+  const merchantMatch = normalized.match(/Comercio:\s*(.+?)\s*Fecha:/)
+  const dateMatch = normalized.match(/Fecha:\s*(\d{2})-(\d{2})-(\d{4})/)
+  const timeMatch = normalized.match(/Hora:\s*(\d{2}:\d{2})/)
+  if (!amountMatch || !merchantMatch || !dateMatch || !timeMatch) return null
+  return {
+    amount: amountMatch[1],
+    merchant: merchantMatch[1].trim(),
+    datetime: `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]} ${timeMatch[1]}`,
+  }
+}
+
 export const emailExtractors: Record<string, (text: string) => ExtractedEmailData | null> = {
   "notificaciones@correo.bancoestado.cl": extractBancoEstado,
   "enviodigital@bancochile.cl": extractBancoChile,
+  "no-reply@tenpo.cl": extractTenpo,
 }
