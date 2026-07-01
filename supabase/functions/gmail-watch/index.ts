@@ -6,17 +6,24 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 )
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type, x-client-info, apikey",
+}
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders })
+
   const authHeader = req.headers.get("Authorization")
-  if (!authHeader) return new Response("Unauthorized", { status: 401 })
+  if (!authHeader) return new Response("Unauthorized", { status: 401, headers: corsHeaders })
 
   const { data: { user }, error: userError } = await supabase.auth.getUser(
     authHeader.replace("Bearer ", "")
   )
-  if (userError || !user) return new Response("Unauthorized", { status: 401 })
+  if (userError || !user) return new Response("Unauthorized", { status: 401, headers: corsHeaders })
 
   const { refresh_token } = await req.json()
-  if (!refresh_token) return new Response("Missing refresh_token", { status: 400 })
+  if (!refresh_token) return new Response("Missing refresh_token", { status: 400, headers: corsHeaders })
 
   // exchange refresh token for access token
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -34,7 +41,7 @@ Deno.serve(async (req) => {
   const { access_token } = tokenData
   if (!access_token) {
     console.error("failed to obtain access_token", tokenData)
-    return new Response("Failed to obtain access token", { status: 502 })
+    return new Response("Failed to obtain access token", { status: 502, headers: corsHeaders })
   }
 
   // activate gmail watch
@@ -47,7 +54,7 @@ Deno.serve(async (req) => {
   if (!watchRes.ok) {
     const body = await watchRes.text()
     console.error("gmail watch failed", watchRes.status, body)
-    return new Response("Gmail watch failed", { status: 502 })
+    return new Response("Gmail watch failed", { status: 502, headers: corsHeaders })
   }
 
   const watchData = await watchRes.json()
@@ -70,6 +77,6 @@ Deno.serve(async (req) => {
   )
 
   return new Response(JSON.stringify({ ok: true }), {
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   })
 })

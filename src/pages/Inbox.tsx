@@ -2,6 +2,7 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { useMemo } from "react";
 import { EmailTransactionRow } from "../components/EmailTransactionRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
+import { EmptyState } from "../components/EmptyState";
 import {
     categoriesCollection,
     emailTransactionsCollection,
@@ -140,7 +141,7 @@ export default function Inbox() {
         </div>
       )}
       {groupedByMonth.length === 0 ? (
-        <p className="text-sm text-zinc-400 dark:text-zinc-500">No pending transactions.</p>
+        <EmptyState />
       ) : (
         <div className="flex flex-col gap-8">
           {groupedByMonth.map(([month, txs]) => (
