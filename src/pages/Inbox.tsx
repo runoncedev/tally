@@ -6,15 +6,19 @@ import {
     categoriesCollection,
     emailTransactionsCollection,
     merchantMappingsCollection,
+    oauthTokensCollection,
     transactionsCollection,
 } from "../lib/collections";
-import { useGmailStatus } from "../lib/gmailStatus";
 import { useHousehold } from "../lib/household";
 import { supabase } from "../lib/supabase";
 
 export default function Inbox() {
   const household = useHousehold();
-  const { gmailInvalid } = useGmailStatus();
+  const { data: oauthTokens = [] } = useLiveQuery(
+    (q) => q.from({ t: oauthTokensCollection }),
+    [],
+  );
+  const gmailInvalid = oauthTokens[0]?.is_invalid ?? false;
 
   const { data: emailTxs = [] } = useLiveQuery(
     (q) => q.from({ e: emailTransactionsCollection }).orderBy(({ e }) => e.transacted_at, "desc"),

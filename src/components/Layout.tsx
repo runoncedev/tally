@@ -3,13 +3,11 @@ import type { User } from "@supabase/supabase-js";
 import { useLiveQuery } from "@tanstack/react-db";
 import { HeadContent, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { emailTransactionsCollection } from "../lib/collections";
+import { emailTransactionsCollection, oauthTokensCollection } from "../lib/collections";
 import type { Household } from "../lib/household";
 import { HouseholdContext, createHousehold, fetchHousehold, joinHousehold } from "../lib/household";
-import { GmailStatusProvider, useGmailStatus } from "../lib/gmailStatus";
 import { supabase } from "../lib/supabase";
 import { ButtonLink } from "./Button";
-import { GmailWatchButton } from "./GmailWatchButton";
 import { ExpandableRow } from "./ExpandableRow";
 import { MonthCard } from "./MonthCard";
 import type { TransactionFieldsState } from "./TransactionForm";
@@ -338,7 +336,6 @@ function HouseholdSetup({ onDone }: { onDone: (h: Household) => void }) {
 }
 
 function AuthenticatedLayout({ user }: { user: User }) {
-  const { gmailInvalid, setGmailInvalid } = useGmailStatus();
   const [household, setHousehold] = useState<Household | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -348,32 +345,22 @@ function AuthenticatedLayout({ user }: { user: User }) {
     [],
   );
   const inboxCount = inboxItems.length;
-  const [hasProviderToken, setHasProviderToken] = useState(false);
-
+  const { data: oauthTokens = [] } = useLiveQuery(
+    (q) => q.from({ t: oauthTokensCollection }),
+    [],
+  );
+  const gmailInvalid = oauthTokens[0]?.is_invalid ?? false;
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setHasProviderToken(!!session?.provider_token);
-    });
-  }, []);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        if (session?.provider_refresh_token) {
-          supabase.from("user_oauth_tokens").upsert(
-            { user_id: session.user.id, refresh_token: session.provider_refresh_token, is_invalid: false },
-            { onConflict: "user_id" }
-          );
-        } else if (session) {
-          supabase.from("user_oauth_tokens")
-            .update({ is_invalid: false })
-            .eq("user_id", session.user.id);
-        }
-        setGmailInvalid(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session?.provider_refresh_token) {
+        supabase.functions.invoke("gmail-watch", {
+          body: { refresh_token: session.provider_refresh_token },
+        });
       }
     });
+
     return () => subscription.unsubscribe();
-  }, [setGmailInvalid]);
+  }, []);
 
   useEffect(() => {
     fetchHousehold()
@@ -409,7 +396,6 @@ function AuthenticatedLayout({ user }: { user: User }) {
               </span>
             )}
           </div>
-          {hasProviderToken && <GmailWatchButton onInvalid={() => setGmailInvalid(true)} />}
           <Menu.Root>
             <Menu.Trigger className="inline-flex aspect-square items-center justify-center rounded-xl p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
               <svg
@@ -506,9 +492,5 @@ export function Layout() {
     return <LoginScreen />;
   }
 
-  return (
-    <GmailStatusProvider userId={user.id}>
-      <AuthenticatedLayout user={user} />
-    </GmailStatusProvider>
-  );
+  return <AuthenticatedLayout user={user} />;
 }

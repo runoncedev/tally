@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/query-core'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { createCollection } from '@tanstack/react-db'
 import type { z } from 'zod'
-import { publicCategoriesRowSchema, publicEmailTransactionsRowSchema, publicMerchantCategoryMappingsRowSchema, publicTransactionsRowSchema } from '../types/database.schemas'
+import { publicCategoriesRowSchema, publicEmailTransactionsRowSchema, publicMerchantCategoryMappingsRowSchema, publicTransactionsRowSchema, publicUserOauthTokensRowSchema } from '../types/database.schemas'
 import { supabase } from './supabase'
 
 export type Category = z.infer<typeof publicCategoriesRowSchema>
@@ -109,6 +109,20 @@ export const merchantMappingsCollection = createCollection(
       if (error) throw error
       await merchantMappingsCollection.utils.refetch()
     },
+  }),
+)
+
+export const oauthTokensCollection = createCollection(
+  queryCollectionOptions({
+    schema: publicUserOauthTokensRowSchema,
+    queryKey: ['user_oauth_tokens'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('user_oauth_tokens').select('*')
+      if (error) throw error
+      return data
+    },
+    queryClient,
+    getKey: (item) => item.user_id,
   }),
 )
 

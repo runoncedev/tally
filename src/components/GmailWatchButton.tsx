@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Button } from "./Button";
 
-export function GmailWatchButton({ onInvalid }: { onInvalid: () => void }) {
+export function GmailWatchButton() {
   const [status, setStatus] = useState<"success" | "error" | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +19,6 @@ export function GmailWatchButton({ onInvalid }: { onInvalid: () => void }) {
         body: JSON.stringify({ topicName: "projects/tally-493920/topics/gmail", labelIds: ["INBOX"] }),
       });
       if (res.status === 401) {
-        onInvalid();
         setStatus("error");
       } else {
         const data = await res.json();
