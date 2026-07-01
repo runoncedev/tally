@@ -22,6 +22,8 @@ Deno.serve(async (req) => {
   )
   if (userError || !user) return new Response("Unauthorized", { status: 401, headers: corsHeaders })
 
+  console.log("gmail-watch: invoked", { user_id: user.id, email: user.email })
+
   const { refresh_token } = await req.json()
   if (!refresh_token) return new Response("Missing refresh_token", { status: 400, headers: corsHeaders })
 
@@ -40,9 +42,10 @@ Deno.serve(async (req) => {
   const tokenData = await tokenRes.json()
   const { access_token } = tokenData
   if (!access_token) {
-    console.error("failed to obtain access_token", tokenData)
+    console.error("gmail-watch: failed to obtain access_token", { user_id: user.id, error: tokenData?.error, error_description: tokenData?.error_description })
     return new Response("Failed to obtain access token", { status: 502, headers: corsHeaders })
   }
+  console.log("gmail-watch: access token obtained")
 
   // activate gmail watch
   const watchRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/watch", {
@@ -53,11 +56,12 @@ Deno.serve(async (req) => {
 
   if (!watchRes.ok) {
     const body = await watchRes.text()
-    console.error("gmail watch failed", watchRes.status, body)
+    console.error("gmail-watch: watch registration failed", { status: watchRes.status, body })
     return new Response("Gmail watch failed", { status: 502, headers: corsHeaders })
   }
 
   const watchData = await watchRes.json()
+  console.log("gmail-watch: watch registered", { historyId: watchData.historyId, expiration: watchData.expiration })
 
   // upsert refresh token and clear is_invalid; set last_history_id only if not already set
   const { data: existing } = await supabase
@@ -66,15 +70,17 @@ Deno.serve(async (req) => {
     .eq("user_id", user.id)
     .single()
 
+  const setHistoryId = existing?.last_history_id == null
   await supabase.from("user_oauth_tokens").upsert(
     {
       user_id: user.id,
       refresh_token,
       is_invalid: false,
-      ...(existing?.last_history_id == null && { last_history_id: String(watchData.historyId) }),
+      ...(setHistoryId && { last_history_id: String(watchData.historyId) }),
     },
     { onConflict: "user_id" }
   )
+  console.log("gmail-watch: token upserted", { set_history_id: setHistoryId })
 
   return new Response(JSON.stringify({ ok: true }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
