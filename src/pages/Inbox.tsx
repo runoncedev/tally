@@ -1,4 +1,4 @@
-import { useLiveQuery } from "@tanstack/react-db";
+import { isNull, useLiveQuery } from "@tanstack/react-db";
 import { useMemo } from "react";
 import { EmailTransactionRow } from "../components/EmailTransactionRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
@@ -22,7 +22,11 @@ export default function Inbox() {
   const gmailInvalid = oauthTokens[0]?.is_invalid ?? false;
 
   const { data: emailTxs = [] } = useLiveQuery(
-    (q) => q.from({ e: emailTransactionsCollection }).orderBy(({ e }) => e.transacted_at, "desc"),
+    (q) =>
+      q
+        .from({ e: emailTransactionsCollection })
+        .where(({ e }) => isNull(e.deleted_at))
+        .orderBy(({ e }) => e.transacted_at, "desc"),
     [],
   );
 
@@ -79,24 +83,7 @@ export default function Inbox() {
       await categoriesCollection.utils.refetch();
     }
 
-    // Persist merchant -> category mapping if we have a merchant and resolved category
     const emailTx = emailTxs.find((e) => e.id === emailTxId);
-    const merchantName = emailTx?.merchant ?? null;
-    if (merchantName && categoryId != null) {
-      const merchantTrim = merchantName.trim();
-      const { data: existing } = await supabase
-        .from('merchant_category_mappings')
-        .select('id')
-        .eq('household_id', household.id)
-        .ilike('merchant', merchantTrim)
-        .maybeSingle();
-      if (existing) {
-        await supabase.from('merchant_category_mappings').update({ category_id: categoryId }).eq('id', existing.id);
-      } else {
-        await supabase.from('merchant_category_mappings').insert({ merchant: merchantTrim, category_id: categoryId, household_id: household.id });
-      }
-      await merchantMappingsCollection.utils.refetch();
-    }
 
     transactionsCollection.insert({
       public_id: payload.public_id,
@@ -111,6 +98,27 @@ export default function Inbox() {
     emailTransactionsCollection.update(emailTxId, (draft) => {
       draft.deleted_at = new Date().toISOString();
     });
+
+    // Persist merchant -> category mapping if we have a merchant and resolved category
+    const merchantName = emailTx?.merchant ?? null;
+    if (merchantName && categoryId != null) {
+      const merchantTrim = merchantName.trim();
+      const existing = merchantMappings.find(
+        (m) => m.merchant?.toLowerCase() === merchantTrim.toLowerCase(),
+      );
+      if (existing) {
+        merchantMappingsCollection.update(existing.public_id, (draft) => {
+          draft.category_id = categoryId;
+        });
+      } else {
+        merchantMappingsCollection.insert({
+          public_id: crypto.randomUUID(),
+          merchant: merchantTrim,
+          category_id: categoryId,
+          household_id: household.id,
+        });
+      }
+    }
   };
 
   const handleDiscard = (emailTxId: string) => {

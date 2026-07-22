@@ -16,6 +16,12 @@ const transactionSchema = publicTransactionsRowSchema.extend({
 
 export type Transaction = z.infer<typeof transactionSchema>
 
+const merchantCategoryMappingSchema = publicMerchantCategoryMappingsRowSchema.extend({
+  id: publicMerchantCategoryMappingsRowSchema.shape.id.optional(),
+  created_at: publicMerchantCategoryMappingsRowSchema.shape.created_at.optional(),
+  updated_at: publicMerchantCategoryMappingsRowSchema.shape.updated_at.optional(),
+})
+
 export const queryClient = new QueryClient()
 
 export const categoriesCollection = createCollection(
@@ -71,7 +77,7 @@ export const emailTransactionsCollection = createCollection(
 
 export const merchantMappingsCollection = createCollection(
   queryCollectionOptions({
-    schema: publicMerchantCategoryMappingsRowSchema,
+    schema: merchantCategoryMappingSchema,
     queryKey: ['merchant_category_mappings'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,11 +88,12 @@ export const merchantMappingsCollection = createCollection(
       return data
     },
     queryClient,
-    getKey: (item) => item.id,
+    getKey: (item) => item.public_id,
     onInsert: async ({ transaction }) => {
       const rows = transaction.mutations.map(mutation => {
         const m = mutation.modified
         return {
+          public_id: m.public_id,
           merchant: m.merchant,
           category_id: m.category_id,
           household_id: m.household_id,
@@ -99,13 +106,13 @@ export const merchantMappingsCollection = createCollection(
     onUpdate: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
       const patch = mutation.changes
-      const { error } = await supabase.from('merchant_category_mappings').update(patch).eq('id', mutation.key as number)
+      const { error } = await supabase.from('merchant_category_mappings').update(patch).eq('public_id', mutation.key as string)
       if (error) throw error
       await merchantMappingsCollection.utils.refetch()
     },
     onDelete: async ({ transaction }) => {
       const mutation = transaction.mutations[0]
-      const { error } = await supabase.from('merchant_category_mappings').delete().eq('id', mutation.key as number)
+      const { error } = await supabase.from('merchant_category_mappings').delete().eq('public_id', mutation.key as string)
       if (error) throw error
       await merchantMappingsCollection.utils.refetch()
     },

@@ -157,6 +157,7 @@ export const publicMerchantCategoryMappingsRowSchema = z.object({
   household_id: z.string(),
   id: z.number(),
   merchant: z.string(),
+  public_id: z.string(),
   updated_at: z.string(),
 });
 
@@ -166,6 +167,7 @@ export const publicMerchantCategoryMappingsInsertSchema = z.object({
   household_id: z.string(),
   id: z.number().optional(),
   merchant: z.string(),
+  public_id: z.string().optional(),
   updated_at: z.string().optional(),
 });
 
@@ -175,6 +177,7 @@ export const publicMerchantCategoryMappingsUpdateSchema = z.object({
   household_id: z.string().optional(),
   id: z.number().optional(),
   merchant: z.string().optional(),
+  public_id: z.string().optional(),
   updated_at: z.string().optional(),
 });
 
