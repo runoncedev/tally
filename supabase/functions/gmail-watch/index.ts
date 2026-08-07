@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "jsr:@supabase/supabase-js@2"
+import { registerGmailWatch } from "../_shared/gmail-watch.ts"
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -27,41 +28,12 @@ Deno.serve(async (req) => {
   const { refresh_token } = await req.json()
   if (!refresh_token) return new Response("Missing refresh_token", { status: 400, headers: corsHeaders })
 
-  // exchange refresh token for access token
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token,
-      client_id: Deno.env.get("GOOGLE_CLIENT_ID")!,
-      client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET")!,
-    }),
-  })
-
-  const tokenData = await tokenRes.json()
-  const { access_token } = tokenData
-  if (!access_token) {
-    console.error("gmail-watch: failed to obtain access_token", { user_id: user.id, error: tokenData?.error, error_description: tokenData?.error_description })
-    return new Response("Failed to obtain access token", { status: 502, headers: corsHeaders })
-  }
-  console.log("gmail-watch: access token obtained")
-
-  // activate gmail watch
-  const watchRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/watch", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ topicName: "projects/tally-493920/topics/gmail", labelIds: ["INBOX"] }),
-  })
-
-  if (!watchRes.ok) {
-    const body = await watchRes.text()
-    console.error("gmail-watch: watch registration failed", { status: watchRes.status, body })
+  const result = await registerGmailWatch(refresh_token)
+  if (!result.ok) {
+    console.error("gmail-watch: watch registration failed", { user_id: user.id, status: result.status, error: result.error })
     return new Response("Gmail watch failed", { status: 502, headers: corsHeaders })
   }
-
-  const watchData = await watchRes.json()
-  console.log("gmail-watch: watch registered", { historyId: watchData.historyId, expiration: watchData.expiration })
+  console.log("gmail-watch: watch registered", { historyId: result.historyId, expiration: result.expiration })
 
   // upsert refresh token and clear is_invalid; set last_history_id only if not already set
   const { data: existing } = await supabase
@@ -76,7 +48,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       refresh_token,
       is_invalid: false,
-      ...(setHistoryId && { last_history_id: String(watchData.historyId) }),
+      ...(setHistoryId && { last_history_id: result.historyId }),
     },
     { onConflict: "user_id" }
   )

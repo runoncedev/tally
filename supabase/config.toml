@@ -5,6 +5,12 @@ verify_jwt = true
 import_map = "./functions/gmail-watch/deno.json"
 entrypoint = "./functions/gmail-watch/index.ts"
 
+[functions.gmail-watch-cron]
+enabled = true
+verify_jwt = false
+import_map = "./functions/gmail-watch-cron/deno.json"
+entrypoint = "./functions/gmail-watch-cron/index.ts"
+
 [functions.gmail-webhook]
 enabled = true
 verify_jwt = false
