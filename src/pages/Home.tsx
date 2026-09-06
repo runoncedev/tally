@@ -17,14 +17,22 @@ function buildMonthSummaries(transactions: Array<Transaction>) {
     if (tx.amount >= 0) months[month].income += tx.amount;
     else months[month].expenses += Math.abs(tx.amount);
   }
-  return Object.entries(months)
+  const sorted = Object.entries(months)
     .map(([month, { income, expenses }]) => ({
       month,
       income,
       expenses,
       balance: income - expenses,
     }))
-    .sort((a, b) => b.month.localeCompare(a.month));
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  let runningBalance = 0;
+  const withRunningBalance = sorted.map((m) => {
+    runningBalance += m.balance;
+    return { ...m, runningBalance };
+  });
+
+  return withRunningBalance.sort((a, b) => b.month.localeCompare(a.month));
 }
 
 export default function Home() {
@@ -45,6 +53,7 @@ export default function Home() {
         income: 0,
         expenses: 0,
         balance: 0,
+        runningBalance: summaries[0]?.runningBalance ?? 0,
       });
     }
     return summaries.sort((a, b) => b.month.localeCompare(a.month));
@@ -52,6 +61,11 @@ export default function Home() {
 
   const totalBalance = useMemo(
     () => months.reduce((sum, m) => sum + m.balance, 0),
+    [months],
+  );
+
+  const maxRunningBalance = useMemo(
+    () => Math.max(0, ...months.map((m) => m.runningBalance)),
     [months],
   );
 
@@ -92,6 +106,7 @@ export default function Home() {
                   <MonthCard
                     key={m.month}
                     {...m}
+                    maxRunningBalance={maxRunningBalance}
                     isCurrent={m.month === currentMonth}
                     isPast={m.month < currentMonth}
                     isLoading={isLoading && m.month >= currentMonth}

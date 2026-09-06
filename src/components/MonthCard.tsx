@@ -11,6 +11,8 @@ type MonthCardProps = {
   income: number;
   expenses: number;
   balance: number;
+  runningBalance: number;
+  maxRunningBalance: number;
   isCurrent?: boolean;
   isPast?: boolean;
   isLoading?: boolean;
@@ -31,14 +33,18 @@ export function MonthCard({
   income,
   expenses,
   balance,
+  runningBalance,
+  maxRunningBalance,
   isCurrent,
   isPast,
   isLoading,
   nonInteractive,
 }: MonthCardProps) {
-  const savingsPct =
-    income > 0 ? Math.max(0, Math.min(balance / income, 1)) * 100 : 0;
-  const balanceClass =
+  const runningPct =
+    maxRunningBalance > 0
+      ? Math.max(0, Math.min(runningBalance / maxRunningBalance, 1)) * 100
+      : 0;
+  const runningBalanceClass =
     balance > 0
       ? "text-green-600 dark:text-green-400 font-medium"
       : balance < 0
@@ -49,24 +55,24 @@ export function MonthCard({
   const [wVal, setWVal] = useState(0);
 
   useEffect(() => {
-    wSpring.set(!isLoading && savingsPct > 0 ? savingsPct : 0);
-  }, [isLoading, savingsPct]);
+    wSpring.set(!isLoading && runningPct > 0 ? runningPct : 0);
+  }, [isLoading, runningPct]);
 
   useMotionValueEvent(wSpring, "change", (v) => setWVal(v));
 
   const cardClassName = `group relative block overflow-hidden rounded-xl border p-4 transition-colors ${isPast ? "border-zinc-100 hover:bg-zinc-50/50 dark:border-zinc-800/50 dark:hover:bg-zinc-800/30" : "border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"}`;
 
-  const opacity = !isLoading && savingsPct > 0 ? 1 : 0;
+  const opacity = !isLoading && runningPct > 0 ? 1 : 0;
   const fill1 =
-    savingsPct > 66
+    runningPct > 66
       ? "rgb(34 197 94 / 0.05)"
-      : savingsPct > 33
+      : runningPct > 33
         ? "rgb(234 179 8 / 0.07)"
         : "rgb(239 68 68 / 0.05)";
   const fill2 =
-    savingsPct > 66
+    runningPct > 66
       ? "rgb(34 197 94 / 0.09)"
-      : savingsPct > 33
+      : runningPct > 33
         ? "rgb(234 179 8 / 0.13)"
         : "rgb(239 68 68 / 0.09)";
   const w = wVal;
@@ -131,8 +137,8 @@ export function MonthCard({
           )}
         </div>
         <CurrencyFlow
-          value={balance}
-          className={`${balanceClass} ${isLoading ? "animate-pulse" : ""}`}
+          value={runningBalance}
+          className={`${runningBalanceClass} ${isLoading ? "animate-pulse" : ""}`}
         />
       </div>
       <div className="mt-1 flex min-h-[1.25rem] gap-4 text-sm text-zinc-500 sm:hidden dark:text-zinc-400">
@@ -148,6 +154,13 @@ export function MonthCard({
           <CurrencyFlow
             value={expenses}
             className={`font-medium ${isLoading ? "animate-pulse" : expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+          />
+        </span>
+        <span className="flex flex-col">
+          <span>Savings</span>
+          <CurrencyFlow
+            value={balance}
+            className={`font-medium ${isLoading ? "animate-pulse" : balance > 0 ? "text-green-600 dark:text-green-400" : balance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
           />
         </span>
       </div>
@@ -180,11 +193,18 @@ export function MonthCard({
               className={`font-medium ${isLoading ? "animate-pulse" : expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
             />
           </span>
+          <span>
+            Savings{" "}
+            <CurrencyFlow
+              value={balance}
+              className={`font-medium ${isLoading ? "animate-pulse" : balance > 0 ? "text-green-600 dark:text-green-400" : balance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+            />
+          </span>
         </div>
         <div className="ml-auto">
           <CurrencyFlow
-            value={balance}
-            className={`${balanceClass} ${isLoading ? "animate-pulse" : ""}`}
+            value={runningBalance}
+            className={`${runningBalanceClass} ${isLoading ? "animate-pulse" : ""}`}
           />
         </div>
       </div>

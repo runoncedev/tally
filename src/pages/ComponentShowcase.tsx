@@ -635,13 +635,15 @@ export default function ComponentShowcase() {
           { prop: "month", type: "string", description: 'Month in "YYYY-MM" format.' },
           { prop: "income", type: "number", description: "Total income for the month." },
           { prop: "expenses", type: "number", description: "Total expenses for the month." },
-          { prop: "balance", type: "number", description: "Income minus expenses." },
+          { prop: "balance", type: "number", description: "Income minus expenses — shown as \"Savings\" for the month." },
+          { prop: "runningBalance", type: "number", description: "Cumulative balance from the first transaction through the end of this month — the large value on the right." },
+          { prop: "maxRunningBalance", type: "number", description: "Highest running balance across all shown months — normalizes the wave width." },
           { prop: "isCurrent", type: "boolean", default: "false", description: 'Shows a "current" badge.' },
           { prop: "isPast", type: "boolean", default: "false", description: "Muted styling for past months." },
           { prop: "isLoading", type: "boolean", default: "false", description: "Pulse animation; hides the wave." },
           { prop: "nonInteractive", type: "boolean", default: "false", description: "Renders a div instead of a Link — no navigation." },
         ]} />
-        <MonthCard month="2026-06" income={5000} expenses={3200} balance={1800} isCurrent nonInteractive />
+        <MonthCard month="2026-06" income={5000} expenses={3200} balance={1800} runningBalance={9400} maxRunningBalance={9400} isCurrent nonInteractive />
         <CodeBlock code={MONTH_CARD_SOURCE} />
       </Section>
 

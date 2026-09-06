@@ -190,7 +190,7 @@ function LoginScreen() {
       <div className="mx-auto max-w-5xl px-4 pt-12 pb-8">
         <h2 className="mb-8 text-center text-2xl font-bold text-balance text-zinc-900 dark:text-zinc-50">Overview your spendings, month by month</h2>
         <div className="pointer-events-none flex flex-col gap-3 select-none">
-          <MonthCard month={new Date().toISOString().slice(0, 7)} income={demoIncome} expenses={demoExpenses} balance={demoBalance} isCurrent nonInteractive />
+          <MonthCard month={new Date().toISOString().slice(0, 7)} income={demoIncome} expenses={demoExpenses} balance={demoBalance} runningBalance={demoBalance} maxRunningBalance={demoBalance} isCurrent nonInteractive />
         </div>
       </div>
 
