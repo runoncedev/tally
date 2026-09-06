@@ -4,11 +4,11 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import React, { useMemo, useRef, useState } from "react";
 import { Button, ButtonLink } from "../components/Button";
 import { CurrencyFlow } from "../components/CurrencyFlow";
+import { EmptyState } from "../components/EmptyState";
 import { GroupRow } from "../components/GroupRow";
 import type { TransactionFormPayload } from "../components/TransactionForm";
 import { TransactionForm } from "../components/TransactionForm";
 import { TransactionRow } from "../components/TransactionRow";
-import { EmptyState } from "../components/EmptyState";
 import type { Transaction } from "../lib/collections";
 import {
   categoriesCollection,
@@ -111,6 +111,13 @@ export default function MonthDetail() {
     [start, end],
   );
 
+  const { data: transactionsUpToMonth = [], isLoading: runningBalanceLoading } =
+    useLiveQuery(
+      (q) =>
+        q.from({ tx: transactionsCollection }).where(({ tx }) => lt(tx.date, end)),
+      [end],
+    );
+
   const { data: allRecurringCategories = [] } = useLiveQuery(
     (q) =>
       q
@@ -132,6 +139,15 @@ export default function MonthDetail() {
     [categories],
   );
   const summary = useMemo(() => computeSummary(transactions), [transactions]);
+  const runningBalance = useMemo(
+    () => computeSummary(transactionsUpToMonth).balance,
+    [transactionsUpToMonth],
+  );
+  const previousRunningBalance = runningBalance - summary.balance;
+  const runningBalanceChangePct =
+    previousRunningBalance !== 0
+      ? ((runningBalance - previousRunningBalance) / Math.abs(previousRunningBalance)) * 100
+      : null;
   const recurringCategoryIds = useMemo(
     () => new Set(allRecurringCategories.map((c) => c.id)),
     [allRecurringCategories],
@@ -306,7 +322,7 @@ export default function MonthDetail() {
               />
             </p>
             {/* mobile: stacked */}
-            <div className="mt-1 flex gap-4 text-sm text-zinc-500 sm:hidden dark:text-zinc-400">
+            <div className="mt-1 flex gap-4 text-sm flex-wrap text-zinc-500 sm:hidden dark:text-zinc-400">
               <span className="flex flex-col">
                 <span>Income</span>
                 <CurrencyFlow
@@ -321,9 +337,26 @@ export default function MonthDetail() {
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
               </span>
+              <span className="flex flex-col">
+                <span className="inline-flex gap-2 items-center">Running balance <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-rotate-ccw-clock"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>
+                <span className="inline-flex items-center gap-1">
+                  <CurrencyFlow
+                    value={runningBalance}
+                    className={`font-medium ${runningBalanceLoading ? "animate-pulse" : runningBalance > 0 ? "text-green-600 dark:text-green-400" : runningBalance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+                  />
+                  {!runningBalanceLoading && runningBalanceChangePct !== null && (
+                    <span
+                      className={`text-xs font-medium ${runningBalanceChangePct > 0 ? "text-green-600 dark:text-green-400" : runningBalanceChangePct < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+                    >
+                      ({runningBalanceChangePct > 0 ? "+" : ""}
+                      {runningBalanceChangePct.toFixed(1)}%)
+                    </span>
+                  )}
+                </span>
+              </span>
             </div>
             {/* sm+: inline with dot */}
-            <div className="mt-1 hidden gap-3 text-sm text-zinc-500 sm:flex dark:text-zinc-400">
+            <div className="mt-1 hidden flex-wrap gap-3 text-sm text-zinc-500 sm:flex dark:text-zinc-400">
               <span>
                 Income{" "}
                 <CurrencyFlow
@@ -331,13 +364,29 @@ export default function MonthDetail() {
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.income > 0 ? "text-green-600 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
               </span>
-              <span>·</span>
               <span>
                 Expenses{" "}
                 <CurrencyFlow
                   value={summary.expenses}
                   className={`font-medium ${isLoading ? "animate-pulse" : summary.expenses > 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
                 />
+              </span>
+              <span className="flex gap-2">
+                <span className="inline-flex gap-2 items-center">Running balance <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-rotate-ccw-clock"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg></span>
+                <span className="inline-flex items-center gap-1">
+                  <CurrencyFlow
+                    value={runningBalance}
+                    className={`font-medium ${runningBalanceLoading ? "animate-pulse" : runningBalance > 0 ? "text-green-600 dark:text-green-400" : runningBalance < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+                  />
+                  {!runningBalanceLoading && runningBalanceChangePct !== null && (
+                    <span
+                      className={`text-xs font-medium ${runningBalanceChangePct > 0 ? "text-green-600 dark:text-green-400" : runningBalanceChangePct < 0 ? "text-red-600 dark:text-red-400" : "text-zinc-400 dark:text-zinc-500"}`}
+                    >
+                      ({runningBalanceChangePct > 0 ? "+" : ""}
+                      {runningBalanceChangePct.toFixed(1)}%)
+                    </span>
+                  )}
+                </span>
               </span>
             </div>
           </div>
@@ -523,7 +572,7 @@ export default function MonthDetail() {
             ),
           )}
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
